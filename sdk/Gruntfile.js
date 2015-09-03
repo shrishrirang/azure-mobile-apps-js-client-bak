@@ -1,169 +1,201 @@
 /// <binding BeforeBuild='default' />
 /// <vs BeforeBuild='default' />
+var remapify = require('remapify');
+
+function definePlatformMappings(mappings) {
+    return function(b) {
+        b.plugin(remapify, mappings);
+    };
+}
+
 module.exports = function(grunt) {
-  // Project configuration.
-  grunt.initConfig({
-    pkg: grunt.file.readJSON('package.json'),
-    files: {
-      resources: [
-        'src/Strings/**/Resources.resjson'
-      ],
-      core: [
-        'src/Utilities/Extensions.js',
-        'src/MobileServiceClient.js',
-        'src/MobileServiceTable.js',
-        'src/MobileServiceLogin.js',
-        'src/Push/Push.js',
-        'src/Utilities/Validate.js',
-        'src/External/queryjs/lib/*.js',
-        'src/External/esprima/esprima.js'
-      ],
-      web: [
-        'src/Platforms/Platform.Web.js',
-        'src/Generated/MobileServices.Core.js',
-        'src/Transports/*.js',
-        'src/LoginUis/*.js',
-        'src/Utilities/PostMessageExchange.js',
-        'src/Utilities/Promises.js'
-      ],
-      winjs: [
-        'src/LoginUis/WebAuthBroker.js',
-        'src/Platforms/Platform.WinJS.js',
-      ],
-      node: [
-        'src/Internals/NodeExports.js',
-      ],
-      Internals: [
-        'src/Internals/InternalsVisible.js',
-      ],
-      Intellisense: [
-        'src/Internals/DevIntellisense.js',
-      ],
-    },    
-    jshint: {
-        all: ['Gruntfile.js', 'src/**/*.js', '!src/External/**/*.js', '!src/Generated/*.js', 'test/**/*.js', '!test/**/bin/**', '!**/MobileServices.*.js']
-    },    
-    concat: {
-      options: {
-        stripBanners: true,
-        banner: header,
-        process: wrapModule,
-        footer: footer
-      },
-      resources: {
-        options: {
-          banner: '\n\t$__modules__.Resources = { };\n\n',
-          process: wrapResourceFile,
-          footer: ''
+    // Project configuration.
+    grunt.initConfig({
+        pkg: grunt.file.readJSON('package.json'),
+        files: {
+            // Entry points common to all platforms
+            core: [
+                'src/MobileServiceClient.js',
+            ],
+            // List of Web entry points
+            web: [
+                '<%= files.core %>',
+            ],
+            // List of Cordova entry points
+            cordova: [
+                '<%= files.core %>',
+            ],
+            // List of WinJS entry points
+            winjs: [
+                '<%= files.core %>',
+            ],
+            // List of entry points for WinjS with intellisense support
+            intellisense: [
+                '<%= files.winjs %>',
+                'src/Internals/DevIntellisense.js',
+            ],
+            // Entry points common to tests for all platforms
+            testcore: [
+                'test/winJS/tests/utilities/*.js',
+                'test/winJS/tests/unit/*.js',
+                'test/winJS/tests/functional/*.js'
+            ],
+            // List of all javascript files that we want to validate and watch
+            // i.e. all javascript files except those that are installed, generated during build, third party files, etc
+            all: [
+                'Gruntfile.js',
+                'src/**/*.js',
+                'test/**/*.js',
+                '!**/[gG]enerated/*.js',
+                '!test/cordova/platforms/**',
+                '!test/**/bin/**',
+                '!test/**/plugins/**',
+                '!**/node_modules/**',
+                '!**/MobileServices.*js',
+                '!**/External/**'
+            ]
+        },        
+        jshint: {
+            all: '<%= files.all %>'
         },
-        src: ['<%= files.resources %>'],
-        dest: 'src/Generated/Resources.js'
-      },
-      web: {
-        src: ['src/Require.js', 'src/Generated/Resources.js', '<%= files.core %>', '<%= files.web %>'],
-        dest: 'src/Generated/MobileServices.Web.js'
-      },
-      webinternals: {
-        options: {
-          footer: '\n\trequire(\'InternalsVisible\');' + footer
+        concat: {
+            constants: {
+                options: {
+                    banner: header + 
+                        '\nexports.FileVersion = \'<%= pkg.version %>\';\n' +
+                        '\nexports.Resources = {};\n',
+                    process: wrapResourceFile,
+                },
+                src: ['src/Strings/**/Resources.resjson'],
+                dest: 'src/Generated/Constants.js'
+            },
         },
-        src: ['src/Require.js', 'src/Generated/Resources.js', '<%= files.Internals %>', '<%= files.core %>', '<%= files.web %>'],
-        dest: 'src/Generated/MobileServices.Web.Internals.js'
-      },
-      winjs: {
-        src: ['src/Require.js', '<%= files.core %>', '<%= files.winjs %>'],
-        dest: 'src/Generated/MobileServices.js'
-      },    
-      winjsinternals: {
-        options: {
-          footer: '\n\trequire(\'InternalsVisible\');' + footer
+        uglify: {
+            options: {
+                banner: '//! Copyright (c) Microsoft Corporation. All rights reserved. <%= pkg.name %> v<%= pkg.version %>\n',
+                mangle: false
+            },
+            web: {
+                src: 'src/Generated/MobileServices.Web.js',
+                dest: 'src/Generated/MobileServices.Web.min.js'
+            },
+            cordova: {
+                src: 'src/Generated/MobileServices.Cordova.js',
+                dest: 'src/Generated/MobileServices.Cordova.min.js'
+            },
+            winjs: {
+                src: 'src/Generated/MobileServices.js',
+                dest: 'src/Generated/MobileServices.min.js'
+            }
         },
-        src: ['src/Require.js', '<%= files.Internals %>', '<%= files.core %>', '<%= files.winjs %>'],
-        dest: 'src/Generated/MobileServices.Internals.js'
-      },
-      Intellisense: {
-        options: {
-          footer: '\n\trequire(\'DevIntellisense\');' + footer
+        browserify: {
+            options: {
+                banner: header
+            },
+            web: {
+                src: '<%= files.web %>',
+                dest: './src/Generated/MobileServices.Web.js',
+                options: {
+                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/src/Platforms/web', expose: 'Platforms' } ] )
+                }
+            },
+            cordova: {
+                src: '<%= files.cordova %>',
+                dest: './src/Generated/MobileServices.Cordova.js',
+                options: {
+                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/src/Platforms/web', expose: 'Platforms' } ] )
+                }
+            },
+            winjs: {
+                src: '<%= files.winjs %>',
+                dest: './src/Generated/MobileServices.js',
+                options: {
+                        preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/src/Platforms/winjs', expose: 'Platforms' } ] )
+                }
+            },
+            intellisense: {
+                src: [
+                    '<%= files.intellisense %>'
+                ],
+                dest: './src/Generated/MobileServices.DevIntellisense.js',
+                options: {
+                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/src/Platforms/winjs', expose: 'Platforms' } ] )
+                }
+            },
+            webTest: {
+                src: [
+                    '<%= files.web %>',
+                    './test/web/js/TestFrameworkAdapter.js',
+                    './test/web/js/TestClientHelper.js',
+                    '<%= files.testcore %>'
+                ],
+                dest: './test/web/Generated/Tests.js',
+                options: {
+                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/src/Platforms/web', expose: 'Platforms' } ] )
+                }
+            },
+// Uncomment this when Cordova UTs are added
+//            cordovaTest: {
+//                src: [
+//                    '<%= files.cordova %>',
+//                    './test/web/js/TestFrameworkAdapter.js',
+//                    './test/web/js/TestClientHelper.js',
+//                    '<%= files.testcore %>'
+//                ],
+//                dest: './test/cordova/www/js/Generated/Tests.js',
+//                options: {
+//                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/src/Platforms/web', expose: 'Platforms' } ] )
+//                }
+//            },
+            winjsTest: {
+                src: [
+                    '<%= files.winjs %>',
+                    'test/winJS/tests/TestFramework.js',
+                    'test/winJS/tests/TestInterface.js',
+                    '<%= files.testcore %>'
+                ],
+                dest: './test/winJS/Generated/Tests.js',
+                options: {
+                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/src/Platforms/winjs', expose: 'Platforms' } ] )
+                }
+            }
         },
-        src: ['src/Require.js', '<%= files.core %>', '<%= files.winjs %>', '<%= files.Intellisense %>'],
-        dest: 'src/Generated/MobileServices.DevIntellisense.js'
-      }
-    },
-    uglify: {
-      options: {
-          banner: '//! Copyright (c) Microsoft Corporation. All rights reserved. <%= pkg.name %> v<%= pkg.version %>\n',
-          mangle: false
-      },
-      web: {
-        src: 'src/Generated/MobileServices.Web.js',
-        dest: 'src/Generated/MobileServices.Web.min.js'
-      },
-      winjs: {
-        src: 'src/Generated/MobileServices.js',
-        dest: 'src/Generated/MobileServices.min.js'
-      }
-    }
-  });
+        watch: {
+            files: '<%= files.all %>',
+            tasks: ['concat', 'browserify', 'uglify']
+        }
+    });
 
-  // Load the plugin that provides the "uglify" task.
-  grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-concat');
-
-  // Default task(s).
-  grunt.registerTask('default', ['jshint', 'concat', 'uglify']);
+    // Load the plugin that provides the "uglify" task.
+    grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-contrib-concat');
+    grunt.loadNpmTasks('grunt-browserify');
+    grunt.loadNpmTasks('grunt-contrib-watch');
+        
+    // Default task(s).
+    grunt.registerTask('default', ['concat', 'browserify', 'uglify', 'jshint']);
 };
 
 var header = '// ----------------------------------------------------------------------------\n' +
              '// Copyright (c) Microsoft Corporation. All rights reserved\n' +
              '// <%= pkg.name %> - v<%= pkg.version %>\n' +
-             '// ----------------------------------------------------------------------------\n' +
-             '\n' +
-             '(function (global) {\n' +
-             '\tvar $__fileVersion__ = \'<%= pkg.version %>\';\n',
-    footer = '\n\trequire(\'MobileServiceClient\');\n' + 
-             '})(this || exports);';
-
-function wrapModule(src, filepath) {
-  /// <summary>
-  /// Takes a file, and if it should be a module, wraps the code in a module block
-  /// </summary>
-  /// <param name="src">
-  /// Source code of a module file
-  /// </param>
-  /// <param name="filepath">
-  /// Sile path of the module (i.e. src/MobileServicesClient.js)
-  /// </param>
-
-  var lastSlash = filepath.lastIndexOf('/'),
-      name = filepath.substr(lastSlash+1);
-
-  name = name.substring(0, name.indexOf('.'));
-  if (name == 'Require' || name == 'Resources') {
-    return src;
-  }
-
-  var newSrc = src.replace(/\/\/\/\s<[\w\s=":\\().]+\/>\n/g, '');
-  newSrc = '\t\t' + newSrc.replace(/\n/g, '\n\t\t');
-
-  return '\n\t$__modules__.' + name + ' = function (exports) {\n' + newSrc + '\n\t};';
-}
+             '// ----------------------------------------------------------------------------\n';
 
 function wrapResourceFile(src, filepath) {
-  /// <summary>
-  /// Takes a resjson file and places it into a module level resources array
-  /// with the index corresponding to the language identifier in the file path
-  /// </summary>
-  /// <param name="src">
-  /// Source code of a module file
-  /// </param>
-  /// <param name="filepath">
-  /// File path of the resjson (i.e. src/Strings/en-US/Resources.resjson)
-  /// The file name must be in format of <directories>/<locale>/Resources.resjson
-  /// </param>
+    /// <summary>
+    /// Takes a resjson file and places it into a module level resources array
+    /// with the index corresponding to the language identifier in the file path
+    /// </summary>
+    /// <param name="src">
+    /// Source code of a module file
+    /// </param>
+    /// <param name="filepath">
+    /// File path of the resjson (i.e. src/Strings/en-US/Resources.resjson)
+    /// The file name must be in format of <directories>/<locale>/Resources.resjson
+    /// </param>
 
-  var language = filepath.replace('src/Strings/', '').replace('/Resources.resjson', ''),
-      newSrc = src.replace(/\n/g, '\n\t\t');
+    var language = filepath.replace('src/Strings/', '').replace('/Resources.resjson', '');
 
-  return '\t$__modules__.Resources[\'' + language + '\'] = ' + newSrc + ';';
+    return '\nexports.Resources[\'' + language + '\'] = ' + src + ';';
 }

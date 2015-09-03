@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-var _ = require('Extensions'),
+var _ = require('../Utilities/Extensions'),
     easyAuthRedirectUriKey = 'post_login_redirect_url';
 
 exports.supportsCurrentRuntime = function () {

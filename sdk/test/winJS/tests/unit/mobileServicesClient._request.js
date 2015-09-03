@@ -7,8 +7,7 @@
 /// <reference path="..\..\js\Zumo.Internals.js" />
 /// <reference path="..\..\generated\Tests.js" />
 
-// Declare JSHint globals
-/*global MobileServiceClient:false, Platform:false */
+var Platform = require('Platforms/Platform');
 
 $testGroup('MobileServiceClient._request',
 
@@ -66,7 +65,7 @@ $testGroup('MobileServiceClient._request',
         var client = new WindowsAzure.MobileServiceClient("http://www.windowsazure.com/");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.headers['Content-Type'], undefined);
-            $assert.areEqual(req.data, undefined);
+            $assert.areEqual(req.data, null);
             callback(null, { status: 200, responseText: null });
         });
 
@@ -115,8 +114,8 @@ $testGroup('MobileServiceClient._request',
     .checkAsync(function () {
         var client = new WindowsAzure.MobileServiceClient("http://www.windowsazure.com/");
         client = client.withFilter(function (req, next, callback) {
-            var isWinJs = typeof Windows === "object",
-                isCordova = window && window.cordova && window.cordova.version;
+            var isWinJs = Platform.getSdkInfo().language === "WinJS",
+                isCordova = Platform.getSdkInfo().language === "Cordova";
 
             if (isWinJs) {
                 $assert.areEqual(0, req.headers['X-ZUMO-VERSION'].indexOf("ZUMO/2.0 (lang=WinJS; os=Windows 8; os_version=--; arch=Neutral; version=2.0.0-beta"));
