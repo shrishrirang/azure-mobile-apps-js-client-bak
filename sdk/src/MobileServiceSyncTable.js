@@ -8,6 +8,7 @@
 
 var Validate = require('./Utilities/Validate');
 var Platform = require('Platforms/Platform');
+var Query = require('query.js/lib/Query').Query;
 
 function MobileServiceSyncTable(tableName, client) {
     /// <summary>
@@ -105,8 +106,64 @@ function MobileServiceSyncTable(tableName, client) {
         return client.getSyncContext().del(tableName, instance);
     };
 
+    this._read = function (query) {
+        return client.getSyncContext().read(query);
+    };
+
+    this.read = function (query) {
+        /// <summary>
+        /// Read the sync table
+        /// </summary>
+        /// <param name="query" type="Object">
+        /// A QueryJS object representing the query to be performed while reading the table.
+        /// This parameter is optional and can be skipped to read the entire table.
+        /// </param>
+        /// <returns type="Promise">
+        /// A promise that is resolved with the read results when the operation is completed successfully.
+        /// If the operation fails, the promise is rejected
+        /// </returns>
+
+        if (query === undefined) {
+            query = new Query(tableName);
+        }
+
+        return this._read(query);
+    };
+}
+
+// Copy select Query operators to MobileServiceSyncTable so queries can be created
+// compactly.  We'll just add them to the MobileServiceSyncTable prototype and then
+// forward on directly to a new Query instance.
+var queryOperators =
+    ['where', 'select', 'orderBy', 'orderByDescending', 'skip', 'take', 'includeTotalCount'];
+
+var copyOperator = function (operator) {
+    MobileServiceSyncTable.prototype[operator] = function () {
+        /// <summary>
+        /// Creates a new query.
+        /// </summary>
+
+        // Create a query associated with this table
+        var table = this;
+        var query = new Query(table.getTableName());
+
+        // Add a .read() method on the query which will execute the query.
+        // This method is defined here per query instance because it's
+        // implicitly tied to the table.
+        query.read = function () {
+            return table._read(query);
+        };
+
+        // Invoke the query operator on the newly created query
+        return query[operator].apply(query, arguments);
+    };
+};
+
+var i = 0;
+for (; i < queryOperators.length; i++) {
+    // Avoid unintended closure capture
+    copyOperator(queryOperators[i]);
 }
 
 // Export the MobileServiceSyncTable class
 exports.MobileServiceSyncTable = MobileServiceSyncTable;
-    
