@@ -1888,7 +1888,7 @@ $testGroup('SQLiteStore tests')
         }).then(function () {
             var query = new Query(testTableName);
             return store.del(query.where(function () {
-                return this.prop1 === 'someid4';
+                return this.id === 'someid4';
             }).select('prop1'));
         }).then(function () {
             return store.read(new Query(testTableName));
