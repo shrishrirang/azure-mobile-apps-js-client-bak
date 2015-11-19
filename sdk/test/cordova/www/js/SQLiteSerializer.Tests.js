@@ -286,6 +286,8 @@ $testGroup('SQLiteSerializer tests').tests(
                 case ColumnType.Int:
                 case ColumnType.Float:
                 case ColumnType.Real:
+                case ColumnType.Boolean:
+                case ColumnType.Bool:
                     serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
                     $assert.areEqual(serializedValue, value);
                     break;
@@ -424,14 +426,14 @@ $testGroup('SQLiteSerializer tests').tests(
             switch (ColumnType[c]) {
                 case ColumnType.Date:
                     serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
-                    $assert.areEqual(serializedValue, value);
+                    $assert.areEqual(serializedValue, serializedValue);
                     break;
                 case ColumnType.String:
                 case ColumnType.Text:
                     serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
                     $assert.areEqual(serializedValue, { val: '\"2011-11-11T20:13:14.000Z\"' });
                     break;
-                    // Serializing as any other type should fail
+                // Serializing as any other type should fail
                 default:
                     $assertThrows(serialize);
                     break;
@@ -617,7 +619,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('deserialize: property of type integer, different column types')
+    $test('deserialize: property of type integer with a non-zero value, different column types')
     .check(function () {
         var value = { val: 51 },
             columnDefinitions = {},
@@ -648,7 +650,46 @@ $testGroup('SQLiteSerializer tests').tests(
                     deserializedValue = SQLiteSerializer.deserialize(value, columnDefinitions);
                     $assert.areEqual(deserializedValue, { val: '51' });
                     break;
-                    // Deserializing to any other type should fail
+                // Deserializing to any other type should fail
+                default:
+                    $assertThrows(deserialize);
+                    break;
+            }
+        }
+    }),
+
+    $test('deserialize: property of type integer with value zero, different column types')
+    .check(function () {
+        var value = { val: 0 },
+            columnDefinitions = {},
+            deserialize = function () {
+                SQLiteSerializer.deserialize(value, columnDefinitions);
+            };
+
+        var deserializedValue;
+        for (var c in ColumnType) {
+
+            columnDefinitions.val = ColumnType[c];
+
+            switch (ColumnType[c]) {
+                case ColumnType.Integer:
+                case ColumnType.Int:
+                case ColumnType.Float:
+                case ColumnType.Real:
+                    deserializedValue = SQLiteSerializer.deserialize(value, columnDefinitions);
+                    $assert.areEqual(deserializedValue, value);
+                    break;
+                case ColumnType.Boolean:
+                case ColumnType.Bool:
+                    deserializedValue = SQLiteSerializer.deserialize(value, columnDefinitions);
+                    $assert.areEqual(deserializedValue, { val: false });
+                    break;
+                case ColumnType.String:
+                case ColumnType.Text:
+                    deserializedValue = SQLiteSerializer.deserialize(value, columnDefinitions);
+                    $assert.areEqual(deserializedValue, { val: '0' });
+                    break;
+                // Deserializing to any other type should fail
                 default:
                     $assertThrows(deserialize);
                     break;
@@ -780,12 +821,17 @@ $testGroup('SQLiteSerializer tests').tests(
                     deserializedValue = SQLiteSerializer.deserialize(value, columnDefinitions);
                     $assert.areEqual(deserializedValue, value);
                     break;
-                case ColumnType.String:
                 case ColumnType.Text:
+                case ColumnType.String:
                     deserializedValue = SQLiteSerializer.deserialize(value, columnDefinitions);
                     $assert.areEqual(deserializedValue, { val: '\"2011-11-11T20:13:14.000Z\"' });
                     break;
-                    // Deserializing to any other type should fail
+                case ColumnType.Integer:
+                case ColumnType.Int:
+                    deserializedValue = SQLiteSerializer.deserialize(value, columnDefinitions);
+                    $assert.areEqual(deserializedValue, { val: 1321042394000 });
+                    break;
+                // Deserializing to any other type should fail
                 default:
                     $assertThrows(deserialize);
                     break;
@@ -866,7 +912,7 @@ $testGroup('SQLiteSerializer tests').tests(
             boolean: false,
             real: 1.5,
             float: 2.2,
-            date: new Date(2001, 1, 1)
+            date: new Date(2001, 11, 12, 13, 14, 59)
         };
         var columnDefinitions = {
             object: ColumnType.Object,
@@ -885,15 +931,15 @@ $testGroup('SQLiteSerializer tests').tests(
         $assert.areEqual(serializedValue, {
             "object": "{\"a\":1,\"b\":\"str\",\"c\":[1,2]}",
             "array": "[1,2,{\"a\":1}]",
-            "string": "somestring",
-            "text": "sometext",
-            "integer": 5,
-            "int": 6,
+            "string": value.string,
+            "text": value.text,
+            "integer": value.integer,
+            "int": value.int,
             "boolean": 0,
             "bool": 1,
-            "real": 1.5,
-            "float": 2.2,
-            "date": new Date(2001, 1, 1)
+            "real": value.real,
+            "float": value.float,
+            "date": value.date
         });
         $assert.areEqual(SQLiteSerializer.deserialize(serializedValue, columnDefinitions), value);
     })

@@ -743,7 +743,7 @@ $testGroup('SQLiteStore tests')
         });
     }),
 
-    $test('Serialization: roundtripping verification non-null values')
+    $test('Roundtripping: non-null property values')
     .checkAsync(function () {
         var store = createStore(),
             row = {
@@ -798,7 +798,7 @@ $testGroup('SQLiteStore tests')
         });
     }),
 
-    $test('Serialization: roundtripping verification null values')
+    $test('Roundtripping: null property values')
     .checkAsync(function () {
         var store = createStore(),
             row = {
@@ -945,10 +945,11 @@ $testGroup('SQLiteStore tests')
         });
     }),
 
-    $test('upsert: verify id case insensitivity')
+    $test('upsert: verify id case sensitivity')
     .checkAsync(function () {
         var store = createStore(),
-            row = { id: 'ABC', description: 'something' };
+            row1 = { id: 'ABC', description: 'old' },
+            row2 = { id: 'abc', description: 'new' };
 
         return store.defineTable({
             name: testTableName,
@@ -958,19 +959,14 @@ $testGroup('SQLiteStore tests')
             }
         }).then(function () {
             // record with an upper cased id
-            return store.upsert(testTableName, { id: 'ABC', description: 'old' });
+            return store.upsert(testTableName, row1);
         }).then(function () {
             // update record using a lower cased id
-            return store.upsert(testTableName, { id: 'abc', description: 'new' });
+            return store.upsert(testTableName, row2);
         }).then(function () {
-            // lookup record using upper cased id
-            return store.lookup(testTableName, 'ABC');
+            return store.read(new Query(testTableName));
         }).then(function (result) {
-            $assert.areEqual(result, { id: 'ABC', description: 'new' });
-            // lookup record using lower cased id
-            return store.lookup(testTableName, 'abc');
-        }).then(function (result) {
-            $assert.areEqual(result, { id: 'ABC', description: 'new' });
+            $assert.areEqual(result, [row1, row2]);
         }, function (error) {
             $assert.fail(error);
         });
@@ -1438,12 +1434,11 @@ $testGroup('SQLiteStore tests')
         });
     }),
 
-    $test('del: verify id case insensitivity')
+    $test('del: verify id case sensitivity')
     .checkAsync(function () {
         var store = createStore(),
-            row1 = { id: 'ABC_def_Yz1', description: 'something' },
-            row2 = { id: 'ABC_def_Yz2', description: 'something' },
-            row3 = { id: 'ABC_def_Yz3', description: 'something' };
+            row1 = { id: 'abc', description: 'something' },
+            row2 = { id: 'DEF', description: 'something' };
 
         return store.defineTable({
             name: testTableName,
@@ -1452,23 +1447,20 @@ $testGroup('SQLiteStore tests')
                 description: WindowsAzure.MobileServiceSQLiteStore.ColumnType.String
             }
         }).then(function () {
-            return store.upsert(testTableName, [row1, row2, row3]);
+            return store.upsert(testTableName, [row1, row2]);
         }).then(function () {
-            return store.read(new Query(testTableName));
-        }).then(function (result) {
-            $assert.areEqual(result, [row1, row2, row3]);
             // Specify a single id to delete
-            return store.del(testTableName, 'abc_DEF_Yz1');
+            return store.del(testTableName, 'ABC');
         }).then(function () {
             return store.read(new Query(testTableName));
         }).then(function (result) {
-            $assert.areEqual(result, [row2, row3]);
+            $assert.areEqual(result, [row1, row2]);
             // Specify an array of ids to delete
-            return store.del(testTableName, ['abc_DEF_Yz2', 'abc_DEF_Yz3']);
+            return store.del(testTableName, ['ABC', 'def']);
         }).then(function () {
             return store.read(new Query(testTableName));
         }).then(function (result) {
-            $assert.areEqual(result, []);
+            $assert.areEqual(result, [row1, row2]);
         }, function (error) {
             $assert.fail(error);
         });

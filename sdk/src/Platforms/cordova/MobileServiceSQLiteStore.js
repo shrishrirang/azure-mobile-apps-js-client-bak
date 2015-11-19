@@ -336,25 +336,23 @@ var MobileServiceSQLiteStore = function (dbName) {
         Validate.notNullOrEmpty(tableName);
 
         // SQL DELETE statements corresponding to each record we want to delete from the table.
-        var deleteStatements = [],
+        var deleteExpressions = [],
             deleteParams = [];
-
         for (var i = 0; i < ids.length; i++) {
             if (!_.isNull(ids[i])) {
                 Validate.isValidId(ids[i]);
-
-                deleteStatements.push(_.format("DELETE FROM {0} WHERE {1} = ? COLLATE NOCASE", tableName, idPropertyName));
-                deleteParams.push([ids[i]]);
+                deleteExpressions.push('?');
+                deleteParams.push(ids[i]);
             }
         }
 
-        this._db.transaction(function(transaction) {
-            for (i = 0; i < deleteStatements.length; i++) {
-                transaction.executeSql(deleteStatements[i], deleteParams[i]);
-            }
-        }, function(error) {
+        var deleteStatement = _.format("DELETE FROM {0} WHERE {1} in ({2})", tableName, idPropertyName, deleteExpressions.join());
+
+        this._db.transaction(function (transaction) {
+            transaction.executeSql(deleteStatement, deleteParams);
+        }, function (error) {
             callback(error);
-        }, function() {
+        }, function () {
             callback();
         });
     };
