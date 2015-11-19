@@ -1,4 +1,4 @@
-# Azure Mobile Services JavaScript SDK Change Log
+# Azure Mobile Apps JavaScript SDK Change Log
 
 ### JavaScript SDK: Version 1.2.7
 - Added support for phonegap/cordova with [plugin repo](https://github.com/Azure/azure-mobile-services-cordova)
