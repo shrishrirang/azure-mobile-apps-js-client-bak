@@ -20,7 +20,7 @@ To get the source code of our SDKs and samples via **git** just type:
 ## Reference Documentation
 
 ## Change log
-- [JavaScript SDK](CHANGELOG.javascript.md)
+- [JavaScript SDK](CHANGELOG.md)
 
 ## JavaScript SDK
 
