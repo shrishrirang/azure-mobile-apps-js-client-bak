@@ -5,6 +5,8 @@
 var Platform = require('Platforms/Platform');
 var Validate = require('../../Utilities/Validate');
 var _ = require('../../Utilities/Extensions');
+var queryHelper = require('azure-mobile-apps/src/query');
+var formatSql = require('azure-mobile-apps/src/data/sql/query/format');
 
 var idPropertyName = "id";
 var tables = {};
@@ -179,12 +181,85 @@ var MobileServiceSQLiteStore = function (dbName) {
         /// If the operation fails, the promise is rejected
         /// </returns>
 
+        // Platform.async silently appends a callback argument to the original list of arguments.
+        // Validate the argument length to ensure the callback argument is indeed the callback 
+        // provided by Platform.async.
+        Validate.length(arguments, 3, 'arguments');
+
+        Validate.isString(tableName, 'tableName');
+        Validate.notNullOrEmpty(tableName, 'tableName');
+
         var deleteStatement = _.format("DELETE FROM {0} WHERE {1} = ? COLLATE NOCASE", tableName, idPropertyName);
 
         this._db.executeSql(deleteStatement, [instance[idPropertyName]], function (result) {
             callback();
         }, function(error) {
             callback(error);
+        });
+    });
+
+    function getStatementParameters(statement) {
+        var params = [];
+
+        if (statement.parameters) {
+            statement.parameters.forEach(function (param) {
+                params.push(param.value);
+            });
+        }
+
+        return params;
+    }
+
+    this.read = Platform.async(function (query, callback) {
+        /// <summary>
+        /// Read a table
+        /// </summary>
+        /// <param name="query" type="Object">
+        /// A QueryJS object representing the query to be performed while reading the table.
+        /// </param>
+        /// <returns type="Promise">
+        /// A promise that is resolved with the read results when the operation is completed successfully.
+        /// If the operation fails, the promise is rejected
+        /// </returns>
+
+        // Platform.async silently appends a callback argument to the original list of arguments.
+        // Validate the argument length to ensure the callback argument is indeed the callback 
+        // provided by Platform.async.
+        Validate.length(arguments, 2, 'arguments');
+
+        Validate.notNull(query, 'query');
+        Validate.isObject(query, 'query');
+
+        var count,
+            result = [],
+            odataQuery = queryHelper.toOData(query),
+            statements = formatSql(odataQuery, { flavor: 'sqlite' });
+
+        this._db.transaction(function (transaction) {
+            if (statements.length >= 1) {
+                transaction.executeSql(statements[0].sql, getStatementParameters(statements[0]), function (transaction, res) {
+                    for (var j = 0; j < res.rows.length; j++) {
+                        result.push(res.rows.item(j));
+                    }
+                });
+            }
+
+            // Check if there are multiple statements. If yes, the second is for the result count.
+            if (statements.length >= 2) {
+                transaction.executeSql(statements[1].sql, getStatementParameters(statements[1]), function (transaction, res) {
+                    count = res.rows.item(0).count;
+                });
+            }
+        }, function (error) {
+            callback(error);
+        }, function () {
+            if (count !== undefined) {
+                result = {
+                    result: result,
+                    count: count
+                };
+            }
+            callback(null, result);
         });
     });
 };
@@ -239,3 +314,5 @@ MobileServiceSQLiteStore.ColumnType = {
 Platform.addToMobileServicesClientNamespace({ MobileServiceSQLiteStore: MobileServiceSQLiteStore });
 
 exports.MobileServiceSQLiteStore = MobileServiceSQLiteStore;
+
+Platform.addToMobileServicesClientNamespace({ MobileServiceSQLiteStore: MobileServiceSQLiteStore });

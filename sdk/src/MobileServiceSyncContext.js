@@ -141,6 +141,24 @@ function MobileServiceSyncContext(client) {
 
         return _store.del(tableName, instance);
     };
+
+    this.read = function (query) {
+        /// <summary>
+        /// Read a local table
+        /// </summary>
+        /// <param name="query" type="Object">
+        /// A QueryJS object representing the query to be performed while reading the table.
+        /// </param>
+        /// <returns type="Promise">
+        /// A promise that is resolved with the read results when the operation is completed successfully.
+        /// If the operation fails, the promise is rejected
+        /// </returns>
+
+        Validate.notNull(query, 'query');
+        Validate.isObject(query, 'query');
+
+        return _store.read(query);
+    };
 }
 
 exports.MobileServiceSyncContext = MobileServiceSyncContext;
