@@ -826,11 +826,6 @@ $testGroup('SQLiteSerializer tests').tests(
                     deserializedValue = SQLiteSerializer.deserialize(value, columnDefinitions);
                     $assert.areEqual(deserializedValue, { val: '\"2011-11-11T20:13:14.000Z\"' });
                     break;
-                case ColumnType.Integer:
-                case ColumnType.Int:
-                    deserializedValue = SQLiteSerializer.deserialize(value, columnDefinitions);
-                    $assert.areEqual(deserializedValue, { val: 1321042394000 });
-                    break;
                 // Deserializing to any other type should fail
                 default:
                     $assertThrows(deserialize);
