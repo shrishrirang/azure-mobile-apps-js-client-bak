@@ -183,6 +183,8 @@
     <Content Include="MobileServiceSyncTable.js" />
     <Content Include="MobileServiceTable.js" />
     <Content Include="Platforms\cordova\MobileServiceSQLiteStore.js" />
+    <Content Include="Platforms\cordova\SQLiteSerializer.js" />
+    <Content Include="Platforms\cordova\SQLiteTypes.js" />
     <Content Include="Platforms\web\Platform.js" />
     <Content Include="Platforms\winjs\Platform.js" />
     <Content Include="Push\Push.js" />
