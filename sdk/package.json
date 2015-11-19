@@ -2,6 +2,7 @@
   "name": "AzureMobileServices",
   "version": "2.0.0-beta",
   "devDependencies": {
+    "azure-mobile-apps": "git://github.com/azure/azure-mobile-apps-node.git",
     "browserify": "~11.1.0",
     "esprima": "~2.6.0",
     "grunt": "~0.4.5",

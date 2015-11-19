@@ -113,7 +113,7 @@ module.exports = function(grunt) {
     copy: {
       cordovaTest: {
         files: [
-          {src: ['src/Generated/MobileServices.Web.Internals.js'], dest: 'test/cordova/www/js/Generated/MobileServices.Web.Internals.js'},
+          {src: ['src/Generated/MobileServices.Cordova.Internals.js'], dest: 'test/cordova/www/js/Generated/MobileServices.Cordova.Internals.js'},
           {src: ['test/web/css/styles.css'], dest: 'test/cordova/www/css/Generated/styles.css'},
           {src: ['**'], dest: 'test/cordova/www/js/External/qunit/', cwd: 'node_modules/qunitjs/qunit', expand: true}
         ]
@@ -185,6 +185,7 @@ module.exports = function(grunt) {
             src: [
                 './test/web/js/TestFrameworkAdapter.js',
                 './test/web/js/TestClientHelper.js',
+                './test/cordova/www/js/offlineTests.js',
                 '<%= files.testcore %>'
             ],
             dest: './test/cordova/www/js/Generated/Tests.js',
