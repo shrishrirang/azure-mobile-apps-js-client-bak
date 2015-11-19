@@ -3,6 +3,8 @@
   "description": "Javascript client for Azure Mobile Apps. For more details visit http://azure.microsoft.com/en-us/develop/mobile",
   "version": "2.0.0-beta5",
   "devDependencies": {
+    "azure-mobile-apps": "~2.0.2",
+    "azure-odata-sql": "Azure/azure-odata-sql-js#9b53d85dacc249ac4b77b622b534ae4309b91568",
     "browserify": "~11.1.0",
     "browserify-derequire": "~0.9.4",
     "esprima": "~2.6.0",

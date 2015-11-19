@@ -34,7 +34,7 @@ var app = {
     // function, we must explicitly call 'app.receivedEvent(...);'
     onDeviceReady: function () {
         // Run the UTs
-        $run();
+        $run(true /* excludeFunctionalTests */);
     }
 };
 
