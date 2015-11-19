@@ -161,5 +161,4 @@ function MobileServiceSyncContext(client) {
     };
 }
 
-
 exports.MobileServiceSyncContext = MobileServiceSyncContext;
