@@ -305,6 +305,15 @@ var MobileServiceSQLiteStore = function (dbName) {
         if (query) {
             var self = this;
 
+            // The query can select specific columns. However, we need to know values of all the columns
+            // to avoid deleting wrong records. 
+            // Explicitly remove selection from the query, if any.
+            var components = query.getComponents();
+            if (components.selections && components.selections.length) {
+                components.selections = [];
+                query.setComponents(components);
+            }
+
             // Run the query and get the list of records to be deleted
             this.read(query).then(function (result) {
                 try {
@@ -313,11 +322,11 @@ var MobileServiceSQLiteStore = function (dbName) {
                         Validate.isArray(result);
                     }
 
-                    ids = result.map(function (record) {
-                        Validate.isObject(record);
-                        return record[idPropertyName];
-                    });
-                    self._del(query.getComponents().table, ids, callback);
+                    var tableName = query.getComponents().table;
+                    Validate.isString(tableName);
+                    Validate.notNullOrEmpty(tableName);
+
+                    self._deleteRecords(tableName, result, callback);
                 } catch (error) {
                     callback(error);
                 }
@@ -325,17 +334,47 @@ var MobileServiceSQLiteStore = function (dbName) {
                 callback(error);
             });
         } else {
-            this._del(tableName, ids, callback);
+            this._deleteIds(tableName, ids, callback);
         }
     });
 
-    this._del = function (tableName, ids, callback) {
+    // Delete the specified records from the table.
+    // If multiple rows match any of the specified records, all will be deleted.
+    this._deleteRecords = function(tableName, records, callback) {
 
-        // Perform basic validation. For the rest just rely on SQL.
-        Validate.isString(tableName);
-        Validate.notNullOrEmpty(tableName);
+        // SQL DELETE statements and parameters corresponding to each record we want to delete from the table.
+        var deleteStatements = [],
+            deleteParams = [];
 
-        // SQL DELETE statements corresponding to each record we want to delete from the table.
+        for (i = 0; i < records.length; i++) {
+
+            var row = records[i];
+
+            var whereClauses = [],
+                whereParams = [];
+            for (var propertyName in row) {
+                whereClauses.push(_.format('{0} = ?', propertyName));
+                whereParams.push(row[propertyName]);
+            }
+
+            deleteStatements.push(_.format('DELETE FROM {0} WHERE {1}', tableName, whereClauses.join(' AND ')));
+            deleteParams.push(whereParams);
+        }
+
+        this._db.transaction(function (transaction) {
+            for (var i = 0; i < deleteStatements.length; i++) {
+                transaction.executeSql(deleteStatements[i], deleteParams[i]);
+            }
+        }, function (error) {
+            callback(error);
+        }, function () {
+            callback();
+        });
+    }
+
+    // Delete records from the table that match the specified IDs.
+    this._deleteIds = function (tableName, ids, callback) {
+
         var deleteExpressions = [],
             deleteParams = [];
         for (var i = 0; i < ids.length; i++) {
@@ -348,12 +387,10 @@ var MobileServiceSQLiteStore = function (dbName) {
 
         var deleteStatement = _.format("DELETE FROM {0} WHERE {1} in ({2})", tableName, idPropertyName, deleteExpressions.join());
 
-        this._db.transaction(function (transaction) {
-            transaction.executeSql(deleteStatement, deleteParams);
+        this._db.executeSql(deleteStatement, deleteParams, function () {
+            callback();
         }, function (error) {
             callback(error);
-        }, function () {
-            callback();
         });
     };
 

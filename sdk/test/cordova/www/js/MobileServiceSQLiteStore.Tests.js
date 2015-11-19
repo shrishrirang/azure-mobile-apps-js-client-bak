@@ -1838,7 +1838,7 @@ $testGroup('SQLiteStore tests')
         });
     }),
 
-    $test('delete: query using where')
+    $test('delete: query result contains id column')
     .checkAsync(function () {
         var store = createStore(),
             row1 = { id: 'someid1', prop1: 'abc', prop2: 200 },
@@ -1863,6 +1863,37 @@ $testGroup('SQLiteStore tests')
             return store.read(new Query(testTableName));
         }).then(function (result) {
             $assert.areEqual(result, [row3]);
+        }, function (error) {
+            $assert.fail(error);
+        });
+    }),
+
+    $test('delete: query result does not contain id column')
+    .checkAsync(function () {
+        var store = createStore(),
+            row1 = { id: 'someid1', prop1: 'abc', prop2: 200 },
+            row2 = { id: 'someid2', prop1: 'ghi', prop2: 100 },
+            row3 = { id: 'someid3', prop1: 'ghi', prop2: 200 },
+            row4 = { id: 'someid4', prop1: 'ghi', prop2: 100 };
+
+        return store.defineTable({
+            name: testTableName,
+            columnDefinitions: {
+                id: WindowsAzure.MobileServiceSQLiteStore.ColumnType.String,
+                prop1: WindowsAzure.MobileServiceSQLiteStore.ColumnType.String,
+                prop2: WindowsAzure.MobileServiceSQLiteStore.ColumnType.Real
+            }
+        }).then(function () {
+            return store.upsert(testTableName, [row1, row2, row3, row4]);
+        }).then(function () {
+            var query = new Query(testTableName);
+            return store.del(query.where(function () {
+                return this.prop1 === 'someid4';
+            }).select('prop1'));
+        }).then(function () {
+            return store.read(new Query(testTableName));
+        }).then(function (result) {
+            $assert.areEqual(result, [row1, row2, row3]);
         }, function (error) {
             $assert.fail(error);
         });
