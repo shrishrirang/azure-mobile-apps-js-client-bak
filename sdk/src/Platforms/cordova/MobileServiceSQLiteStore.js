@@ -370,7 +370,7 @@ var MobileServiceSQLiteStore = function (dbName) {
         }, function () {
             callback();
         });
-    }
+    };
 
     // Delete records from the table that match the specified IDs.
     this._deleteIds = function (tableName, ids, callback) {

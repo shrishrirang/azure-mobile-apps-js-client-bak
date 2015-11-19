@@ -142,7 +142,12 @@ module.exports = function(grunt) {
                 '<%= files.cordova %>',
                 './test/web/js/TestFrameworkAdapter.js',
                 './test/web/js/TestClientHelper.js',
-                './test/cordova/www/js/MobileServiceSQLiteStore.Tests.js',
+                './test/cordova/www/js/MobileServiceSQLiteStore.DefineTable.Tests.js',
+                './test/cordova/www/js/MobileServiceSQLiteStore.Upsert.Tests.js',
+                './test/cordova/www/js/MobileServiceSQLiteStore.Lookup.Tests.js',
+                './test/cordova/www/js/MobileServiceSQLiteStore.Read.Tests.js',
+                './test/cordova/www/js/MobileServiceSQLiteStore.Delete.Tests.js',
+                './test/cordova/www/js/MobileServiceSQLiteStore.Misc.Tests.js',
                 './test/cordova/www/js/SqliteSerializer.Tests.js',
                 '<%= files.testcore %>'
             ],
