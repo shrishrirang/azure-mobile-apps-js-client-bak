@@ -9,7 +9,7 @@
 var Validate = require('./Utilities/Validate');
 var _ = require('./Utilities/Extensions');
 var Platform = require('Platforms/Platform');
-var Query = require('query.js/lib/Query').Query;
+var Query = require('query.js').Query;
 
 function MobileServiceSyncTable(tableName, client) {
     /// <summary>
