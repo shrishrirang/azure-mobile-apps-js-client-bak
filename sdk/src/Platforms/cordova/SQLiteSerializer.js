@@ -161,13 +161,11 @@ function serializeMember(value, columnType) {
                 error = new Error(_.format(Platform.getResourceString("SQLiteSerializer_UnsupportedColumnType"), columnType));
                 break;
         }
-
+    } finally {
+        // For anything that went wrong, return a meaningful error if we haven't done so already.
         if (!error && serializedValue === undefined) {
             error = new Error(Platform.getResourceString('SQLiteSerializer_UnsupportedTypeConversion'), value, typeof value, columnType);
         }
-    } catch (ex) {
-        // For any underlying error, return a meaningful error
-        error = new Error(Platform.getResourceString('SQLiteSerializer_UnsupportedTypeConversion'), value, typeof value, columnType);
     }
 
     if (!_.isNull(error)) {
@@ -249,10 +247,6 @@ function convertToInteger(value) {
 
     if (_.isBool(value)) {
         return value ? 1 : 0;
-    }
-
-    if (_.isDate(value)) {
-        return value.getTime();
     }
 
     throw new Error(_.format(Platform.getResourceString('SQLiteSerializer_UnsupportedTypeConversion'), value, typeof value, 'integer'));
