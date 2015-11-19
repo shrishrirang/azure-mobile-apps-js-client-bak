@@ -8,39 +8,6 @@ function definePlatformMappings(mappings) {
     };
 }
 
-var sdkExports = {
-    web: [ 
-        ['./src/Utilities/Extensions.js', {expose: 'Extensions'}],
-        ['./src/Utilities/Validate.js', {expose: 'Validate'}],
-        // Expose Platform.js as Platforms/Platform to be consistent with how it is referenced within the SDK bundle
-        ['./src/Platforms/web/Platform.js', {expose: 'Platforms/Platform'}] 
-    ],
-    winjs: [ 
-        ['./src/Utilities/Extensions.js', {expose: 'Extensions'}],
-        ['./src/Utilities/Validate.js', {expose: 'Validate'}],
-        // Expose Platform.js as Platforms/Platform to be consistent with how it is referenced within the SDK bundle
-        ['./src/Platforms/winjs/Platform.js', {expose: 'Platforms/Platform'}] 
-    ]
-};
-
-var sdkImports = [
-    'Extensions',
-    'Validate',
-    'Platforms/Platform'
-];
-
-var sdkBrowserifyOptions = {
-    web: {
-        preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/src/Platforms/web', expose: 'Platforms' } ] )
-    },
-    cordova: {
-        preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/src/Platforms/web', expose: 'Platforms' } ] )
-    },
-    winjs: {
-        preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/src/Platforms/winjs', expose: 'Platforms' } ] )
-    }
-};
-
 /// <vs BeforeBuild='default' />
 module.exports = function(grunt) {
   // Project configuration.
@@ -105,6 +72,10 @@ module.exports = function(grunt) {
         src: 'src/Generated/MobileServices.Web.js',
         dest: 'src/Generated/MobileServices.Web.min.js'
       },
+      cordova: {
+        src: 'src/Generated/MobileServices.Cordova.js',
+        dest: 'src/Generated/MobileServices.Cordova.min.js'
+      },
       winjs: {
         src: 'src/Generated/MobileServices.js',
         dest: 'src/Generated/MobileServices.min.js'
@@ -113,7 +84,7 @@ module.exports = function(grunt) {
     copy: {
       cordovaTest: {
         files: [
-          {src: ['src/Generated/MobileServices.Cordova.Internals.js'], dest: 'test/cordova/www/js/Generated/MobileServices.Cordova.Internals.js'},
+          {src: ['src/Generated/MobileServices.Cordova.js'], dest: 'test/cordova/www/js/Generated/MobileServices.Cordova.js'},
           {src: ['test/web/css/styles.css'], dest: 'test/cordova/www/css/Generated/styles.css'},
           {src: ['**'], dest: 'test/cordova/www/js/External/qunit/', cwd: 'node_modules/qunitjs/qunit', expand: true}
         ]
@@ -126,40 +97,22 @@ module.exports = function(grunt) {
         web: {
             src: '<%= files.web %>',
             dest: './src/Generated/MobileServices.Web.js',
-            options: sdkBrowserifyOptions.web
-        },
-        webInternals: {
-            src: '<%= files.web %>',
-            dest: './src/Generated/MobileServices.Web.Internals.js',
             options: {
-                preBundleCB: sdkBrowserifyOptions.web.preBundleCB,
-                require: sdkExports.web
+                preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/src/Platforms/web', expose: 'Platforms' } ] )
             }
         },
         cordova: {
             src: '<%= files.cordova %>',
             dest: './src/Generated/MobileServices.Cordova.js',
-            options: sdkBrowserifyOptions.cordova
-        },
-        cordovaInternals: {
-            src: '<%= files.cordova %>',
-            dest: './src/Generated/MobileServices.Cordova.Internals.js',
             options: {
-                preBundleCB: sdkBrowserifyOptions.cordova.preBundleCB,
-                require: sdkExports.web
+                preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/src/Platforms/web', expose: 'Platforms' } ] )
             }
         },
         winjs: {
             src: '<%= files.winjs %>',
             dest: './src/Generated/MobileServices.js',
-            options: sdkBrowserifyOptions.winjs
-        },
-        winjsInternals: {
-            src: '<%= files.winjs %>',
-            dest: './src/Generated/MobileServices.Internals.js',
             options: {
-                preBundleCB: sdkBrowserifyOptions.winjs.preBundleCB,
-                require: sdkExports.winjs,
+                preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/src/Platforms/winjs', expose: 'Platforms' } ] )
             }
         },
         intellisense: {
@@ -168,46 +121,52 @@ module.exports = function(grunt) {
                 '<%= files.intellisense %>'
             ],
             dest: './src/Generated/MobileServices.DevIntellisense.js',
-            options: sdkBrowserifyOptions.winjs
+            options: {
+                preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/src/Platforms/winjs', expose: 'Platforms' } ] )
+            }
         },
         webTest: {
             src: [
+                '<%= files.web %>',
                 './test/web/js/TestFrameworkAdapter.js',
                 './test/web/js/TestClientHelper.js',
                 '<%= files.testcore %>'
             ],
             dest: './test/web/Generated/Tests.js',
             options: {
-                external: sdkImports,
+                preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/src/Platforms/web', expose: 'Platforms' } ] )
             }
         },
         cordovaTest: {
             src: [
+                '<%= files.cordova %>',
                 './test/web/js/TestFrameworkAdapter.js',
                 './test/web/js/TestClientHelper.js',
-                './test/cordova/www/js/offlineTests.js',
+                './test/cordova/www/js/MobileServiceSQLiteStore.Tests.js',
+                './test/cordova/www/js/SqliteSerializer.Tests.js',
                 '<%= files.testcore %>'
             ],
             dest: './test/cordova/www/js/Generated/Tests.js',
             options: {
-                external: sdkImports,
+                preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/src/Platforms/web', expose: 'Platforms' } ] )
             }
         },
         winjsTest: {
             src: [
+                '<%= files.winjs %>',
                 'test/winJS/tests/TestFramework.js',
                 'test/winJS/tests/TestInterface.js',
                 '<%= files.testcore %>'
             ],
             dest: './test/winJS/Generated/Tests.js',
             options: {
-                external: sdkImports,
+                preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/src/Platforms/winjs', expose: 'Platforms' } ] )
             }
         }
     },
     watch: {
         files: '<%= files.all %>',
-        tasks: ['concat', 'uglify', 'copy', 'browserify', 'jshint']
+        tasks: ['concat', 'browserify', 'uglify', 'copy']
     }
   });
 
