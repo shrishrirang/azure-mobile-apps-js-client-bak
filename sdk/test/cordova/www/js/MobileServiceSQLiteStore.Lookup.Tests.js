@@ -1,4 +1,4 @@
-// ----------------------------------------------------------------------------
+﻿// ----------------------------------------------------------------------------
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
@@ -25,7 +25,7 @@ $testGroup('SQLiteStore lookup tests')
         });
     })).tests(
 
-    $test('lookup: when table is not defined')
+    $test('table not defined')
     .checkAsync(function () {
         return createStore().lookup(testTableName, 'one').then(function (result) {
             $assert.fail('failure expected');
@@ -33,7 +33,7 @@ $testGroup('SQLiteStore lookup tests')
         });
     }),
 
-    $test('lookup: Id of type string')
+    $test('Id of type string')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 'someid', price: 51.5 };
@@ -55,7 +55,7 @@ $testGroup('SQLiteStore lookup tests')
         });
     }),
 
-    $test('lookup: Id of type integer')
+    $test('Id of type integer')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 51, price: 51.5 };
@@ -77,7 +77,7 @@ $testGroup('SQLiteStore lookup tests')
         });
     }),
 
-    $test('lookup: Id of type real')
+    $test('Id of type real')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 21.11, price: 51.5 };
@@ -99,7 +99,7 @@ $testGroup('SQLiteStore lookup tests')
         });
     }),
 
-    $test('lookup: verify id case insensitivity')
+    $test('verify id case insensitivity')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 'ABC', description: 'something' };
@@ -121,7 +121,7 @@ $testGroup('SQLiteStore lookup tests')
         });
     }),
 
-    $test('lookup: read columns that are missing in table definition')
+    $test('read columns that are missing in table definition')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 'ABC', column1: 1, column2: 2 },
@@ -149,7 +149,7 @@ $testGroup('SQLiteStore lookup tests')
         });
     }),
 
-    $test('lookup: record not found')
+    $test('record not found')
     .checkAsync(function () {
         var store = createStore();
 
@@ -168,7 +168,7 @@ $testGroup('SQLiteStore lookup tests')
         });
     }),
 
-    $test('lookup: invoked with extra parameters')
+    $test('invoked with extra parameters')
     .description('Check that promise returned by lookup is either resolved or rejected even when invoked with extra parameters')
     .checkAsync(function () {
         var store = createStore();
@@ -187,7 +187,7 @@ $testGroup('SQLiteStore lookup tests')
         });
     }),
 
-    $test('lookup: null id')
+    $test('null id')
     .checkAsync(function () {
         var store = createStore();
 
@@ -205,7 +205,7 @@ $testGroup('SQLiteStore lookup tests')
         });
     }),
 
-    $test('lookup: id defined as undefined')
+    $test('id defined as undefined')
     .checkAsync(function () {
         var store = createStore();
 
@@ -223,7 +223,7 @@ $testGroup('SQLiteStore lookup tests')
         });
     }),
 
-    $test('lookup: id property not defined')
+    $test('id property not defined')
     .checkAsync(function () {
         var store = createStore();
 
@@ -241,7 +241,7 @@ $testGroup('SQLiteStore lookup tests')
         });
     }),
 
-    $test('lookup: invalid id')
+    $test('invalid id')
     .checkAsync(function () {
         var store = createStore();
 
@@ -259,7 +259,7 @@ $testGroup('SQLiteStore lookup tests')
         });
     }),
 
-    $test('lookup: null table name')
+    $test('null table name')
     .checkAsync(function () {
         var store = createStore();
 
@@ -277,7 +277,7 @@ $testGroup('SQLiteStore lookup tests')
         });
     }),
 
-    $test('lookup: undefined table name')
+    $test('undefined table name')
     .checkAsync(function () {
         var store = createStore();
 
@@ -295,7 +295,7 @@ $testGroup('SQLiteStore lookup tests')
         });
     }),
 
-    $test('lookup: invalid table name')
+    $test('invalid table name')
     .checkAsync(function () {
         var store = createStore();
 
@@ -313,7 +313,7 @@ $testGroup('SQLiteStore lookup tests')
         });
     }),
 
-    $test('lookup: no parameter')
+    $test('invoked without any parameter')
     .checkAsync(function () {
         var store = createStore();
 
@@ -331,7 +331,7 @@ $testGroup('SQLiteStore lookup tests')
         });
     }),
 
-    $test('lookup: verify deserialization error is handled properly')
+    $test('verify deserialization error is handled properly')
     .checkAsync(function() {
         var store = createStore();
 

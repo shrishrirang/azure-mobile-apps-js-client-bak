@@ -1,4 +1,4 @@
-// ----------------------------------------------------------------------------
+﻿// ----------------------------------------------------------------------------
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
@@ -25,7 +25,7 @@ $testGroup('Miscellaneous SQLiteStore tests')
         });
     })).tests(
 
-    $test('Roundtripping: non-null property values')
+    $test('Roundtrip non-null property values')
     .checkAsync(function () {
         var store = createStore(),
             row = {
@@ -80,7 +80,7 @@ $testGroup('Miscellaneous SQLiteStore tests')
         });
     }),
 
-    $test('Roundtripping: null property values')
+    $test('Roundtrip null property values')
     .checkAsync(function () {
         var store = createStore(),
             row = {
@@ -122,6 +122,36 @@ $testGroup('Miscellaneous SQLiteStore tests')
             $assert.areEqual(result, row);
         }, function (error) {
             $assert.fail(error);
+        });
+    }),
+
+    $test('Read table with columns missing from definition')
+    .checkAsync(function () {
+        var store = createStore(),
+            row = { id: 101, flag: 51, object: { 'a': 21 } },
+            tableDefinition = {
+                name: testTableName,
+                columnDefinitions: {
+                    id: WindowsAzure.MobileServiceSQLiteStore.ColumnType.Integer,
+                    flag: WindowsAzure.MobileServiceSQLiteStore.ColumnType.Integer,
+                    object: WindowsAzure.MobileServiceSQLiteStore.ColumnType.Object
+                }
+            };
+
+        return store.defineTable(tableDefinition).then(function () {
+            return store.upsert(testTableName, row);
+        }).then(function () {
+            // Now change column definition to only contain id column
+            delete tableDefinition.columnDefinitions.flag;
+            return store.defineTable(tableDefinition);
+        }).then(function () {
+            // Now read data inserted before changing column definition
+            return store.lookup(testTableName, row.id);
+        }).then(function (result) {
+            // Check that the original data is read irrespective of whether the properties are defined by defineColumn
+            $assert.areEqual(result, row);
+        }, function (err) {
+            $assert.fail(err);
         });
     })
 );

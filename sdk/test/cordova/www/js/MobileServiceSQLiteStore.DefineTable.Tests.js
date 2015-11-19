@@ -1,4 +1,4 @@
-// ----------------------------------------------------------------------------
+﻿// ----------------------------------------------------------------------------
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
@@ -25,7 +25,7 @@ $testGroup('SQLiteStore defineTable tests')
         });
     })).tests(
 
-    $test('defineTable: basic')
+    $test('basic table definition')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 101, price: 51.5 };
@@ -47,7 +47,7 @@ $testGroup('SQLiteStore defineTable tests')
         });
     }),
 
-    $test('defineTable: single column')
+    $test('table definition containing a single column')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 101 };
@@ -68,7 +68,7 @@ $testGroup('SQLiteStore defineTable tests')
         });
     }),
 
-    $test('defineTable: add new columns')
+    $test('add new columns to existing table')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 101, price: 51.5 },
@@ -96,7 +96,7 @@ $testGroup('SQLiteStore defineTable tests')
         });
     }),
 
-    $test('defineTable: change type of existing column')
+    $test('changes type of existing columns')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 101, flag: 51 },
@@ -123,7 +123,7 @@ $testGroup('SQLiteStore defineTable tests')
         });
     }),
 
-    $test('defineTable: table definition without table name')
+    $test('table definition without table name')
     .checkAsync(function () {
         var tableDefinition = {
             columnDefinitions: {
@@ -138,7 +138,7 @@ $testGroup('SQLiteStore defineTable tests')
         });
     }),
 
-    $test('defineTable: table definition with an invalid table name')
+    $test('table definition with an invalid table name')
     .checkAsync(function () {
         var tableDefinition = {
             tableName: '*',
@@ -154,7 +154,7 @@ $testGroup('SQLiteStore defineTable tests')
         });
     }),
 
-    $test('defineTable: table definition without column definitions')
+    $test('table definition without column definitions')
     .checkAsync(function () {
         var tableDefinition = {
             name: testTableName
@@ -166,7 +166,7 @@ $testGroup('SQLiteStore defineTable tests')
         });
     }),
 
-    $test('defineTable: table definition with an invalid column name')
+    $test('table definition with an invalid column name')
     .checkAsync(function () {
         var tableDefinition = {
             tableName: '*',
@@ -182,7 +182,7 @@ $testGroup('SQLiteStore defineTable tests')
         });
     }),
 
-    $test('defineTable: primary key int')
+    $test('table definition with primary key of type int')
     .checkAsync(function () {
         var store = createStore(),
             row1 = { id: 1, str: 'str1'},
@@ -206,7 +206,7 @@ $testGroup('SQLiteStore defineTable tests')
         });
     }),
 
-    $test('defineTable: primary key real')
+    $test('table definition with primary key of type real')
     .checkAsync(function () {
         var store = createStore(),
             row1 = { id: 1.1, str: 'str1' },
@@ -230,7 +230,7 @@ $testGroup('SQLiteStore defineTable tests')
         });
     }),
 
-    $test('defineTable: primary key string')
+    $test('table definition with primary key of type string')
     .checkAsync(function () {
         var store = createStore(),
             row1 = { id: '1', str: 'str1'},
@@ -254,7 +254,7 @@ $testGroup('SQLiteStore defineTable tests')
         });
     }),
 
-    $test('defineTable: column definition invalid')
+    $test('invalid column definition')
     .checkAsync(function () {
         var tableDefinition = {
             columnDefinitions: [
@@ -269,7 +269,7 @@ $testGroup('SQLiteStore defineTable tests')
         });
     }),
 
-    $test('defineTable: id column missing from column definitions')
+    $test('id column missing from column definitions')
     .checkAsync(function () {
         var tableDefinition = {
             columnDefinitions: {
@@ -283,7 +283,7 @@ $testGroup('SQLiteStore defineTable tests')
         });
     }),
 
-    $test('defineTable: column type not supported')
+    $test('unsupported column type in table definition')
     .checkAsync(function () {
         var tableDefinition = {
             columnDefinitions: {
@@ -298,7 +298,7 @@ $testGroup('SQLiteStore defineTable tests')
         });
     }),
 
-    $test('defineTable: column type undefined')
+    $test('undefined column type in table definition')
     .checkAsync(function () {
         var tableDefinition = {
             columnDefinitions: {
@@ -313,7 +313,7 @@ $testGroup('SQLiteStore defineTable tests')
         });
     }),
 
-    $test('defineTable: column type null')
+    $test('null column type in table definition')
     .checkAsync(function () {
         var tableDefinition = {
             columnDefinitions: {
@@ -328,7 +328,7 @@ $testGroup('SQLiteStore defineTable tests')
         });
     }),
 
-    $test('defineTable: invoked with extra parameters')
+    $test('invoked with extra parameters')
     .checkAsync(function () {
         return createStore().defineTable({
             name: testTableName,
@@ -343,41 +343,11 @@ $testGroup('SQLiteStore defineTable tests')
         });
     }),
 
-    $test('defineTable: invoked with no parameter')
+    $test('invoked with no parameter')
     .checkAsync(function () {
         return createStore().defineTable().then(function () {
             $assert.fail('failure expected');
         }, function(error) {
-        });
-    }),
-
-    $test('defineTable: reading undefined columns should work')
-    .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 101, flag: 51, object: { 'a': 21 } },
-            tableDefinition = {
-                name: testTableName,
-                columnDefinitions: {
-                    id: WindowsAzure.MobileServiceSQLiteStore.ColumnType.Integer,
-                    flag: WindowsAzure.MobileServiceSQLiteStore.ColumnType.Integer,
-                    object: WindowsAzure.MobileServiceSQLiteStore.ColumnType.Object
-                }
-            };
-
-        return store.defineTable(tableDefinition).then(function() {
-            return store.upsert(testTableName, row);
-        }).then(function () {
-            // Now change column definition to only contain id column
-            delete tableDefinition.columnDefinitions.flag;
-            return store.defineTable(tableDefinition);
-        }).then(function () {
-            // Now read data inserted before changing column definition
-            return store.lookup(testTableName, row.id);
-        }).then(function (result) {
-            // Check that the original data is read irrespective of whether the properties are defined by defineColumn
-            $assert.areEqual(result, row);
-        }, function (err) {
-            $assert.fail(err);
         });
     })
 );

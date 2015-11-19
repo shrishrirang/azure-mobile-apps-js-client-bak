@@ -1,4 +1,4 @@
-// ----------------------------------------------------------------------------
+﻿// ----------------------------------------------------------------------------
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
@@ -25,7 +25,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     })).tests(
 
-    $test('upsert: when table is not defined')
+    $test('when table is not defined')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 101, description: 'some description' };
@@ -36,7 +36,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: insert new record and then update it')
+    $test('insert new record and then update it')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 'some id', price: 100 };
@@ -66,7 +66,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: array of records, all having the same id')
+    $test('array of records, all having the same id')
     .checkAsync(function () {
         var store = createStore(),
             rows = [{ id: 't1', description: 'description1', price: 5 }, { id: 't1', description: 'description2' }];
@@ -89,7 +89,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: adding record with columns that are not defined should fail')
+    $test('adding record with columns that are not defined should fail')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 101, flag: 51, undefinedColumn: 1 },
@@ -109,7 +109,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: update select properties of an existing record')
+    $test('update select properties of an existing record')
     .checkAsync(function () {
         var store = createStore();
 
@@ -138,7 +138,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: verify id case sensitivity')
+    $test('verify id case sensitivity')
     .checkAsync(function () {
         var store = createStore(),
             row1 = { id: 'ABC', description: 'old' },
@@ -165,7 +165,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: insert array of records with null values')
+    $test('insert array of records with null values')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 'ABC', description: 'something' };
@@ -187,7 +187,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: empty table name')
+    $test('empty table name')
     .checkAsync(function () {
         var store = createStore();
 
@@ -205,7 +205,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: null table name')
+    $test('null table name')
     .checkAsync(function () {
         var store = createStore();
 
@@ -223,7 +223,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: undefined table name')
+    $test('undefined table name')
     .checkAsync(function () {
         var store = createStore();
 
@@ -241,7 +241,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: invalid table name')
+    $test('invalid table name')
     .checkAsync(function () {
         var store = createStore();
 
@@ -259,7 +259,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: empty array')
+    $test('empty array')
     .checkAsync(function () {
         var store = createStore();
 
@@ -277,7 +277,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: record is null')
+    $test('record is null')
     .checkAsync(function () {
         var store = createStore();
 
@@ -298,7 +298,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: record is undefined')
+    $test('record is undefined')
     .checkAsync(function () {
         var store = createStore();
 
@@ -319,7 +319,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: adding record with columns that are not defined should fail')
+    $test('adding record with columns that are not defined should fail')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 101, flag: 51, undefinedColumn: 1 },
@@ -339,7 +339,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: adding record with incorrect column type should fail')
+    $test('adding record with incorrect column type should fail')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 101, flag: [1, 2] },
@@ -359,7 +359,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: record is not an object')
+    $test('record is not an object')
     .checkAsync(function () {
         var store = createStore();
 
@@ -378,7 +378,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: record without id property')
+    $test('record without id property')
     .checkAsync(function () {
         var store = createStore();
 
@@ -397,7 +397,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: record id is null')
+    $test('record id is null')
     .description('Check that promise returned by upsert is either resolved or rejected even when id is null')
     .checkAsync(function () {
         var store = createStore();
@@ -417,7 +417,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: record id is defined as undefined')
+    $test('record id is defined as undefined')
     .description('Check that promise returned by upsert is either resolved or rejected even when id is undefined')
     .checkAsync(function () {
         var store = createStore();
@@ -437,7 +437,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: record does not have an id')
+    $test('record does not have an id')
     .description('Check that promise returned by upsert is either resolved or rejected even when id is missing')
     .checkAsync(function () {
         var store = createStore();
@@ -457,7 +457,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: invoked with extra parameters')
+    $test('invoked with extra parameters')
     .description('Check that promise returned by upsert is either resolved or rejected even when invoked with extra parameters')
     .checkAsync(function () {
         var store = createStore();
@@ -477,7 +477,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
 
-    $test('upsert: no parameter')
+    $test('no parameter')
     .checkAsync(function () {
         var store = createStore();
 
@@ -495,7 +495,7 @@ $testGroup('SQLiteStore upsert tests')
         });
     }),
     
-    $test('upsert: verify serialization error is handled properly')
+    $test('verify serialization error is handled properly')
     .checkAsync(function () {
         var store = createStore();
 
