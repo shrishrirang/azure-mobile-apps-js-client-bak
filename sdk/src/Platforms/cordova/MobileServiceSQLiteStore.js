@@ -5,7 +5,7 @@
 var Platform = require('Platforms/Platform');
 var Validate = require('../../Utilities/Validate');
 var _ = require('../../Utilities/Extensions');
-var Query = require('azure-mobile-apps/src/query');
+var queryHelper = require('azure-mobile-apps/src/query');
 var formatSql = require('azure-mobile-apps/src/data/sql/query/format');
 
 var idPropertyName = "id";
@@ -232,7 +232,7 @@ var MobileServiceSQLiteStore = function (dbName) {
 
         var count,
             result = [],
-            odataQuery = Query.toOData(query),
+            odataQuery = queryHelper.toOData(query),
             statements = formatSql(odataQuery, { flavor: 'sqlite' });
 
         this._db.transaction(function (transaction) {
