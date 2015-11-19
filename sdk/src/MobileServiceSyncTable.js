@@ -7,6 +7,7 @@
 /// <reference path="Generated\MobileServices.DevIntellisense.js" />
 
 var Validate = require('./Utilities/Validate');
+var _ = require('./Utilities/Extensions');
 var Platform = require('Platforms/Platform');
 var Query = require('query.js').Query;
 
@@ -123,7 +124,9 @@ function MobileServiceSyncTable(tableName, client) {
         /// If the operation fails, the promise is rejected
         /// </returns>
 
-        if (query === undefined) {
+        Validate.isObject(query, 'query');
+
+        if (_.isNull(query)) {
             query = new Query(tableName);
         }
 

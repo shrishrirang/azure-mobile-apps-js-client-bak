@@ -36,9 +36,9 @@ var MobileServiceSQLiteStore = function (dbName) {
         /// If the operation fails, the promise is rejected
         /// </returns>
 
-        // Platform.async silently appends a callback argument to the original list of arguments.
-        // Validate the argument length to ensure the callback argument is indeed the callback 
-        // provided by Platform.async.
+        // Ensure 'defineTable' has been invoked with exactly 1 argument.
+        // As Platform.async silently appends a callback argument to the original list of arguments,
+        // we expect the arugment length to be 2.
         Validate.length(arguments, 2, 'arguments');
 
         Validate.notNull(callback, 'callback');
@@ -100,9 +100,9 @@ var MobileServiceSQLiteStore = function (dbName) {
         /// If the operation fails, the promise is rejected
         /// </returns>
 
-        // Platform.async silently appends a callback argument to the original list of arguments.
-        // Validate the argument length to ensure the callback argument is indeed the callback 
-        // provided by Platform.async.
+        // Ensure 'upsert' has been invoked with exactly 2 arguments.
+        // As Platform.async silently appends a callback argument to the original list of arguments,
+        // we expect the arugment length to be 3.
         Validate.length(arguments, 3, 'arguments');
 
         Validate.isString(tableName, 'tableName');
@@ -146,9 +146,9 @@ var MobileServiceSQLiteStore = function (dbName) {
         /// If the operation fails, the promise is rejected
         /// </returns>
 
-        // Platform.async silently appends a callback argument to the original list of arguments.
-        // Validate the argument length to ensure the callback argument is indeed the callback 
-        // provided by Platform.async.
+        // Ensure 'lookup' has been invoked with exactly 2 arguments.
+        // As Platform.async silently appends a callback argument to the original list of arguments,
+        // we expect the arugment length to be 3.
         Validate.length(arguments, 3, 'arguments');
 
         Validate.isString(tableName, 'tableName');
@@ -181,9 +181,9 @@ var MobileServiceSQLiteStore = function (dbName) {
         /// If the operation fails, the promise is rejected
         /// </returns>
 
-        // Platform.async silently appends a callback argument to the original list of arguments.
-        // Validate the argument length to ensure the callback argument is indeed the callback 
-        // provided by Platform.async.
+        // Ensure 'del' has been invoked with exactly 2 arguments.
+        // As Platform.async silently appends a callback argument to the original list of arguments,
+        // we expect the arugment length to be 3.
         Validate.length(arguments, 3, 'arguments');
 
         Validate.isString(tableName, 'tableName');
@@ -222,9 +222,9 @@ var MobileServiceSQLiteStore = function (dbName) {
         /// If the operation fails, the promise is rejected
         /// </returns>
 
-        // Platform.async silently appends a callback argument to the original list of arguments.
-        // Validate the argument length to ensure the callback argument is indeed the callback 
-        // provided by Platform.async.
+        // Ensure 'read' has been invoked with exactly 1 argument.
+        // As Platform.async silently appends a callback argument to the original list of arguments,
+        // we expect the arugment length to be 2.
         Validate.length(arguments, 2, 'arguments');
 
         Validate.notNull(query, 'query');
@@ -236,16 +236,19 @@ var MobileServiceSQLiteStore = function (dbName) {
             statements = formatSql(odataQuery, { flavor: 'sqlite' });
 
         this._db.transaction(function (transaction) {
-            if (statements.length >= 1) {
-                transaction.executeSql(statements[0].sql, getStatementParameters(statements[0]), function (transaction, res) {
-                    for (var j = 0; j < res.rows.length; j++) {
-                        result.push(res.rows.item(j));
-                    }
-                });
+
+            if (statements.length < 1 || statements.length > 2) {
+                throw Platform.getResourceString("MobileServiceSQLiteStore_UnexptedNumberOfStatements");
             }
 
+            transaction.executeSql(statements[0].sql, getStatementParameters(statements[0]), function (transaction, res) {
+                for (var j = 0; j < res.rows.length; j++) {
+                    result.push(res.rows.item(j));
+                }
+            });
+
             // Check if there are multiple statements. If yes, the second is for the result count.
-            if (statements.length >= 2) {
+            if (statements.length === 2) {
                 transaction.executeSql(statements[1].sql, getStatementParameters(statements[1]), function (transaction, res) {
                     count = res.rows.item(0).count;
                 });
@@ -314,5 +317,3 @@ MobileServiceSQLiteStore.ColumnType = {
 Platform.addToMobileServicesClientNamespace({ MobileServiceSQLiteStore: MobileServiceSQLiteStore });
 
 exports.MobileServiceSQLiteStore = MobileServiceSQLiteStore;
-
-Platform.addToMobileServicesClientNamespace({ MobileServiceSQLiteStore: MobileServiceSQLiteStore });
