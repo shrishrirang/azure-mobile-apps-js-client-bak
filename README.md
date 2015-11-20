@@ -34,7 +34,7 @@ The Microsoft Azure Mobile Apps for WinJS SDK requires Windows 8.1 and Visual St
 
 1. Install Node.js and grunt-cli (globally) for building in Visual Studio
 2. Install the Task Runner Explorer(https://visualstudiogallery.msdn.microsoft.com/8e1b4368-4afb-467a-bc13-9650572db708) add on for VS 2013 
-3. Open the ```sdk\JavaScript\Microsoft.WindowsAzure.Mobile.JS.sln``` file in Visual Studio.
+3. Open the ```sdk\Microsoft.WindowsAzure.Mobile.JS.sln``` file in Visual Studio.
 4. Right click on the gruntfile.js in the solution, and select Task Runner Explorer
 5. Run the default build option
 
@@ -42,11 +42,11 @@ Alternatively, you can use Grunt from the command line to build the project as w
 
 For WinJS Windows Store apps, copy the ```Generated/MobileServices[.min].js```, ```Generated/MobileServices.DevIntellisense.js``` and ```Generated/MobileService.pri``` files into your WinJS project. For HTML applications, copy the ```Generated/MobileServices.Web[.min].js``` and the ```Generated/MobileServices.DevIntellisense.js``` files into your HTML\JavaScript project.
 
-### Running the Tests
+### Running Unit Tests
 
 To run the WinJS Windows Store test app:
 
-1. Open the ```sdk\JavaScript\Microsoft.WindowsAzure.Mobile.JS.sln``` file in Visual Studio.
+1. Open the ```sdk\Microsoft.WindowsAzure.Mobile.JS.sln``` file in Visual Studio.
 2. In the Solution Explorer, right-click on the ```Microsoft.WindowsAzure.Mobile.WinJS.Test``` project in the Solution Explorer and select ```Set as StartUp Project```.
 3. Press F5 to run the application in debug mode.
 4. A Windows Store application will appear with a prompt for a Runtime Uri and Tags. You can safely ignore this prompt and just click the Start button.
@@ -54,14 +54,13 @@ To run the WinJS Windows Store test app:
 
 To run the HTML tests:
 
-1. Open the ```sdk\JavaScript\Microsoft.WindowsAzure.Mobile.JS.sln``` file in Visual Studio.
+1. Open the ```sdk\Microsoft.WindowsAzure.Mobile.JS.sln``` file in Visual Studio.
 2. In the Solution Explorer, select the Microsoft.WindowsAzure.Mobile.WinJS.Test project and right-click to select 'View in Browser'.
 3. The default browser will launch and run the test HTML application. Some tests may fail because due to an 'Unexpected connection failure'. This is because the test is configured to connect to a Mobile Service that does not exist. These failures can be ignored.
 
 ## Useful Resources
 
 * [Quickstarts](https://github.com/Azure/azure-mobile-services-quickstarts)
-* [E2E Test Suite](https://github.com/Azure/azure-mobile-services-test)
 * [Samples](https://github.com/Azure/mobile-services-samples)
 * Tutorials and product overview are available at [Microsoft Azure Mobile Apps Developer Center](http://azure.microsoft.com/en-us/develop/mobile).
 * Our product team actively monitors the [Mobile Services Developer Forum](http://social.msdn.microsoft.com/Forums/en-US/azuremobile/) to assist you with any troubles.
