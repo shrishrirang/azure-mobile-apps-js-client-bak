@@ -234,7 +234,7 @@ function defineMiscTestsNamespace() {
                             etag = etag.substring(0, etag.length - 1);
                         }
                         var body = JSON.parse(response.responseText);
-                        body['__version'] = etag;
+                        body['version'] = etag;
                         response.responseText = JSON.stringify(body);
                     }
                 }
@@ -266,7 +266,7 @@ function defineMiscTestsNamespace() {
                         for (var k in body) {
                             if (k.indexOf('__') === 0) {
                                 toRemove.push(k);
-                                if (k === '__version') {
+                                if (k === 'version') {
                                     var etag = '\"' + body[k] + '\"';
                                     req.headers['If-Match'] = etag;
                                 }
@@ -297,7 +297,7 @@ function defineMiscTestsNamespace() {
             table.update(inserted).done(function (updated) {
                 test.addLog('Updated: ', updated);
                 test.addLog('Now updating with incorrect version');
-                updated['__version'] = 'incorrect';
+                updated['version'] = 'incorrect';
                 table.update(updated).done(function (updated2) {
                     test.addLog('Updated again (should not happen): ', updated2);
                     done(false);
