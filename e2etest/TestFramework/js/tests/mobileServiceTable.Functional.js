@@ -24,6 +24,20 @@ function defineTableGenericFunctionalTestsNamespace() {
         globaldone(false);
     }
 
+    function getTestSystemProperties() {
+        return [
+            WindowsAzure.MobileServiceTable.SystemProperties.None,
+            WindowsAzure.MobileServiceTable.SystemProperties.All,
+            WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt | WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt | WindowsAzure.MobileServiceTable.SystemProperties.Version,
+            WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt | WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt,
+            WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt | WindowsAzure.MobileServiceTable.SystemProperties.Version,
+            WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt,
+            WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt | WindowsAzure.MobileServiceTable.SystemProperties.Version,
+            WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt,
+            WindowsAzure.MobileServiceTable.SystemProperties.Version
+        ];
+    }
+
     function emptyTable(table) {
         return table.read().then(function (results) {
             if (!results || results.length == 0) {
@@ -343,6 +357,7 @@ function defineTableGenericFunctionalTestsNamespace() {
             var promise;
 
             savedItems.push(item);
+            var testSystemProperties = getTestSystemProperties();
             for (index = 0; index < testSystemProperties.length; index++) {
                 table.systemProperties = testSystemProperties[index];
                 test.addLog('testing properties: ' + table.systemProperties);
@@ -1459,18 +1474,6 @@ testInvalidSystemPropertyQueryStrings = [
 
 // All and individual system properties requested
 "__systemProperties=*,__updatedAt"
-];
-
-testSystemProperties = [
-WindowsAzure.MobileServiceTable.SystemProperties.None,
-WindowsAzure.MobileServiceTable.SystemProperties.All,
-WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt | WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt | WindowsAzure.MobileServiceTable.SystemProperties.Version,
-WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt | WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt,
-WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt | WindowsAzure.MobileServiceTable.SystemProperties.Version,
-WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt,
-WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt | WindowsAzure.MobileServiceTable.SystemProperties.Version,
-WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt,
-WindowsAzure.MobileServiceTable.SystemProperties.Version
 ];
 
 invalidStringIds = [

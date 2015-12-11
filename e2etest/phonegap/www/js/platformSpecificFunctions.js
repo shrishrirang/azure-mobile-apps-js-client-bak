@@ -13,12 +13,10 @@ function createPlatformSpecificFunctions() {
         }
     };
 
-    var saveAppInfo = function (lastAppUrl, lastAppKey) {
+    var saveAppInfo = function (lastAppUrl) {
         /// <param name="lastAppUrl" type="String">The last value used in the application URL text box</param>
-        /// <param name="lastAppKey" type="String">The last value used in the application key text box</param>        
         var state = {
-            lastAppUrl: lastAppUrl,
-            lastAppKey: lastAppKey,            
+            lastAppUrl: lastAppUrl
         };
     };
 
