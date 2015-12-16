@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <!--
     Copyright (c) 2012-2014 Adobe Systems Incorporated. All rights reserved.
 
@@ -31,7 +31,13 @@
         <title>ZumoE2ETestAppJs</title>
 
         <!-- ZumoE2ETestAppJs references -->
-        <link href="TestFramework/css/default.css" rel="stylesheet" />
+        <link href="TestFramework/css/default.css" rel="stylesheet"/>
+
+        <!-- Include cordova.js before including any other script so that tests can check for windows.cordova, if required.
+             Note that cordova initialization is performed asynchronously, however, window.cordova is set synchronously.
+        -->
+        <script type="text/javascript" src="cordova.js"></script>
+
         <script src="TestFramework/js/lib/jquery-2.1.1.js"></script>
 
         <!-- Test framework scripts -->
@@ -49,7 +55,6 @@
         <script src="js/pushTests.js" type="text/javascript"></script>
         <script src="TestFramework/js/tests/mobileServiceTable.Functional.js" type="text/javascript"></script>
         <script src="TestFramework/js/tests/allTests.js" type="text/javascript"></script>
-        <script type="text/javascript" src="cordova.js"></script>        
     </head>
     <body>
         <div id="deviceready" class="blink">
@@ -58,6 +63,7 @@
         </div>
 
         <script type="text/javascript" src="js/index.js"></script>
+        <script type="text/javascript" src="TestFramework/js/lib/wl.js"></script>
         <script type="text/javascript">
             app.initialize();
         </script>

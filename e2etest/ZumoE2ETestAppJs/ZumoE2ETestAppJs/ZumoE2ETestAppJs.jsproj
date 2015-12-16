@@ -77,6 +77,10 @@
       <Link>js\lib\jquery-2.1.1.js</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\..\TestFramework\js\lib\wl.js">
+      <Link>js\lib\wl.js</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\..\TestFramework\js\tests\allTests.js">
       <Link>js\tests\allTests.js</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -132,7 +136,6 @@
     <Content Include="js\MobileServices.min.js" />
     <Content Include="js\MobileServices.pri" />
     <Content Include="js\platformSpecificFunctions.js" />
-    <Content Include="js\wl.js" />
     <Content Include="packages.config" />
     <None Include="ZumoE2ETestAppJs_StoreKey.pfx" />
     <None Include="ZumoE2ETestAppJs_TemporaryKey.pfx" />
