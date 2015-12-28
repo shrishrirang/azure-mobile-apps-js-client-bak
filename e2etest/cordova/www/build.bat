@@ -3,16 +3,16 @@ REM Installs the required plugins and builds supported platforms when using Wind
 
 REM clean up previous builds
 
-call rmdir /s /q ../platforms
-call rmdir /s /q ../plugins
+call rmdir /s /q ..\platforms
+call rmdir /s /q ..\plugins
 
 REM copy the js files from TestFramework over to TestFramework
 
 call rmdir /s /q TestFramework
-call robocopy /MIR ../../TestFramework TestFramework
+call robocopy /MIR ..\..\TestFramework TestFramework
 
-call cordova plugin add com.microsoft.azure-mobile-services
-REM cordova plugin add https://github.com/azure/azure-mobile-services-cordova.git
+call cordova plugin add cordova-plugin-ms-azure-mobile-apps
+REM call cordova plugin add https://github.com/azure/azure-mobile-services-cordova.git
 
 REM Plugins required for push notifications
 call cordova plugin add cordova-plugin-device
