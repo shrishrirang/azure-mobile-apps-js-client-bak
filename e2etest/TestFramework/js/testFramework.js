@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-/// <reference path="//Microsoft.WinJS.1.0/js/base.js" />
+/// <reference path="//Microsoft.WinJS.2.0/js/base.js" />
 /// <reference path="../../ZumoE2ETestAppJs/ZumoE2ETestAppJs/js/MobileServices.js" />
 /// <reference path="../../ZumoE2EHTMLApp/ZumoE2EHTMLApp/../../TestFramework/js/platformSpecificFunctions.js" />
 

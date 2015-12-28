@@ -1,10 +1,10 @@
 // ----------------------------------------------------------------------------
 // Copyright (c) Microsoft Corporation. All rights reserved
-// AzureMobileServices - v1.2.8
+// AzureMobileServices - v2.0.0-beta
 // ----------------------------------------------------------------------------
 
 (function (global) {
-	var $__fileVersion__ = '1.2.8';
+	var $__fileVersion__ = '2.0.0-beta';
     /// <field name="$__modules__">
     /// Map module names to either their cached exports or a function which
     /// will define the module's exports when invoked.
@@ -46,9 +46,6 @@
 		// Copyright (c) Microsoft Corporation. All rights reserved.
 		// ----------------------------------------------------------------------------
 		
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\base.js" />
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
-		/// <reference path="..\Generated\MobileServices.DevIntellisense.js" />
 		
 		// Declare JSHint globals
 		/*global XMLHttpRequest:false */
@@ -552,7 +549,20 @@
 		
 		        var start = url.substring(0, 7).toLowerCase();
 		        return (start  == "http://" || start == "https:/");
+		    },
+		
+		    isHttps: function (url) {
+		        /// <summary>
+		        /// Simple check to verify if url begins with https:/
+		        /// </summary>
+		        if (_.isNullOrEmpty(url)) {
+		            return false;
+		        }
+		
+		        var start = url.substring(0, 7).toLowerCase();
+		        return (start == "https:/");
 		    }
+		
 		};
 		
 		exports.tryParseIsoDateString = function (text) {
@@ -638,9 +648,6 @@
 		// Copyright (c) Microsoft Corporation. All rights reserved.
 		// ----------------------------------------------------------------------------
 		
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\base.js" />
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
-		/// <reference path="Generated\MobileServices.DevIntellisense.js" />
 		
 		var _ = require('Extensions');
 		var Validate = require('Validate');
@@ -663,25 +670,54 @@
 		    TableReadQuery: "TQ",            // Table reads where the caller uses a function / query OM to determine the items to be returned
 		};
 		var _zumoFeaturesHeaderName = "X-ZUMO-FEATURES";
+		var _zumoApiVersionHeaderName = "ZUMO-API-VERSION";
+		var _zumoApiVersion = "2.0.0";
+		var _alternateLoginHost = null;
+		Object.defineProperties(MobileServiceClient.prototype, {
+		    alternateLoginHost: {
+		        get: function () {
+		            return this._alternateLoginHost;
+		        },
+		        set: function (value) {
+		            if (_.isNullOrEmpty(value)) {
+		                this._alternateLoginHost = this.applicationUrl;
+		            }else if (_.url.isAbsoluteUrl(value) && _.url.isHttps(value)) {
+		                this._alternateLoginHost = value;
+		            } else {
+		                throw _.format(Platform.getResourceString("AlternateLoginHost_Invalid"), value);
+		            }
+		        }
+		    }
+		});
+		var _loginUriPrefix = null;
+		Object.defineProperties(MobileServiceClient.prototype, {
+		    loginUriPrefix: {
+		        get: function () {
+		            return this._loginUriPrefix;
+		        },
+		        set: function (value) {
+		            if (_.isNullOrEmpty(value)) {
+		                this._loginUriPrefix = ".auth/login";
+		            } else {
+		                _.isString(value);
+		                this._loginUriPrefix = value;
+		            }
+		        }
+		    }
+		});
 		
-		function MobileServiceClient(applicationUrl, gatewayUrl, applicationKey) {
+		function MobileServiceClient(applicationUrl) {
 		    /// <summary>
 		    /// Initializes a new instance of the MobileServiceClient class.
 		    /// </summary>
 		    /// <param name="applicationUrl" type="string" mayBeNull="false">
 		    /// The URL to the Mobile Services application.
 		    /// </param>
-		    /// <param name="applicationKey" type="string" mayBeNull="false">
-		    /// The Mobile Service application's key.
-		    /// </param>
 		
 		    Validate.isString(applicationUrl, 'applicationUrl');
 		    Validate.notNullOrEmpty(applicationUrl, 'applicationUrl');
-		    Validate.isString(applicationKey, 'applicationKey');
 		
 		    this.applicationUrl = applicationUrl;
-		    this.applicationKey = applicationKey || null;
-		    this.gatewayUrl = gatewayUrl || null;
 		
 		    var sdkInfo = Platform.getSdkInfo();
 		    var osInfo = Platform.getOperatingSystemInfo();
@@ -711,6 +747,8 @@
 		        this.push = new Push(this, MobileServiceClient._applicationInstallationId);
 		    }
 		}
+		
+		
 		
 		// Export the MobileServiceClient class
 		exports.MobileServiceClient = MobileServiceClient;
@@ -767,7 +805,7 @@
 		    Validate.notNull(serviceFilter, 'serviceFilter');
 		
 		    // Clone the current instance
-		    var client = new MobileServiceClient(this.applicationUrl, this.gatewayUrl, this.applicationKey);
+		    var client = new MobileServiceClient(this.applicationUrl);
 		    client.currentUser = this.currentUser;
 		
 		    // Chain the service filter with any existing filters
@@ -829,7 +867,7 @@
 		        callback = ignoreFilters;
 		        ignoreFilters = false;
 		    }
-		    
+		
 		    if (_.isNull(callback) && (typeof content === 'function')) {
 		        callback = content;
 		        content = null;
@@ -855,9 +893,6 @@
 		        _.extend(options.headers, headers);
 		    }
 		    options.headers["X-ZUMO-INSTALLATION-ID"] = MobileServiceClient._applicationInstallationId;
-		    if (!_.isNullOrEmpty(this.applicationKey)) {
-		        options.headers["X-ZUMO-APPLICATION"] = this.applicationKey;
-		    }
 		    if (this.currentUser && !_.isNullOrEmpty(this.currentUser.mobileServiceAuthenticationToken)) {
 		        options.headers["X-ZUMO-AUTH"] = this.currentUser.mobileServiceAuthenticationToken;
 		    }
@@ -880,7 +915,7 @@
 		            options.data = content;
 		        }
 		
-		        if(!_.hasProperty(options.headers, ['Content-Type','content-type','CONTENT-TYPE','Content-type'])) {
+		        if (!_.hasProperty(options.headers, ['Content-Type', 'content-type', 'CONTENT-TYPE', 'Content-type'])) {
 		            options.headers['Content-Type'] = 'application/json';
 		        }
 		    } else {
@@ -934,7 +969,7 @@
 		         /// Optional callback accepting (error, user) parameters.
 		         /// </param>
 		         this._login.loginWithOptions(provider, options, callback);
-		});
+		     });
 		
 		MobileServiceClient.prototype.login = Platform.async(
 		    function (provider, token, useSingleSignOn, callback) {
@@ -973,7 +1008,7 @@
 		};
 		
 		MobileServiceClient.prototype.invokeApi = Platform.async(
-		    function (apiName, options, callback) {   
+		    function (apiName, options, callback) {
 		        /// <summary>
 		        /// Invokes the specified custom api and returns a response object.
 		        /// </summary>
@@ -1025,6 +1060,11 @@
 		            headers.accept = 'application/json';
 		        }
 		
+		        // Add version header on API requests
+		        if (_.isNull(headers[_zumoApiVersionHeaderName])) {
+		            headers[_zumoApiVersionHeaderName] = _zumoApiVersion;
+		        }
+		
 		        // Construct the URL
 		        var urlFragment = _.url.combinePathSegments("api", apiName);
 		        if (!_.isNull(parameters)) {
@@ -1064,7 +1104,7 @@
 		                    if (!contentType) {
 		                        try {
 		                            response.result = _.fromJson(response.responseText);
-		                        } catch(e) {
+		                        } catch (e) {
 		                            // Do nothing, since we don't know the content-type, failing may be ok
 		                        }
 		                    } else if (contentType.toLowerCase().indexOf('json') !== -1) {
@@ -1135,6 +1175,16 @@
 		/// </summary>
 		MobileServiceClient._zumoFeatures = _zumoFeatures;
 		
+		/// <summary>
+		/// The header / querystring to use to specify the API Version
+		/// </summary>
+		MobileServiceClient._zumoApiVersionHeaderName = _zumoApiVersionHeaderName;
+		
+		/// <summary>
+		/// The current Zumo API Version
+		/// </summary>
+		MobileServiceClient._zumoApiVersion = _zumoApiVersion;
+		
 	};
 
 	$__modules__.MobileServiceTable = function (exports) {
@@ -1142,9 +1192,6 @@
 		// Copyright (c) Microsoft Corporation. All rights reserved.
 		// ----------------------------------------------------------------------------
 		
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\base.js" />
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
-		/// <reference path="Generated\MobileServices.DevIntellisense.js" />
 		
 		var _ = require('Extensions');
 		var Validate = require('Validate');
@@ -1169,9 +1216,10 @@
 		};
 		
 		var MobileServiceSystemColumns = {
-		    CreatedAt: "__createdAt",
-		    UpdatedAt: "__updatedAt",
-		    Version: "__version"
+		    CreatedAt: "createdAt",
+		    UpdatedAt: "updatedAt",
+		    Version: "version",
+		    Deleted: "deleted"
 		};
 		
 		Platform.addToMobileServicesClientNamespace({
@@ -1209,8 +1257,6 @@
 		        /// </returns>
 		        return client;
 		    };
-		
-		    this.systemProperties = 0;
 		}
 		
 		// Export the MobileServiceTable class
@@ -1301,7 +1347,6 @@
 		    addQueryParametersFeaturesIfApplicable(features, parameters);
 		
 		    // Add any user-defined query string parameters
-		    parameters = addSystemProperties(parameters, this.systemProperties, queryString);
 		    if (!_.isNull(parameters)) {
 		        var userDefinedQueryString = _.url.getQueryString(parameters);
 		        if (!_.isNullOrEmpty(queryString)) {
@@ -1321,13 +1366,16 @@
 		        }
 		    }
 		
+		    var headers = { };
+		    headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
+		
 		    // Make the request
 		    this.getMobileServiceClient()._request(
 		        'GET',
 		        urlFragment,
 		        null,
 		        false,
-		        null,
+		        headers,
 		        features,
 		        function (error, response) {
 		            var values = null;
@@ -1433,11 +1481,13 @@
 		
 		        // Construct the URL
 		        var urlFragment = _.url.combinePathSegments(tableRouteSeperatorName, this.getTableName());
-		        parameters = addSystemProperties(parameters, this.systemProperties);
 		        if (!_.isNull(parameters)) {
 		            var queryString = _.url.getQueryString(parameters);
 		            urlFragment = _.url.combinePathAndQuery(urlFragment, queryString);
 		        }
+		
+		        var headers = { };
+		        headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
 		
 		        // Make the request
 		        this.getMobileServiceClient()._request(
@@ -1445,7 +1495,7 @@
 		            urlFragment,
 		            instance,
 		            false,
-		            null,
+		            headers,
 		            features,
 		            function (error, response) {
 		                if (!_.isNull(error)) {
@@ -1491,20 +1541,17 @@
 		        }
 		        Validate.notNull(callback, 'callback');
 		
-		        if (_.isString(instance[idPropertyName])) {
-		            version = instance.__version;
-		            serverInstance = removeSystemProperties(instance);
-		        } else {
-		            serverInstance = instance;
-		        }
+		        version = instance[MobileServiceSystemColumns.Version];
+		        serverInstance = removeSystemProperties(instance);
 		
 		        if (!_.isNullOrEmpty(version)) {
 		            headers['If-Match'] = getEtagFromVersion(version);
 		            features.push(WindowsAzure.MobileServiceClient._zumoFeatures.OptimisticConcurrency);
 		        }
 		
+		        headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
+		
 		        features = addQueryParametersFeaturesIfApplicable(features, parameters);
-		        parameters = addSystemProperties(parameters, this.systemProperties);
 		
 		        // Construct the URL
 		        var urlFragment =  _.url.combinePathSegments(
@@ -1595,13 +1642,16 @@
 		        var features = [WindowsAzure.MobileServiceClient._zumoFeatures.TableRefreshCall];
 		        features = addQueryParametersFeaturesIfApplicable(features, parameters);
 		
+		        var headers = { };
+		        headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
+		
 		        // Make the request
 		        this.getMobileServiceClient()._request(
 		            'GET',
 		            urlFragment,
 		            instance,
 		            false,
-		            null,
+		            headers,
 		            features,
 		            function (error, response) {
 		                if (!_.isNull(error)) {
@@ -1661,11 +1711,13 @@
 		
 		        var features = addQueryParametersFeaturesIfApplicable([], parameters);
 		
-		        parameters = addSystemProperties(parameters, this.systemProperties);
 		        if (!_.isNull(parameters)) {
 		            var queryString = _.url.getQueryString(parameters);
 		            urlFragment = _.url.combinePathAndQuery(urlFragment, queryString);
 		        }
+		
+		        var headers = { };
+		        headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
 		
 		        // Make the request
 		        this.getMobileServiceClient()._request(
@@ -1673,7 +1725,7 @@
 		            urlFragment,
 		            null,
 		            false,
-		            null,
+		            headers,
 		            features,
 		            function (error, response) {
 		                if (!_.isNull(error)) {
@@ -1714,15 +1766,15 @@
 		        var headers = {};
 		        var features = [];
 		        if (_.isString(instance[idPropertyName])) {
-		            if (!_.isNullOrEmpty(instance.__version)) {
-		                headers['If-Match'] = getEtagFromVersion(instance.__version);
+		            if (!_.isNullOrEmpty(instance[MobileServiceSystemColumns.Version])) {
+		                headers['If-Match'] = getEtagFromVersion(instance[MobileServiceSystemColumns.Version]);
 		                features.push(WindowsAzure.MobileServiceClient._zumoFeatures.OptimisticConcurrency);
 		            }
 		        }
+		        headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
 		
 		        features = addQueryParametersFeaturesIfApplicable(features, parameters);
 		
-		        parameters = addSystemProperties(parameters, this.systemProperties);
 		        if (!_.isNull(parameters)) {
 		            Validate.isValidParametersObject(parameters);
 		        }
@@ -1792,44 +1844,16 @@
 		// Table system properties
 		function removeSystemProperties(instance) {
 		    var copy = {};
-		    for(var property in instance) {
-		        if (property.substr(0, 2) !== '__') {
+		    for (var property in instance) {
+		        if ((property != MobileServiceSystemColumns.Version) &&
+		            (property != MobileServiceSystemColumns.UpdatedAt) &&
+		            (property != MobileServiceSystemColumns.CreatedAt) &&
+		            (property != MobileServiceSystemColumns.Deleted))
+		        {
 		            copy[property] = instance[property];
 		        }
 		    }
 		    return copy;
-		}
-		
-		function addSystemProperties(parameters, properties, querystring) {
-		    if (properties === MobileServiceSystemProperties.None || (typeof querystring === 'string' && querystring.toLowerCase().indexOf('__systemproperties') >= 0)) {
-		        return parameters;
-		    }
-		
-		    // Initialize an object if none passed in
-		    parameters = parameters || {};
-		
-		    // Don't override system properties if already set
-		    if(!_.isNull(parameters.__systemProperties)) {
-		        return parameters;
-		    }
-		
-		    if (properties === MobileServiceSystemProperties.All) {
-		        parameters.__systemProperties = '*';
-		    } else {
-		        var options = [];
-		        if (MobileServiceSystemProperties.CreatedAt & properties) {
-		            options.push(MobileServiceSystemColumns.CreatedAt);
-		        }
-		        if (MobileServiceSystemProperties.UpdatedAt & properties) {
-		            options.push(MobileServiceSystemColumns.UpdatedAt);
-		        }
-		        if (MobileServiceSystemProperties.Version & properties) {
-		            options.push(MobileServiceSystemColumns.Version);
-		        }
-		        parameters.__systemProperties = options.join(',');
-		    }
-		
-		    return parameters;
 		}
 		
 		// Add double quotes and unescape any internal quotes
@@ -1838,7 +1862,7 @@
 		    if (response.getResponseHeader) {
 		        var eTag = response.getResponseHeader('ETag');
 		        if (!_.isNullOrEmpty(eTag)) {
-		            result.__version = getVersionFromEtag(eTag);
+		            result[MobileServiceSystemColumns.Version] = getVersionFromEtag(eTag);
 		        }
 		    }
 		    return result;
@@ -1896,15 +1920,12 @@
 		// Copyright (c) Microsoft Corporation. All rights reserved.
 		// ----------------------------------------------------------------------------
 		
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\base.js" />
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
-		/// <reference path="Generated\MobileServices.DevIntellisense.js" />
 		
 		var _ = require('Extensions');
 		var Validate = require('Validate');
 		var Platform = require('Platform');
 		
-		var loginUrl = "login";
+		var loginUrl = ".auth/login";
 		var loginDone = "done";
 		
 		function MobileServiceLogin(client, ignoreFilters) {
@@ -1998,7 +2019,7 @@
 		        } else {
 		            Validate.notNull(null, 'callback');
 		        }
-		    }    
+		    }
 		
 		    // loginWithOptions('a.b.c')
 		    if (!options && this._isAuthToken(provider)) {
@@ -2090,7 +2111,7 @@
 		    return value && _.isString(value) && value.split('.').length === 3;
 		};
 		
-		MobileServiceLogin.prototype.loginWithMobileServiceToken = function(authenticationToken, callback) {
+		MobileServiceLogin.prototype.loginWithMobileServiceToken = function (authenticationToken, callback) {
 		    /// <summary>
 		    /// Log a user into a Mobile Services application given an Mobile Service authentication token.
 		    /// </summary>
@@ -2112,12 +2133,12 @@
 		        loginUrl,
 		        { authenticationToken: authenticationToken },
 		        self.ignoreFilters,
-		        function(error, response) { 
+		        function (error, response) {
 		            onLoginResponse(error, response, client, callback);
 		        });
 		};
 		
-		MobileServiceLogin.prototype.loginWithProvider = function(provider, token, useSingleSignOn, parameters, callback) {
+		MobileServiceLogin.prototype.loginWithProvider = function (provider, token, useSingleSignOn, parameters, callback) {
 		    /// <summary>
 		    /// Log a user into a Mobile Services application given a provider name and optional token object.
 		    /// </summary>
@@ -2156,7 +2177,7 @@
 		    }
 		
 		    provider = provider.toLowerCase();
-		    
+		
 		    // Either login with the token or the platform specific login control.
 		    if (!_.isNull(token)) {
 		        loginWithProviderAndToken(this, provider, token, parameters, callback);
@@ -2315,8 +2336,8 @@
 		
 		    var client = login.getMobileServiceClient();
 		    var startUri = _.url.combinePathSegments(
-		        client.gatewayUrl || client.applicationUrl,
-		        loginUrl,
+		        client.alternateLoginHost || client.applicationUrl,
+		        client.loginUriPrefix || loginUrl,
 		        provider);
 		    var endUri = null;
 		
@@ -2328,11 +2349,11 @@
 		    // If not single sign-on, then we need to construct a non-null end uri.
 		    if (!useSingleSignOn) {
 		        endUri = _.url.combinePathSegments(
-		            client.gatewayUrl || client.applicationUrl,
-		            loginUrl,
+		            client.alternateLoginHost || client.applicationUrl,
+		            client.loginUriPrefix || loginUrl,
 		            loginDone);
 		    }
-		    
+		
 		    login._loginState = { inProcess: true, cancelCallback: null }; // cancelCallback gets set below
 		
 		    // Call the platform to launch the login control, capturing any
@@ -2344,7 +2365,7 @@
 		            login._loginState = { inProcess: false, cancelCallback: null };
 		            onLoginComplete(error, mobileServiceToken, client, callback);
 		        });
-		    
+		
 		    if (login._loginState.inProcess && platformResult && platformResult.cancelCallback) {
 		        login._loginState.cancelCallback = platformResult.cancelCallback;
 		    }
@@ -2426,12 +2447,15 @@
 		    Validate.isString(pushChannel, 'pushChannel');
 		    Validate.notNullOrEmpty(pushChannel, 'pushChannel');
 		
+		    var headers = { 'If-Modified-Since': 'Mon, 27 Mar 1972 00:00:00 GMT' };
+		    headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
+		
 		    client._request(
 		        method,
 		        'push/installations/' + encodeURIComponent(installationId),
 		        content,
 		        null,
-		        { 'If-Modified-Since': 'Mon, 27 Mar 1972 00:00:00 GMT' },
+		        headers,
 		        callback
 		    );
 		}
@@ -2457,9 +2481,6 @@
 		// Copyright (c) Microsoft Corporation. All rights reserved.
 		// ----------------------------------------------------------------------------
 		
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\base.js" />
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
-		/// <reference path="..\Generated\Zumo.DevIntellisense.js" />
 		
 		var _ = require('Extensions');
 		var Platform = require('Platform');
@@ -10104,9 +10125,6 @@
 		// Copyright (c) Microsoft Corporation. All rights reserved.
 		// ----------------------------------------------------------------------------
 		
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\base.js" />
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
-		/// <reference path="..\Generated\MobileServices.DevIntellisense.js" />
 		
 		// Declare JSHint globals
 		/*global WinJS:false, Windows:false, $__fileVersion__:false, $__version__:false */
@@ -10368,286 +10386,3 @@
 	};
 	require('MobileServiceClient');
 })(this || exports);
-// SIG // Begin signature block
-// SIG // MIIkIwYJKoZIhvcNAQcCoIIkFDCCJBACAQExDzANBglg
-// SIG // hkgBZQMEAgEFADB3BgorBgEEAYI3AgEEoGkwZzAyBgor
-// SIG // BgEEAYI3AgEeMCQCAQEEEBDgyQbOONQRoqMAEEvTUJAC
-// SIG // AQACAQACAQACAQACAQAwMTANBglghkgBZQMEAgEFAAQg
-// SIG // ehwouwhksd4QlCkf5vvqNzn70zb8ydbBK+gX6ohw8S6g
-// SIG // gg2SMIIGEDCCA/igAwIBAgITMwAAADiNI20WJ6Mm4AAA
-// SIG // AAAAODANBgkqhkiG9w0BAQsFADB+MQswCQYDVQQGEwJV
-// SIG // UzETMBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UEBxMH
-// SIG // UmVkbW9uZDEeMBwGA1UEChMVTWljcm9zb2Z0IENvcnBv
-// SIG // cmF0aW9uMSgwJgYDVQQDEx9NaWNyb3NvZnQgQ29kZSBT
-// SIG // aWduaW5nIFBDQSAyMDExMB4XDTE0MTAwMTE4MTExNloX
-// SIG // DTE2MDEwMTE4MTExNlowgYMxCzAJBgNVBAYTAlVTMRMw
-// SIG // EQYDVQQIEwpXYXNoaW5ndG9uMRAwDgYDVQQHEwdSZWRt
-// SIG // b25kMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRp
-// SIG // b24xDTALBgNVBAsTBE1PUFIxHjAcBgNVBAMTFU1pY3Jv
-// SIG // c29mdCBDb3Jwb3JhdGlvbjCCASIwDQYJKoZIhvcNAQEB
-// SIG // BQADggEPADCCAQoCggEBAMLe1s/it38RZf+zY6nzcrnx
-// SIG // JOtfpByyRFnrb5z7cNtlaZqrkDFe/94rZBH17WzpACGC
-// SIG // w5DMghmj45ljZYq909X7IKPgGX+4jTxq/sgSjeXTOe9N
-// SIG // Tj6GlkwRsRGEmyeYiDst1H0Y8wXgrUsEPkN1GeZGxIyd
-// SIG // 24nYJIe+9Ecnv22N3Hi5w2WhbzfqvHGmnayOj42IkX6o
-// SIG // NyXZgSSpiPRjRuq7IMkBL9iODNnZ7eA2+2RoTfxCL5Eg
-// SIG // qQiaKEpHqPD+2bJ6/djoOAG8gUWrOugaKt05gz8H29jh
-// SIG // j/w5LDaeAZ/vaHfIeG8++CD/lhoQvvGq0GGeqJqEvz6u
-// SIG // r8oKWeWNiwUCAwEAAaOCAX8wggF7MB8GA1UdJQQYMBYG
-// SIG // CCsGAQUFBwMDBgorBgEEAYI3TAgBMB0GA1UdDgQWBBTG
-// SIG // 8coYEgskpUX1guR1JdAvMNdiczBRBgNVHREESjBIpEYw
-// SIG // RDENMAsGA1UECxMETU9QUjEzMDEGA1UEBRMqMzE2NDIr
-// SIG // YzIyYzk5MzYtYjNjNy00MjcxLWE0YmQtZmUwM2ZhNzJj
-// SIG // M2YwMB8GA1UdIwQYMBaAFEhuZOVQBdOCqhc3NyK1bajK
-// SIG // dQKVMFQGA1UdHwRNMEswSaBHoEWGQ2h0dHA6Ly93d3cu
-// SIG // bWljcm9zb2Z0LmNvbS9wa2lvcHMvY3JsL01pY0NvZFNp
-// SIG // Z1BDQTIwMTFfMjAxMS0wNy0wOC5jcmwwYQYIKwYBBQUH
-// SIG // AQEEVTBTMFEGCCsGAQUFBzAChkVodHRwOi8vd3d3Lm1p
-// SIG // Y3Jvc29mdC5jb20vcGtpb3BzL2NlcnRzL01pY0NvZFNp
-// SIG // Z1BDQTIwMTFfMjAxMS0wNy0wOC5jcnQwDAYDVR0TAQH/
-// SIG // BAIwADANBgkqhkiG9w0BAQsFAAOCAgEAnnJuqLq2NRqN
-// SIG // hLA6lTfiNM177M9T5O6rxhgxFjN7TyL+k3VWR010a5mH
-// SIG // XC50iHClRm+0nBuYWRJNNL7Q3HWzXQwz1tgF9jUbfolI
-// SIG // weWJpS06NydHHu5o02haRqKshfv/0Ojo1WBV50RrTc+9
-// SIG // 3qXcu9V6i9PjSMdGe3WYc/nDyOyIEAv3Ki0TeBKP/muo
-// SIG // mF4cSc46pjSWYtvu5uMM2Rtjx/oYYey5AAir5Mx8EqW2
-// SIG // pr1lYA4dM1k43xbhMlx+0HsSB4G0fripXdtE/2ZMnkAm
-// SIG // qUz+Tok/ltFsxdiuyyZm4b9l4/e7Y/qobSkqHSfKTifK
-// SIG // tvFM6uanbQqwkS7DhH1ygLH4Pg5g2cy7G4CQT4sRiF53
-// SIG // CLvjiqt/bwk+K6xnwUftsqhdejywBfVgitVG8FZc8qcr
-// SIG // sC4RFq/ikdLfKK3m1ZU/+Lj1a/8C57nbzbz9s0DAca5G
-// SIG // nYxu5PYFXezuACeDyEZ75sI64e8cu/ehN0blhquXrnV6
-// SIG // du6eSzsGyh+oXKyNFTkh5r3hwneZofck8dk4HkwL+e7/
-// SIG // kW20ikoXiChj2FBjXOeq+1WLxEGDNwNAAXBjn7iw+WhH
-// SIG // X6JyiwlTDj+7jUKgEzlLwkGDLzD4Wyb4H7ktTnkMu+x6
-// SIG // XZ83atlIrXadL+m+bDZYGtWS/Ozf87FeMhSpExP1KZP1
-// SIG // yTgW1zXnazgwggd6MIIFYqADAgECAgphDpDSAAAAAAAD
-// SIG // MA0GCSqGSIb3DQEBCwUAMIGIMQswCQYDVQQGEwJVUzET
-// SIG // MBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UEBxMHUmVk
-// SIG // bW9uZDEeMBwGA1UEChMVTWljcm9zb2Z0IENvcnBvcmF0
-// SIG // aW9uMTIwMAYDVQQDEylNaWNyb3NvZnQgUm9vdCBDZXJ0
-// SIG // aWZpY2F0ZSBBdXRob3JpdHkgMjAxMTAeFw0xMTA3MDgy
-// SIG // MDU5MDlaFw0yNjA3MDgyMTA5MDlaMH4xCzAJBgNVBAYT
-// SIG // AlVTMRMwEQYDVQQIEwpXYXNoaW5ndG9uMRAwDgYDVQQH
-// SIG // EwdSZWRtb25kMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29y
-// SIG // cG9yYXRpb24xKDAmBgNVBAMTH01pY3Jvc29mdCBDb2Rl
-// SIG // IFNpZ25pbmcgUENBIDIwMTEwggIiMA0GCSqGSIb3DQEB
-// SIG // AQUAA4ICDwAwggIKAoICAQCr8PpyEBwurdhuqoIQTTS6
-// SIG // 8rZYIZ9CGypr6VpQqrgGOBoESbp/wwwe3TdrxhLYC/A4
-// SIG // wpkGsMg51QEUMULTiQ15ZId+lGAkbK+eSZzpaF7S35tT
-// SIG // sgosw6/ZqSuuegmv15ZZymAaBelmdugyUiYSL+erCFDP
-// SIG // s0S3XdjELgN1q2jzy23zOlyhFvRGuuA4ZKxuZDV4pqBj
-// SIG // Dy3TQJP4494HDdVceaVJKecNvqATd76UPe/74ytaEB9N
-// SIG // ViiienLgEjq3SV7Y7e1DkYPZe7J7hhvZPrGMXeiJT4Qa
-// SIG // 8qEvWeSQOy2uM1jFtz7+MtOzAz2xsq+SOH7SnYAs9U5W
-// SIG // kSE1JcM5bmR/U7qcD60ZI4TL9LoDho33X/DQUr+MlIe8
-// SIG // wCF0JV8YKLbMJyg4JZg5SjbPfLGSrhwjp6lm7GEfauEo
-// SIG // SZ1fiOIlXdMhSz5SxLVXPyQD8NF6Wy/VI+NwXQ9RRnez
-// SIG // +ADhvKwCgl/bwBWzvRvUVUvnOaEP6SNJvBi4RHxF5MHD
-// SIG // cnrgcuck379GmcXvwhxX24ON7E1JMKerjt/sW5+v/N2w
-// SIG // ZuLBl4F77dbtS+dJKacTKKanfWeA5opieF+yL4TXV5xc
-// SIG // v3coKPHtbcMojyyPQDdPweGFRInECUzF1KVDL3SV9274
-// SIG // eCBYLBNdYJWaPk8zhNqwiBfenk70lrC8RqBsmNLg1oiM
-// SIG // CwIDAQABo4IB7TCCAekwEAYJKwYBBAGCNxUBBAMCAQAw
-// SIG // HQYDVR0OBBYEFEhuZOVQBdOCqhc3NyK1bajKdQKVMBkG
-// SIG // CSsGAQQBgjcUAgQMHgoAUwB1AGIAQwBBMAsGA1UdDwQE
-// SIG // AwIBhjAPBgNVHRMBAf8EBTADAQH/MB8GA1UdIwQYMBaA
-// SIG // FHItOgIxkEO5FAVO4eqnxzHRI4k0MFoGA1UdHwRTMFEw
-// SIG // T6BNoEuGSWh0dHA6Ly9jcmwubWljcm9zb2Z0LmNvbS9w
-// SIG // a2kvY3JsL3Byb2R1Y3RzL01pY1Jvb0NlckF1dDIwMTFf
-// SIG // MjAxMV8wM18yMi5jcmwwXgYIKwYBBQUHAQEEUjBQME4G
-// SIG // CCsGAQUFBzAChkJodHRwOi8vd3d3Lm1pY3Jvc29mdC5j
-// SIG // b20vcGtpL2NlcnRzL01pY1Jvb0NlckF1dDIwMTFfMjAx
-// SIG // MV8wM18yMi5jcnQwgZ8GA1UdIASBlzCBlDCBkQYJKwYB
-// SIG // BAGCNy4DMIGDMD8GCCsGAQUFBwIBFjNodHRwOi8vd3d3
-// SIG // Lm1pY3Jvc29mdC5jb20vcGtpb3BzL2RvY3MvcHJpbWFy
-// SIG // eWNwcy5odG0wQAYIKwYBBQUHAgIwNB4yIB0ATABlAGcA
-// SIG // YQBsAF8AcABvAGwAaQBjAHkAXwBzAHQAYQB0AGUAbQBl
-// SIG // AG4AdAAuIB0wDQYJKoZIhvcNAQELBQADggIBAGfyhqWY
-// SIG // 4FR5Gi7T2HRnIpsLlhHhY5KZQpZ90nkMkMFlXy4sPvjD
-// SIG // ctFtg/6+P+gKyju/R6mj82nbY78iNaWXXWWEkH2LRlBV
-// SIG // 2AySfNIaSxzzPEKLUtCw/WvjPgcuKZvmPRul1LUdd5Q5
-// SIG // 4ulkyUQ9eHoj8xN9ppB0g430yyYCRirCihC7pKkFDJvt
-// SIG // aPpoLpWgKj8qa1hJYx8JaW5amJbkg/TAj/NGK978O9C9
-// SIG // Ne9uJa7lryft0N3zDq+ZKJeYTQ49C/IIidYfwzIY4vDF
-// SIG // Lc5bnrRJOQrGCsLGra7lstnbFYhRRVg4MnEnGn+x9Cf4
-// SIG // 3iw6IGmYslmJaG5vp7d0w0AFBqYBKig+gj8TTWYLwLNN
-// SIG // 9eGPfxxvFX1Fp3blQCplo8NdUmKGwx1jNpeG39rz+PIW
-// SIG // oZon4c2ll9DuXWNB41sHnIc+BncG0QaxdR8UvmFhtfDc
-// SIG // xhsEvt9Bxw4o7t5lL+yX9qFcltgA1qFGvVnzl6UJS0gQ
-// SIG // mYAf0AApxbGbpT9Fdx41xtKiop96eiL6SJUfq/tHI4D1
-// SIG // nvi/a7dLl+LrdXga7Oo3mXkYS//WsyNodeav+vyL6wuA
-// SIG // 6mk7r/ww7QRMjt/fdW1jkT3RnVZOT7+AVyKheBEyIXrv
-// SIG // QQqxP/uozKRdwaGIm1dxVk5IRcBCyZt2WwqASGv9eZ/B
-// SIG // vW1taslScxMNelDNMYIV6TCCFeUCAQEwgZUwfjELMAkG
-// SIG // A1UEBhMCVVMxEzARBgNVBAgTCldhc2hpbmd0b24xEDAO
-// SIG // BgNVBAcTB1JlZG1vbmQxHjAcBgNVBAoTFU1pY3Jvc29m
-// SIG // dCBDb3Jwb3JhdGlvbjEoMCYGA1UEAxMfTWljcm9zb2Z0
-// SIG // IENvZGUgU2lnbmluZyBQQ0EgMjAxMQITMwAAADiNI20W
-// SIG // J6Mm4AAAAAAAODANBglghkgBZQMEAgEFAKCB1DAZBgkq
-// SIG // hkiG9w0BCQMxDAYKKwYBBAGCNwIBBDAcBgorBgEEAYI3
-// SIG // AgELMQ4wDAYKKwYBBAGCNwIBFTAvBgkqhkiG9w0BCQQx
-// SIG // IgQgb/hNGIapRZNCxuVWz4t6uhWdbEm0wtSVTdqTQL8n
-// SIG // 3IYwaAYKKwYBBAGCNwIBDDFaMFigPoA8AE0AaQBjAHIA
-// SIG // bwBzAG8AZgB0ACAAVwBpAG4AZABvAHcAcwAgAEEAegB1
-// SIG // AHIAZQAgAE0AbwBiAGkAbABloRaAFGh0dHA6Ly93d3cu
-// SIG // YXNwLm5ldC8gMA0GCSqGSIb3DQEBAQUABIIBAIeAZkle
-// SIG // 5+QoIoZvpYXANdLKk+m+EnYntZozaBV0f1NGOyzV2Z0B
-// SIG // a/hmQNWeMOOVYW6D3PRv+P8QhhGSh0GQ3eZtNKV4fg6W
-// SIG // vOp7TrpUEP39vOh8n5oGArBkIqPlQnQuCBFH+j7+tXzA
-// SIG // yit/it9XqN1Pd93XW0CNn3K3qf5/WZU5cyoMqV/oRhp3
-// SIG // 9AL4F5s6Tyf2KOfLboA2zA/0PuUOs4wvOcWoZ+K0OXjG
-// SIG // LbvQV11g99nODqehGEKDptaMQrZKqlEWGCbPbjT+biXh
-// SIG // 0nm6cnYoNQznGuWbEE5khnr6AVe7EpjoGienPSk4LN7n
-// SIG // 8Ut8ikXKGYdopaIhNbJyDUyq34OhghNNMIITSQYKKwYB
-// SIG // BAGCNwMDATGCEzkwghM1BgkqhkiG9w0BBwKgghMmMIIT
-// SIG // IgIBAzEPMA0GCWCGSAFlAwQCAQUAMIIBPAYLKoZIhvcN
-// SIG // AQkQAQSgggErBIIBJzCCASMCAQEGCisGAQQBhFkKAwEw
-// SIG // MTANBglghkgBZQMEAgEFAAQgLN645c1JBpmDiVbN46Cm
-// SIG // 2GQp7lpti73Bw8vRHvzdPmwCBlU5N/TG1hgSMjAxNTA0
-// SIG // MjMyMjU1MjEuNzRaMAcCAQGAAgH0oIG5pIG2MIGzMQsw
-// SIG // CQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQ
-// SIG // MA4GA1UEBxMHUmVkbW9uZDEeMBwGA1UEChMVTWljcm9z
-// SIG // b2Z0IENvcnBvcmF0aW9uMQ0wCwYDVQQLEwRNT1BSMScw
-// SIG // JQYDVQQLEx5uQ2lwaGVyIERTRSBFU046QjhFQy0zMEE0
-// SIG // LTcxNDQxJTAjBgNVBAMTHE1pY3Jvc29mdCBUaW1lLVN0
-// SIG // YW1wIFNlcnZpY2Wggg7RMIIGcTCCBFmgAwIBAgIKYQmB
-// SIG // KgAAAAAAAjANBgkqhkiG9w0BAQsFADCBiDELMAkGA1UE
-// SIG // BhMCVVMxEzARBgNVBAgTCldhc2hpbmd0b24xEDAOBgNV
-// SIG // BAcTB1JlZG1vbmQxHjAcBgNVBAoTFU1pY3Jvc29mdCBD
-// SIG // b3Jwb3JhdGlvbjEyMDAGA1UEAxMpTWljcm9zb2Z0IFJv
-// SIG // b3QgQ2VydGlmaWNhdGUgQXV0aG9yaXR5IDIwMTAwHhcN
-// SIG // MTAwNzAxMjEzNjU1WhcNMjUwNzAxMjE0NjU1WjB8MQsw
-// SIG // CQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQ
-// SIG // MA4GA1UEBxMHUmVkbW9uZDEeMBwGA1UEChMVTWljcm9z
-// SIG // b2Z0IENvcnBvcmF0aW9uMSYwJAYDVQQDEx1NaWNyb3Nv
-// SIG // ZnQgVGltZS1TdGFtcCBQQ0EgMjAxMDCCASIwDQYJKoZI
-// SIG // hvcNAQEBBQADggEPADCCAQoCggEBAKkdDbx3EYo6IOz8
-// SIG // E5f1+n9plGt0VBDVpQoAgoX77XxoSyxfxcPlYcJ2tz5m
-// SIG // K1vwFVMnBDEfQRsalR3OCROOfGEwWbEwRA/xYIiEVEMM
-// SIG // 1024OAizQt2TrNZzMFcmgqNFDdDq9UeBzb8kYDJYYEby
-// SIG // WEeGMoQedGFnkV+BVLHPk0ySwcSmXdFhE24oxhr5hoC7
-// SIG // 32H8RsEnHSRnEnIaIYqvS2SJUGKxXf13Hz3wV3WsvYpC
-// SIG // TUBR0Q+cBj5nf/VmwAOWRH7v0Ev9buWayrGo8noqCjHw
-// SIG // 2k4GkbaICDXoeByw6ZnNPOcvRLqn9NxkvaQBwSAJk3jN
-// SIG // /LzAyURdXhacAQVPIk0CAwEAAaOCAeYwggHiMBAGCSsG
-// SIG // AQQBgjcVAQQDAgEAMB0GA1UdDgQWBBTVYzpcijGQ80N7
-// SIG // fEYbxTNoWoVtVTAZBgkrBgEEAYI3FAIEDB4KAFMAdQBi
-// SIG // AEMAQTALBgNVHQ8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB
-// SIG // /zAfBgNVHSMEGDAWgBTV9lbLj+iiXGJo0T2UkFvXzpoY
-// SIG // xDBWBgNVHR8ETzBNMEugSaBHhkVodHRwOi8vY3JsLm1p
-// SIG // Y3Jvc29mdC5jb20vcGtpL2NybC9wcm9kdWN0cy9NaWNS
-// SIG // b29DZXJBdXRfMjAxMC0wNi0yMy5jcmwwWgYIKwYBBQUH
-// SIG // AQEETjBMMEoGCCsGAQUFBzAChj5odHRwOi8vd3d3Lm1p
-// SIG // Y3Jvc29mdC5jb20vcGtpL2NlcnRzL01pY1Jvb0NlckF1
-// SIG // dF8yMDEwLTA2LTIzLmNydDCBoAYDVR0gAQH/BIGVMIGS
-// SIG // MIGPBgkrBgEEAYI3LgMwgYEwPQYIKwYBBQUHAgEWMWh0
-// SIG // dHA6Ly93d3cubWljcm9zb2Z0LmNvbS9QS0kvZG9jcy9D
-// SIG // UFMvZGVmYXVsdC5odG0wQAYIKwYBBQUHAgIwNB4yIB0A
-// SIG // TABlAGcAYQBsAF8AUABvAGwAaQBjAHkAXwBTAHQAYQB0
-// SIG // AGUAbQBlAG4AdAAuIB0wDQYJKoZIhvcNAQELBQADggIB
-// SIG // AAfmiFEN4sbgmD+BcQM9naOhIW+z66bM9TG+zwXiqf76
-// SIG // V20ZMLPCxWbJat/15/B4vceoniXj+bzta1RXCCtRgkQS
-// SIG // +7lTjMz0YBKKdsxAQEGb3FwX/1z5Xhc1mCRWS3TvQhDI
-// SIG // r79/xn/yN31aPxzymXlKkVIArzgPF/UveYFl2am1a+TH
-// SIG // zvbKegBvSzBEJCI8z+0DpZaPWSm8tv0E4XCfMkon/VWv
-// SIG // L/625Y4zu2JfmttXQOnxzplmkIz/amJ/3cVKC5Em4jns
-// SIG // GUpxY517IW3DnKOiPPp/fZZqkHimbdLhnPkd/DjYlPTG
-// SIG // pQqWhqS9nhquBEKDuLWAmyI4ILUl5WTs9/S/fmNZJQ96
-// SIG // LjlXdqJxqgaKD4kWumGnEcua2A5HmoDF0M2n0O99g/Dh
-// SIG // O3EJ3110mCIIYdqwUB5vvfHhAN/nMQekkzr3ZUd46Pio
-// SIG // SKv33nJ+YWtvd6mBy6cJrDm77MbL2IK0cs0d9LiFAR6A
-// SIG // +xuJKlQ5slvayA1VmXqHczsI5pgt6o3gMy4SKfXAL1Qn
-// SIG // IffIrE7aKLixqduWsqdCosnPGUFN4Ib5KpqjEWYw07t0
-// SIG // MkvfY3v1mYovG8chr1m1rtxEPJdQcdeh0sVV42neV8HR
-// SIG // 3jDA/czmTfsNv11P6Z0eGTgvvM9YBS7vDaBQNdrvCScc
-// SIG // 1bN+NR4Iuto229Nfj950iEkSMIIE2jCCA8KgAwIBAgIT
-// SIG // MwAAAFROhquDk3LW6QAAAAAAVDANBgkqhkiG9w0BAQsF
-// SIG // ADB8MQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGlu
-// SIG // Z3RvbjEQMA4GA1UEBxMHUmVkbW9uZDEeMBwGA1UEChMV
-// SIG // TWljcm9zb2Z0IENvcnBvcmF0aW9uMSYwJAYDVQQDEx1N
-// SIG // aWNyb3NvZnQgVGltZS1TdGFtcCBQQ0EgMjAxMDAeFw0x
-// SIG // NTAzMjAxNzMyMjdaFw0xNjA2MjAxNzMyMjdaMIGzMQsw
-// SIG // CQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQ
-// SIG // MA4GA1UEBxMHUmVkbW9uZDEeMBwGA1UEChMVTWljcm9z
-// SIG // b2Z0IENvcnBvcmF0aW9uMQ0wCwYDVQQLEwRNT1BSMScw
-// SIG // JQYDVQQLEx5uQ2lwaGVyIERTRSBFU046QjhFQy0zMEE0
-// SIG // LTcxNDQxJTAjBgNVBAMTHE1pY3Jvc29mdCBUaW1lLVN0
-// SIG // YW1wIFNlcnZpY2UwggEiMA0GCSqGSIb3DQEBAQUAA4IB
-// SIG // DwAwggEKAoIBAQCyt8tOxHkNf+MWg51xLjC9BJQXNAS3
-// SIG // oDjJJ5A9Fz4FoQkbZThrgyWZxC2vEFVzi8Tr9i2J+Zj4
-// SIG // MWcBoytC9Wmawv5P63eWCRFRljZeJQstmp9B09KnLjRe
-// SIG // 0HApPwncuwXoGJgME/iRpZ4JTpNE5cHUl4Futw6G0/tf
-// SIG // 7wxAsmytlnL6l/ECGzG20wU4HwhDMkexLYqRRI618LT1
-// SIG // CcxFk3HxHZZWQs2VaLhoqEBScleUWvt3f+v54L7zeKhe
-// SIG // pseqkLdRAX8fJaxcHns/CrEQ3s8yzp+i1xw2lJocFZ31
-// SIG // CAqKbs//FhGXKlnahuNJul0fPlKKP29Bx+tPt+BMKFQt
-// SIG // 7GXLAgMBAAGjggEbMIIBFzAdBgNVHQ4EFgQUtTsKAcOp
-// SIG // 987C8qhvuxSujpan9sIwHwYDVR0jBBgwFoAU1WM6XIox
-// SIG // kPNDe3xGG8UzaFqFbVUwVgYDVR0fBE8wTTBLoEmgR4ZF
-// SIG // aHR0cDovL2NybC5taWNyb3NvZnQuY29tL3BraS9jcmwv
-// SIG // cHJvZHVjdHMvTWljVGltU3RhUENBXzIwMTAtMDctMDEu
-// SIG // Y3JsMFoGCCsGAQUFBwEBBE4wTDBKBggrBgEFBQcwAoY+
-// SIG // aHR0cDovL3d3dy5taWNyb3NvZnQuY29tL3BraS9jZXJ0
-// SIG // cy9NaWNUaW1TdGFQQ0FfMjAxMC0wNy0wMS5jcnQwDAYD
-// SIG // VR0TAQH/BAIwADATBgNVHSUEDDAKBggrBgEFBQcDCDAN
-// SIG // BgkqhkiG9w0BAQsFAAOCAQEAfZ7aSM1X6hLRIjAUNtfc
-// SIG // GdRoJ8ka9nI02gHgU/9Gf0OEwfiaUYSgYm0FEGaWIk5G
-// SIG // F6SaodG1TP+xvMTbg05TSlQn9j/z1UraYtgB1wm3hl2O
-// SIG // Nl/m82Vytw1qfcVUqxcWtFFsKvRqP3eJaYleP2oWrzhe
-// SIG // FnjJVnWdEXsvDcGJkPEQ6HL4HmS3O0j0hlpfSEX8GnjG
-// SIG // xHMfgdOjh3Ws+6svM14UqY9OoD0KjCJRuKafvGCmi25X
-// SIG // NAaRnZAVlwtO3ISTxgYmxE12z1SfoNleePnNGcLnqt0T
-// SIG // y2EBp8IKz15C0zPusuMxMgFcO5+1lbnipWnr3cW/v3Uh
-// SIG // MGz6s3inezkHzKGCA3owggJiAgEBMIHjoYG5pIG2MIGz
-// SIG // MQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3Rv
-// SIG // bjEQMA4GA1UEBxMHUmVkbW9uZDEeMBwGA1UEChMVTWlj
-// SIG // cm9zb2Z0IENvcnBvcmF0aW9uMQ0wCwYDVQQLEwRNT1BS
-// SIG // MScwJQYDVQQLEx5uQ2lwaGVyIERTRSBFU046QjhFQy0z
-// SIG // MEE0LTcxNDQxJTAjBgNVBAMTHE1pY3Jvc29mdCBUaW1l
-// SIG // LVN0YW1wIFNlcnZpY2WiJQoBATAJBgUrDgMCGgUAAxUA
-// SIG // SFjCXj3j3gXsf9/56EQNA5fRUBOggcIwgb+kgbwwgbkx
-// SIG // CzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpXYXNoaW5ndG9u
-// SIG // MRAwDgYDVQQHEwdSZWRtb25kMR4wHAYDVQQKExVNaWNy
-// SIG // b3NvZnQgQ29ycG9yYXRpb24xDTALBgNVBAsTBE1PUFIx
-// SIG // JzAlBgNVBAsTHm5DaXBoZXIgTlRTIEVTTjo1N0Y2LUMx
-// SIG // RTAtNTU0QzErMCkGA1UEAxMiTWljcm9zb2Z0IFRpbWUg
-// SIG // U291cmNlIE1hc3RlciBDbG9jazANBgkqhkiG9w0BAQUF
-// SIG // AAIFANjjtnAwIhgPMjAxNTA0MjMxODIwMzJaGA8yMDE1
-// SIG // MDQyNDE4MjAzMloweDA+BgorBgEEAYRZCgQBMTAwLjAK
-// SIG // AgUA2OO2cAIBADALAgEAAgMJ444CAf8wBwIBAAICFhMw
-// SIG // CgIFANjlB/ACAQAwNgYKKwYBBAGEWQoEAjEoMCYwDAYK
-// SIG // KwYBBAGEWQoDAaAKMAgCAQACAxbjYKEKMAgCAQACAweh
-// SIG // IDANBgkqhkiG9w0BAQUFAAOCAQEAX5oPtVBm1Q+mQBsV
-// SIG // 9SQ/tCQpzRBVvxCFm+8QxPb1n3GU5oIXY/TLWC6IBc5J
-// SIG // dAvSy9DThcXSX6kcm5UNdhx/US99IWXLTV5VhQIcZ5AU
-// SIG // fcSydhZnWI9XvQ3A/RBJfAtFcLEwLSktFicr647zJ7RC
-// SIG // tUK6P/F7+3vV6Iz7YuzGPW6r/F8brpGDcQy0jDUiMk80
-// SIG // 9Bc9cmZGjyv4chOcK0VW/RsDF5NeITpqHJNoq+MLmwa8
-// SIG // XDTG0HQ0nMjzyphZyc1ugYNxeFU+XoKrBxQPrZ51pjGG
-// SIG // q+OMlW2MfHIortUbzQuaPzWDDdUiRaBGh4MG5uX/sO2h
-// SIG // NgRkmvd5GPROEw80NDGCAvUwggLxAgEBMIGTMHwxCzAJ
-// SIG // BgNVBAYTAlVTMRMwEQYDVQQIEwpXYXNoaW5ndG9uMRAw
-// SIG // DgYDVQQHEwdSZWRtb25kMR4wHAYDVQQKExVNaWNyb3Nv
-// SIG // ZnQgQ29ycG9yYXRpb24xJjAkBgNVBAMTHU1pY3Jvc29m
-// SIG // dCBUaW1lLVN0YW1wIFBDQSAyMDEwAhMzAAAAVE6Gq4OT
-// SIG // ctbpAAAAAABUMA0GCWCGSAFlAwQCAQUAoIIBMjAaBgkq
-// SIG // hkiG9w0BCQMxDQYLKoZIhvcNAQkQAQQwLwYJKoZIhvcN
-// SIG // AQkEMSIEIA0l2MYZbqJbXry77vt56U0Bk87VQXsDxdvS
-// SIG // yE2z/AXVMIHiBgsqhkiG9w0BCRACDDGB0jCBzzCBzDCB
-// SIG // sQQUSFjCXj3j3gXsf9/56EQNA5fRUBMwgZgwgYCkfjB8
-// SIG // MQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3Rv
-// SIG // bjEQMA4GA1UEBxMHUmVkbW9uZDEeMBwGA1UEChMVTWlj
-// SIG // cm9zb2Z0IENvcnBvcmF0aW9uMSYwJAYDVQQDEx1NaWNy
-// SIG // b3NvZnQgVGltZS1TdGFtcCBQQ0EgMjAxMAITMwAAAFRO
-// SIG // hquDk3LW6QAAAAAAVDAWBBSmfZmd7VAFWeyBJm5qdnOt
-// SIG // N2So8zANBgkqhkiG9w0BAQsFAASCAQA+90jEswBeFg99
-// SIG // ePFJ9iX8CiFSG5k3UczzkG4BPmjUdxcQ7YkWo2b/Qnou
-// SIG // 7g+yhfQ/zTLKxdINVFoRmGjj6zBd4HKC2srm+YK2loPu
-// SIG // VIbZXOm1d/qtHR2s8RhJsabQ8GOHPR39RKvU5fhnkCMr
-// SIG // PHisyaiegTSCIH6whOqW67OCZ8k8nES4y/iB9rryujaS
-// SIG // ToywtGjjMxo9JoPIBaaMDHDLoKvkD4QI+QdwQEMXT/cL
-// SIG // anhT9ILtrhut0nCYVug5Yeudype1o7dYmwGF0zX7rkr3
-// SIG // TYhCncv1lFamuwusirz89PWS4xWOTHq3ihrRAfKn8k96
-// SIG // SBBTthZcWA2uGv3eXBes
-// SIG // End signature block

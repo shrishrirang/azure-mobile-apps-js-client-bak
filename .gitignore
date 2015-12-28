@@ -27,5 +27,6 @@ packages
 *.jar
 *.xccheckout
 deriveddata
-
+.vs
+Backup
 *.iml
