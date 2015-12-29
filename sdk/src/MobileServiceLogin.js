@@ -12,6 +12,8 @@ var Platform = require('Platform');
 
 var loginUrl = ".auth/login";
 var loginDone = "done";
+var sessionModeKey = 'session_mode';
+var sessionModeValueToken = 'token';
 
 function MobileServiceLogin(client, ignoreFilters) {
     /// <summary>
@@ -426,10 +428,11 @@ function loginWithLoginControl(login, provider, useSingleSignOn, parameters, cal
         provider);
     var endUri = null;
 
-    if (!_.isNull(parameters)) {
-        var queryString = _.url.getQueryString(parameters);
-        startUri = _.url.combinePathAndQuery(startUri, queryString);
-    }
+    parameters = parameters || {};
+    parameters[sessionModeKey] = sessionModeValueToken;
+    
+    var queryString = _.url.getQueryString(parameters);
+    startUri = _.url.combinePathAndQuery(startUri, queryString);
 
     // If not single sign-on, then we need to construct a non-null end uri.
     if (!useSingleSignOn) {

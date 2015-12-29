@@ -112,7 +112,7 @@ $testGroup('MobileServiceClient.js',
     .tag('login')
     .checkAsync(function () {
         return testLoginParameters(['facebook', { parameters: { display: 'popup' } }],
-                                  "http://www.test.com/.auth/login/facebook?display=popup",
+                                  "http://www.test.com/.auth/login/facebook?display=popup&session_mode=token",
                                   "http://www.test.com/.auth/login/done");
     }),
 
@@ -120,7 +120,7 @@ $testGroup('MobileServiceClient.js',
     .tag('login')
     .checkAsync(function () {
         return testLoginParameters(['facebook', { useSingleSignOn: true, parameters: { display: 'popup' } }],
-                                  "http://www.test.com/.auth/login/facebook?display=popup",
+                                  "http://www.test.com/.auth/login/facebook?display=popup&session_mode=token",
                                   null);
     }),
 
@@ -128,7 +128,7 @@ $testGroup('MobileServiceClient.js',
     .tag('login')
     .checkAsync(function () {
         return testLoginParameters(['facebook', { useSingleSignOn: true }],
-                                  "http://www.test.com/.auth/login/facebook",
+                                  "http://www.test.com/.auth/login/facebook?session_mode=token",
                                   null);
     }),
 
@@ -136,7 +136,7 @@ $testGroup('MobileServiceClient.js',
     .tag('login')
     .checkAsync(function () {
         return testLoginParameters(['facebook'],
-                                  "http://www.test.com/.auth/login/facebook",
+                                  "http://www.test.com/.auth/login/facebook?session_mode=token",
                                   "http://www.test.com/.auth/login/done");
     }),
 
@@ -144,7 +144,7 @@ $testGroup('MobileServiceClient.js',
     .tag('login')
     .checkAsync(function () {
         return testLoginParameters(['facebook', { parameters: { display: 'popup' } }],
-                                  "https://www.testalternateloginhost.com/.auth/login/facebook?display=popup",
+                                  "https://www.testalternateloginhost.com/.auth/login/facebook?display=popup&session_mode=token",
                                   "https://www.testalternateloginhost.com/.auth/login/done", "https://www.testalternateloginhost.com/");
     }),
 
@@ -152,7 +152,7 @@ $testGroup('MobileServiceClient.js',
     .tag('login')
     .checkAsync(function () {
         return testLoginParameters(['facebook', { useSingleSignOn: true, parameters: { display: 'popup' } }],
-                                  "https://www.testalternateloginhost.com/.auth/login/facebook?display=popup",
+                                  "https://www.testalternateloginhost.com/.auth/login/facebook?display=popup&session_mode=token",
                                   null, "https://www.testalternateloginhost.com/");
     }),
 
@@ -160,7 +160,7 @@ $testGroup('MobileServiceClient.js',
     .tag('login')
     .checkAsync(function () {
         return testLoginParameters(['facebook', { useSingleSignOn: true }],
-                                  "https://www.testalternateloginhost.com/.auth/login/facebook",
+                                  "https://www.testalternateloginhost.com/.auth/login/facebook?session_mode=token",
                                   null, "https://www.testalternateloginhost.com/");
     }),
 
@@ -168,7 +168,7 @@ $testGroup('MobileServiceClient.js',
     .tag('login')
     .checkAsync(function () {
         return testLoginParameters(['facebook'],
-                                  "https://www.testalternateloginhost.com/.auth/login/facebook",
+                                  "https://www.testalternateloginhost.com/.auth/login/facebook?session_mode=token",
                                   "https://www.testalternateloginhost.com/.auth/login/done", "https://www.testalternateloginhost.com/");
     }),
 
@@ -177,7 +177,7 @@ $testGroup('MobileServiceClient.js',
     .tag('login')
     .checkAsync(function () {
         return testLoginParameters(['facebook', { parameters: { display: 'popup' } }],
-                                  "http://www.test.com/login/facebook?display=popup",
+                                  "http://www.test.com/login/facebook?display=popup&session_mode=token",
                                   "http://www.test.com/login/done", null, "login");
     }),
 
@@ -185,7 +185,7 @@ $testGroup('MobileServiceClient.js',
     .tag('login')
     .checkAsync(function () {
         return testLoginParameters(['facebook', { useSingleSignOn: true, parameters: { display: 'popup' } }],
-                                  "http://www.test.com/login/facebook?display=popup",
+                                  "http://www.test.com/login/facebook?display=popup&session_mode=token",
                                   null, null, "login");
     }),
 
@@ -193,7 +193,7 @@ $testGroup('MobileServiceClient.js',
     .tag('login')
     .checkAsync(function () {
         return testLoginParameters(['facebook', { useSingleSignOn: true }],
-                                  "http://www.test.com/login/facebook",
+                                  "http://www.test.com/login/facebook?session_mode=token",
                                   null, null, "login");
     }),
 
@@ -201,7 +201,7 @@ $testGroup('MobileServiceClient.js',
     .tag('login')
     .checkAsync(function () {
         return testLoginParameters(['facebook'],
-                                  "http://www.test.com/login/facebook",
+                                  "http://www.test.com/login/facebook?session_mode=token",
                                   "http://www.test.com/login/done", null, "login");
     }),
 
@@ -209,7 +209,7 @@ $testGroup('MobileServiceClient.js',
     .tag('login')
     .checkAsync(function () {
         return testLoginParameters(['facebook', { parameters: { display: 'popup' } }],
-                                  "https://www.testalternateloginhost.com/login/facebook?display=popup",
+                                  "https://www.testalternateloginhost.com/login/facebook?display=popup&session_mode=token",
                                   "https://www.testalternateloginhost.com/login/done", "https://www.testalternateloginhost.com/", "login");
     }),
 
@@ -217,7 +217,7 @@ $testGroup('MobileServiceClient.js',
     .tag('login')
     .checkAsync(function () {
         return testLoginParameters(['facebook', { useSingleSignOn: true, parameters: { display: 'popup' } }],
-                                  "https://www.testalternateloginhost.com/login/facebook?display=popup",
+                                  "https://www.testalternateloginhost.com/login/facebook?display=popup&session_mode=token",
                                   null, "https://www.testalternateloginhost.com/", "login");
     }),
 
@@ -225,7 +225,7 @@ $testGroup('MobileServiceClient.js',
     .tag('login')
     .checkAsync(function () {
         return testLoginParameters(['facebook', { useSingleSignOn: true }],
-                                  "https://www.testalternateloginhost.com/login/facebook",
+                                  "https://www.testalternateloginhost.com/login/facebook?session_mode=token",
                                   null, "https://www.testalternateloginhost.com/", "login");
     }),
 
@@ -233,7 +233,7 @@ $testGroup('MobileServiceClient.js',
     .tag('login')
     .checkAsync(function () {
         return testLoginParameters(['facebook'],
-                                  "https://www.testalternateloginhost.com/login/facebook",
+                                  "https://www.testalternateloginhost.com/login/facebook?session_mode=token",
                                   "https://www.testalternateloginhost.com/login/done", "https://www.testalternateloginhost.com/", "login");
     }),
 
@@ -254,7 +254,7 @@ $testGroup('MobileServiceClient.js',
             .tag('login')
             .checkAsync(function () {
                 return testLoginParameters(['facebook'],
-                                          "http://www.test.com/.auth/login/facebook",
+                                          "http://www.test.com/.auth/login/facebook?session_mode=token",
                                           "http://www.test.com/.auth/login/done", null, null);
             }),
     

@@ -173,7 +173,9 @@ exports.login = function (startUri, endUri, callback) {
     var findProtocol = /^[a-z]+:/,
         requiredProtocol = 'https:';
     startUri = startUri.replace(findProtocol, requiredProtocol);
-    endUri = endUri.replace(findProtocol, requiredProtocol);
+    if (endUri) {
+        endUri = endUri.replace(findProtocol, requiredProtocol);
+    }
 
     return getBestProvider(knownLoginUis).login(startUri, endUri, callback);
 };
