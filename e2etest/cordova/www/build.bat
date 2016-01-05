@@ -16,7 +16,7 @@ REM call cordova plugin add https://github.com/azure/azure-mobile-services-cordo
 
 REM Plugins required for push notifications
 call cordova plugin add cordova-plugin-device
-call cordova plugin add https://github.com/phonegap-build/PushPlugin.git
+call cordova plugin add https://github.com/phonegap/phonegap-plugin-push.git
 
 REM For debugging
 call cordova plugin add cordova-plugin-console
