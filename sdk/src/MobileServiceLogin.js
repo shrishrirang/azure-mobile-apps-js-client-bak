@@ -426,12 +426,18 @@ function loginWithLoginControl(login, provider, useSingleSignOn, parameters, cal
         client.alternateLoginHost || client.applicationUrl,
         client.loginUriPrefix || loginUrl,
         provider);
-    var endUri = null;
 
-    parameters = parameters || {};
-    parameters[sessionModeKey] = sessionModeValueToken;
-    
-    var queryString = _.url.getQueryString(parameters);
+    var endUri = null,
+        queryParams = {},
+        key;
+
+    // Make a copy of the query parameters and set the session mode to token.
+    for (key in parameters) {
+        queryParams[key] = parameters[key];
+    }
+    queryParams[sessionModeKey] = sessionModeValueToken;
+
+    var queryString = _.url.getQueryString(queryParams);
     startUri = _.url.combinePathAndQuery(startUri, queryString);
 
     // If not single sign-on, then we need to construct a non-null end uri.
