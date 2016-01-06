@@ -112,8 +112,8 @@ $testGroup('MobileServiceClient.js',
     .tag('login')
     .checkAsync(function () {
         return testLoginParameters(['facebook', { parameters: { display: 'popup' } }],
-                                  "http://www.test.com/.auth/login/facebook?display=popup&session_mode=token",
-                                  "http://www.test.com/.auth/login/done");
+            "http://www.test.com/.auth/login/facebook?display=popup&session_mode=token",
+            "http://www.test.com/.auth/login/done");
     }),
 
     $test('loginWithOptions_provider_singlesignon_parameters')
@@ -130,6 +130,22 @@ $testGroup('MobileServiceClient.js',
         return testLoginParameters(['facebook', { useSingleSignOn: true }],
                                   "http://www.test.com/.auth/login/facebook?session_mode=token",
                                   null);
+    }),
+
+    $test('loginWithOptions_provider_sessionmode_token_parameter')
+    .tag('login')
+    .checkAsync(function () {
+        return testLoginParameters(['facebook', { parameters: { display: 'popup', session_mode: 'token' } }],
+            "http://www.test.com/.auth/login/facebook?display=popup&session_mode=token",
+            "http://www.test.com/.auth/login/done");
+    }),
+
+    $test('loginWithOptions_provider_sessionmode_other_than_token_parameter')
+    .tag('login')
+    .checkAsync(function () {
+        return testLoginParameters(['facebook', { parameters: { display: 'popup', session_mode: 'some_session_mode' } }],
+            "http://www.test.com/.auth/login/facebook?display=popup&session_mode=token",
+            "http://www.test.com/.auth/login/done");
     }),
 
     $test('loginWithOptions_provider')
@@ -749,8 +765,12 @@ function testLoginParameters(args, expectedStartUri, expectedEndUri, alternateLo
         });
     };
 
-    return client.loginWithOptions.apply(client, args).then(function (currentUser) {
+    var originalArgs = JSON.stringify(args);
+    return client.loginWithOptions.apply(client, args).then(function(currentUser) {
         $assert.areEqual(client.currentUser.userId, 'bob');
         $assert.areEqual(client.currentUser.mobileServiceAuthenticationToken, 'zumo');
+
+        // Make sure args haven't changed.
+        $assert.areEqual(JSON.stringify(args), originalArgs);
     });
 }

@@ -16,7 +16,7 @@ cordova plugin add cordova-plugin-ms-azure-mobile-apps
 
 # Plugins required for push notifications
 cordova plugin add cordova-plugin-device
-cordova plugin add https://github.com/phonegap-build/PushPlugin.git
+cordova plugin add https://github.com/phonegap/phonegap-plugin-push.git
 
 # For debugging
 cordova plugin add cordova-plugin-console
