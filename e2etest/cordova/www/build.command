@@ -11,8 +11,8 @@ rm -rf ../plugins
 rm -rf TestFramework 
 rsync -rlK ../../TestFramework .
 
-cordova plugin add cordova-plugin-ms-azure-mobile-apps
-#cordova plugin add https://github.com/azure/azure-mobile-services-cordova.git
+#cordova plugin add cordova-plugin-ms-azure-mobile-apps
+cordova plugin add https://github.com/shrishrirang/azure-mobile-services-cordova.git#beta2
 
 # Plugins required for push notifications
 cordova plugin add cordova-plugin-device
@@ -23,8 +23,8 @@ cordova plugin add cordova-plugin-console
 
 # Now build platforms supported on OSX
 
-cordova platform add android
-cordova build android
+#cordova platform add android
+#cordova build android
 
 cordova platform add ios
 cordova build ios
