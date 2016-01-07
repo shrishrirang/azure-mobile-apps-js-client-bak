@@ -45,10 +45,5 @@ var app = {
         receivedElement.setAttribute('style', 'display:block;');
 
         console.log('Received Event: ' + id);
-    },
-    pushNotificationQueue: [],
-    onNotification: function(event) {
-        console.log('Recieved event' + JSON.stringify(event));
-        app.pushNotificationQueue.push(event);
-    },    
+    }
 };
