@@ -6,6 +6,10 @@
 /// <reference path="/LiveSDKHTML/js/wl.js" />
 /// <reference path="../testFramework.js" />
 
+function sid() {
+    ssid = Windows.Security.Authentication.Web.WebAuthenticationBroker.getCurrentApplicationCallbackUri().absoluteUri;
+}
+
 function defineLoginTestsNamespace() {
     var tests = [];
     var i;
@@ -236,7 +240,11 @@ function defineLoginTestsNamespace() {
                             var retrievedItem = items[0];
                             var usersFeatureEnabled = retrievedItem.UsersEnabled;
                             if (retrievedItem.identities) {
-                                lastUserIdentityObject = JSON.parse(items[0].identities);
+                                if (typeof items[0].identities === 'string') {
+                                    lastUserIdentityObject = JSON.parse(items[0].identities);
+                                } else {
+                                    lastUserIdentityObject = items[0].identities;
+                                }
                                 test.addLog('Identities object: ', lastUserIdentityObject);
                                 var providerIdentity = lastUserIdentityObject[provider];
                                 if (!providerIdentity) {
@@ -282,25 +290,29 @@ function defineLoginTestsNamespace() {
                 }
             }
 
-            table.insert(item).done(function (newItem) {
-                insertedItem = newItem;
-                test.addLog('Inserted item: ', newItem);
-                if (tablePermission === TABLE_PERMISSION_USER) {
-                    var currentUser = client.currentUser.userId;
-                    if (currentUser === newItem.userId) {
-                        test.addLog('User id correctly added by the server script');
-                    } else {
-                        test.addLog('Error, user id not set by the server script');
-                        done(false);
-                        return;
+            setTimeout(function() {
+                table.insert(item).done(function (newItem) {
+                    insertedItem = newItem;
+                    test.addLog('Inserted item: ', newItem);
+                    if (tablePermission === TABLE_PERMISSION_USER) {
+                        var currentUser = client.currentUser.userId;
+                        if (currentUser === newItem.userId) {
+                            test.addLog('User id correctly added by the server script');
+                        } else {
+                            test.addLog('Error, user id not set by the server script');
+                            done(false);
+                            return;
+                        }
                     }
-                }
-                insertCallback();
-            }, function (err) {
-                insertedItem = item;
-                insertedItem.id = item.id || 1;
-                insertCallback(err);
-            });
+                    insertCallback();
+                }, function (err) {
+                    insertedItem = item;
+                    insertedItem.id = item.id || 1;
+                    insertCallback(err);
+                });
+
+            }, 1000);
+
         });
     }
 
