@@ -1,4 +1,4 @@
-var name = 'apns';
+var name = 'gcm';
 
 try {
     
@@ -9,7 +9,8 @@ function definePushTestsNamespace() {
         notification = {
             type: 'toast',
             payloadWindows: '<?xml version="1.0"?><toast><visual><binding template="ToastText01"><text id="1">hello world2</text></binding></visual></toast>',
-        payload: '{"aps":{"alert":"Notification testing"}}'
+            payloadIos: '{"aps":{"alert":"Notification testing"}}',
+            payload: '{"data":{"message":"android testing..."}}'
         },
         receivedNotification = {},
         pushNotification,
@@ -19,7 +20,8 @@ function definePushTestsNamespace() {
 
         pushNotification = PushNotification.init({
             android: {
-                senderID: "467840898434"
+                senderID: "467840898434" // app named e2e-node in google console
+//                 senderID: "919628281261" //net
             },
             ios: {
                 alert: "true",

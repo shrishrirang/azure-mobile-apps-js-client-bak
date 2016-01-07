@@ -11,8 +11,8 @@ REM copy the js files from TestFramework over to TestFramework
 call rmdir /s /q TestFramework
 call robocopy /MIR ..\..\TestFramework TestFramework
 
-call cordova plugin add cordova-plugin-ms-azure-mobile-apps
-REM call cordova plugin add https://github.com/azure/azure-mobile-services-cordova.git
+REM call cordova plugin add cordova-plugin-ms-azure-mobile-apps
+call cordova plugin add https://github.com/shrishrirang/azure-mobile-services-cordova.git#beta2
 
 REM Plugins required for push notifications
 call cordova plugin add cordova-plugin-device
@@ -23,11 +23,11 @@ call cordova plugin add cordova-plugin-console
 
 REM Now build platforms supported on Windows
 
-call cordova platform add android
-call cordova build android
+REM call cordova platform add android
+REM call cordova build android
 
-call cordova platform add wp8
-call cordova build wp8
+REM call cordova platform add wp8
+REM call cordova build wp8
 
 call cordova platform add windows
 call cordova build windows
