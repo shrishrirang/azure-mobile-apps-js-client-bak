@@ -171,7 +171,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Internals\DevIntellisense.js" />
-    <Content Include="Internals\InternalsVisible.js" />
     <Content Include="Internals\NodeExports.js" />
     <Content Include="LoginUis\BrowserPopup.js" />
     <Content Include="LoginUis\CordovaPopup.js" />
@@ -181,8 +180,8 @@
     <Content Include="MobileServices.intellisense.js" />
     <Content Include="MobileServices.priconfig.xml" />
     <Content Include="MobileServiceTable.js" />
-    <Content Include="Platforms\Platform.Web.js" />
-    <Content Include="Platforms\Platform.WinJS.js" />
+    <Content Include="Platforms\web\Platform.js" />
+    <Content Include="Platforms\winjs\Platform.js" />
     <Content Include="Push\Push.js" />
     <Content Include="Transports\IframeTransport.js" />
     <Content Include="Transports\DirectAjaxTransport.js" />

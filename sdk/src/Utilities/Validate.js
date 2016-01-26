@@ -4,10 +4,10 @@
 
 /// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\base.js" />
 /// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
-/// <reference path="..\Generated\Zumo.DevIntellisense.js" />
+/// <reference path="..\Generated\MobileServices.DevIntellisense.js" />
 
-var _ = require('Extensions');
-var Platform = require('Platform');
+var _ = require('./Extensions');
+var Platform = require('Platforms/Platform');
 
 exports.notNull = function (value, name) {
     /// <summary>
@@ -77,7 +77,7 @@ exports.isDate = function (value, name) {
     exports.notNull(value, name);    
     if (!_.isDate(value)) {
         throw _.format(
-            Platform.getResourceString("Validate_TypeCheckError"),
+            Platform.getResourceString("TypeCheckError"),
             name || 'Value',
             'Date',
             typeof value);
@@ -97,9 +97,27 @@ exports.isNumber = function (value, name) {
 
     if (!_.isNumber(value)) {
         throw _.format(
-            Platform.getResourceString("Validate_TypeCheckError"),
+            Platform.getResourceString("TypeCheckError"),
             name || 'Value',
             'Number',
+            typeof value);
+    }
+};
+
+exports.isFunction = function (value, name) {
+    /// <summary>
+    /// Ensure the value is a function.
+    /// </summary>
+    /// <param name="value" mayBeNull="true">The value to check.</param>
+    /// <param name="name" mayBeNull="true" optional="true" type="String">
+    /// Optional name of the value to throw.
+    /// </param>
+
+    if (!_.isFunction(value)) {
+        throw _.format(
+            Platform.getResourceString("TypeCheckError"),
+            name || 'Value',
+            'Function',
             typeof value);
     }
 };
@@ -140,7 +158,25 @@ exports.isInteger = function (value, name) {
 
     if (parseInt(value, 10) !== parseFloat(value)) {
         throw _.format(
-            Platform.getResourceString("Validate_TypeCheckError"),
+            Platform.getResourceString("TypeCheckError"),
+            name || 'Value',
+            'number',
+            typeof value);
+    }
+};
+
+exports.isBool = function (value, name) {
+    /// <summary>
+    /// Ensure the value is a bool.
+    /// </summary>
+    /// <param name="value" mayBeNull="true">The value to check.</param>
+    /// <param name="name" mayBeNull="true" optional="true" type="String">
+    /// Optional name of the value to throw.
+    /// </param>
+
+    if (!_.isBool(value)) {
+        throw _.format(
+            Platform.getResourceString("TypeCheckError"),
             name || 'Value',
             'number',
             typeof value);
@@ -158,7 +194,7 @@ exports.isString = function (value, name) {
 
     if (!_.isString(value)) {
         throw _.format(
-            Platform.getResourceString("Validate_TypeCheckError"),
+            Platform.getResourceString("TypeCheckError"),
             name || 'Value',
             'string',
             typeof value);
@@ -176,7 +212,7 @@ exports.isObject = function (value, name) {
 
     if (!_.isObject(value)) {
         throw _.format(
-            Platform.getResourceString("Validate_TypeCheckError"),
+            Platform.getResourceString("TypeCheckError"),
             name || 'Value',
             'object',
             typeof value);
@@ -194,7 +230,7 @@ exports.isArray = function (value, name) {
 
     if (!Array.isArray(value)) {
         throw _.format(
-            Platform.getResourceString("Validate_TypeCheckError"),
+            Platform.getResourceString("TypeCheckError"),
             name || 'Value',
             'array',
             typeof value);

@@ -64,7 +64,7 @@
     <Content Include="generated\Tests.js" />
     <Content Include="index.html" />
     <Content Include="js\MobileServices.intellisense.js" />
-    <Content Include="js\MobileServices.Web.Internals.js" />
+    <Content Include="js\MobileServices.Web.js" />
     <Content Include="js\TestClientHelper.js" />
     <Content Include="js\TestFrameworkAdapter.js" />
     <Content Include="promiseTests\readme.txt" />
@@ -72,7 +72,6 @@
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Tests.library" />
     <Content Include="promiseTests\package.json" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -124,11 +123,8 @@
   <Target Name="CreateTestLibrary">
     <!-- Get dependencies from src project -->
     <Message Importance="high" Text="Copying over dependencies from the src project" />
-    <Copy SourceFiles="..\..\src\Generated\MobileServices.Web.Internals.js" DestinationFolder="js" />
+    <Copy SourceFiles="..\..\src\Generated\MobileServices.Web.js" DestinationFolder="js" />
     <Copy SourceFiles="..\..\src\MobileServices.intellisense.js" DestinationFolder="js" />
-    <!-- Merge the modules into a library -->
-    <Message Importance="high" Text="Generating Test Library" />
-    <MergeJSModules LibraryDefinitions="Tests.library" />
   </Target>
   <PropertyGroup>
     <BuildDependsOn>

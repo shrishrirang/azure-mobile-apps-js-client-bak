@@ -7,10 +7,7 @@
 /// <reference path="..\..\js\MobileServices.Internals.js" />
 /// <reference path="..\..\generated\Tests.js" />
 
-// Declare JSHint globals
-/*global MobileServiceClient:false, Platform:false */
-
-var testData = require("constants");
+var testData = require('../utilities/constants');
 
 function emptyTable(table) {
     return table.read().then(function (results) {
