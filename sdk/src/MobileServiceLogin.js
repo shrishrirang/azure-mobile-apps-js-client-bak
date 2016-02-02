@@ -378,7 +378,10 @@ function loginWithProviderAndToken(login, provider, token, parameters, callback)
     // one-at-a-time restriction.
     login._loginState = { inProcess: true, cancelCallback: null };
 
-    var url = loginUrl + '/' + provider;
+    var url = _.url.combinePathSegments(client.alternateLoginHost || client.applicationUrl,
+                                        client.loginUriPrefix || loginUrl,
+                                        provider);
+
     if (!_.isNull(parameters)) {
         var queryString = _.url.getQueryString(parameters);
         url = _.url.combinePathAndQuery(url, queryString);
