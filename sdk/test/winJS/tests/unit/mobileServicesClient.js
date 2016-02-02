@@ -109,6 +109,46 @@ $testGroup('MobileServiceClient.js',
         });
     }),
 
+    $test('testLoginWithToken_withoutAlternateLoginHost_withoutLoginUriPrefix')
+    .tag('login')
+    .checkAsync(function () {
+        return testLoginWithToken(['facebook', { access_token: 'zumo' }],
+                                  'https://www.test.com/test/',
+                                  null,
+                                  null,
+                                  'https://www.test.com/test/.auth/login/facebook');
+    }),
+
+    $test('testLoginWithToken_withoutAlternateLoginHost_withLoginUriPrefix')
+    .tag('login')
+    .checkAsync(function () {
+        return testLoginWithToken(['aad', { access_token: 'zumo' }],
+                                  'https://www.test.com/test',
+                                  undefined,
+                                  'custom/prefix',
+                                  'https://www.test.com/test/custom/prefix/aad');
+    }),
+
+    $test('testLoginWithToken_withAlternateLoginHost_withoutLoginUriPrefix')
+    .tag('login')
+    .checkAsync(function () {
+        return testLoginWithToken(['google', { access_token: 'zumo' }],
+                                  'https://www.test.com/test',
+                                  'https://www.alternateloginhost.com/test/',
+                                  undefined,
+                                  'https://www.alternateloginhost.com/test/.auth/login/google');
+    }),
+
+    $test('testLoginWithToken_withAlternateLoginHost_withLoginUriPrefix')
+    .tag('login')
+    .checkAsync(function () {
+        return testLoginWithToken(['microsoftaccount', { access_token: 'zumo' }],
+                                  'https://www.test.com/test/',
+                                  'https://www.alternateloginhost.com/test',
+                                  'custom/prefix',
+                                  'https://www.alternateloginhost.com/test/custom/prefix/microsoftaccount');
+    }),
+
     $test('loginWithOptions_provider_parameters')
     .tag('login')
     .checkAsync(function () {
@@ -775,3 +815,21 @@ function testLoginParameters(args, expectedStartUri, expectedEndUri, alternateLo
         $assert.areEqual(JSON.stringify(args), originalArgs);
     });
 }
+
+function testLoginWithToken(args, serviceUrl, alternateLoginHost, loginUriPrefix, expectedLoginUri) {
+
+    var client = new WindowsAzure.MobileServiceClient(serviceUrl);
+
+    client = client.withFilter(function (req, next, callback) {
+        $assert.areEqual(req.url, expectedLoginUri);
+        callback(null, { status: 200, responseText: '{"authenticationToken":"zumo","user":{"userId":"bob"}}' });
+    });
+
+    client.alternateLoginHost = alternateLoginHost;
+    client.loginUriPrefix = loginUriPrefix;
+
+    client._login.ignoreFilters = false;
+
+    return client.login.apply(client, args);
+}
+
