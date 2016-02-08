@@ -6,11 +6,11 @@
 /// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
 /// <reference path="Generated\MobileServices.DevIntellisense.js" />
 
-var _ = require('./Utilities/Extensions');
-var Validate = require('./Utilities/Validate');
-var Platform = require('Platforms/Platform');
-var MobileServiceTable = require('./MobileServiceTable').MobileServiceTable;
-var MobileServiceLogin = require('./MobileServiceLogin').MobileServiceLogin;
+var _ = require('./Utilities/Extensions'),
+    Validate = require('./Utilities/Validate'),
+    Platform = require('Platforms/Platform'),
+    MobileServiceTable = require('./MobileServiceTable').MobileServiceTable,
+    MobileServiceLogin = require('./MobileServiceLogin').MobileServiceLogin;
 
 var Push;
 try {
@@ -357,12 +357,17 @@ MobileServiceClient.prototype.login = Platform.async(
         this._login.login(provider, token, useSingleSignOn, callback);
     });
 
-MobileServiceClient.prototype.logout = function () {
+MobileServiceClient.prototype.logout = Platform.async(function(callback) {
     /// <summary>
     /// Log a user out of a Mobile Services application.
+    /// <param name="callback" type="Function" mayBeNull="true">
+    /// Optional callback accepting error as a parameter.
+    /// </param>
     /// </summary>
+    
     this.currentUser = null;
-};
+    callback();
+});
 
 MobileServiceClient.prototype.invokeApi = Platform.async(
     function (apiName, options, callback) {
