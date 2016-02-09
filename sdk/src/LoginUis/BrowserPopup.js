@@ -39,7 +39,7 @@ exports.login = function (startUri, endUri, callback) {
         return;
     }
 
-    var loginWindow = window.open(startUri, "_blank", "location=no"),
+    var loginWindow = window.open(startUri, "_blank", "location=no,resizable=yes"),
         complete = function(errorValue, oauthValue) {
             // Clean up event handlers, windows, frames, ...
             window.clearInterval(checkForWindowClosedInterval);
