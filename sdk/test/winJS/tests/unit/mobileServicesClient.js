@@ -317,13 +317,14 @@ $testGroup('MobileServiceClient.js',
     
 
     $test('logout')
-    .description('Verify Authentication.logout undoes the effects of logging in')
-    .check(function () {
+    .description('Verify Authentication.logout clears currentUser')
+    .checkAsync(function () {
         var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
         client.currentUser = { userId: 'bob', mobileServiceAuthenticationToken: 'abcd' };
 
-        client.logout();
-        $assert.areEqual(client.currentUser, null);
+        return client.logout().then(function () {
+            $assert.areEqual(client.currentUser, null);
+        });
     }),
 
     $test('static initialization of appInstallId')

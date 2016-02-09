@@ -67,7 +67,12 @@ exports.login = function (startUri, endUri, callback) {
             // Parse message
             var envelope;
             try {
-                envelope = JSON.parse(evt.data);
+				// Temporary workaround for IE8 bug until it is fixed in EA.
+				if (typeof evt.data === 'string') {
+					envelope = JSON.parse(evt.data);
+				} else {
+					envelope = evt.data;
+				}
             } catch(ex) {
                 // Not JSON - it's not for us. Ignore it and keep waiting for the next message.
                 return;
@@ -105,8 +110,7 @@ exports.login = function (startUri, endUri, callback) {
 function createIntermediateIframeForLogin(runtimeOrigin, completionOrigin) {
     var frame = document.createElement("iframe");
     frame.name = "zumo-login-receiver"; // loginviaiframe.html specifically looks for this name
-    frame.src = runtimeOrigin +
-        "/crossdomain/loginreceiver?completion_origin=" + encodeURIComponent(completionOrigin);
+    frame.src = runtimeOrigin + "/.auth/login/iframereceiver?completion_origin=" + encodeURIComponent(completionOrigin);
     frame.setAttribute("width", 0);
     frame.setAttribute("height", 0);
     frame.style.display = "none";

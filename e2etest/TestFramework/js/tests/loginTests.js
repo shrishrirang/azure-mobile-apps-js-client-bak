@@ -330,9 +330,10 @@ function defineLoginTestsNamespace() {
     function createLogoutTest() {
         return new zumo.Test('Log out', function (test, done) {
             var client = zumo.getClient();
-            client.logout();
-            test.addLog('Logged out');
-            done(true);
+            client.logout().then(function() {
+                test.addLog('Logged out');
+                done(true);
+            });
         });
     }
 
