@@ -159,9 +159,17 @@ module.exports = function(grunt) {
                 }
             }
         },
+        copy: {
+            web: {
+                src: 'MobileServices.Web.*js',
+                dest: 'dist/',
+                expand: true,
+                cwd: 'sdk/src/Generated/'
+            }
+        },
         watch: {
             files: '<%= files.all %>',
-            tasks: ['concat', 'browserify', 'uglify']
+            tasks: ['concat', 'browserify', 'uglify', 'copy']
         }
     });
 
@@ -171,9 +179,10 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-browserify');
     grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-contrib-copy');
         
     // Default task(s).
-    grunt.registerTask('default', ['concat', 'browserify', 'uglify', 'jshint']);
+    grunt.registerTask('default', ['concat', 'browserify', 'uglify', 'copy', 'jshint']);
 };
 
 var header = '// ----------------------------------------------------------------------------\n' +
