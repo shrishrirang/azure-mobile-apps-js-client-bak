@@ -18,13 +18,12 @@ deriveddata
 Backup
 *.iml
 
-#ignore build files
-bin/
-obj/
-bld/
-dist/
-gen/
-[Gg]enerated/
+# Build files
+bin
+obj
+bld
+gen
+[Gg]enerated
 
 # VS files
 *.user
@@ -33,5 +32,13 @@ gen/
 
 ## END: Files common to .gitignore and .npmignore
 
-# Distributables directory
-dist
+# Test files
+test
+e2etest
+
+# Exclude VS files as we want to keep the npm package as small as possible
+*.sln
+*.proj
+
+.npmignore
+.git*
