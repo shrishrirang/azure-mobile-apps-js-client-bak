@@ -1,5 +1,6 @@
 var fs = require('fs'),
     rimraf = require('rimraf'),
+    path = require('path'),
     execSync = require('child_process').execSync;
 
 function run(command) {
@@ -10,7 +11,7 @@ function run(command) {
     console.log(result);
 }
 
-function setupCordova() {
+function setupCordovaTests() {
 
     process.chdir(__dirname);
 
@@ -58,4 +59,24 @@ function setupCordova() {
     
 }
 
-setupCordova();
+function setupBrowserTests() {
+
+    process.chdir(__dirname);
+
+    // Clean up previous builds
+    rimraf.sync('./browser/generated');
+    
+    fs.mkdirSync('./browser/generated');
+    
+    fs.symlinkSync(path.join(__dirname, '../dist'), './browser/generated/dist', 'dir');
+    fs.symlinkSync(path.join(__dirname, './shared/css'), './browser/generated/css', 'dir');
+    fs.symlinkSync(path.join(__dirname, './shared/js'), './browser/generated/js', 'dir');
+    fs.symlinkSync(path.join(__dirname, './shared/testframework'), './browser/generated/testframework', 'dir');
+    fs.symlinkSync(path.join(__dirname, './shared/tests'), './browser/generated/tests', 'dir');
+    fs.symlinkSync(path.join(__dirname, './shared/thirdparty'), './browser/generated/thirdparty', 'dir');
+ 
+}
+
+
+setupBrowserTests();
+//setupCordovaTests();
