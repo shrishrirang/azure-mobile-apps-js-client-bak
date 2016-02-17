@@ -15,7 +15,7 @@
   </Resources>
   <Applications>
     <Application Id="App" StartPage="default.html">
-      <VisualElements DisplayName="zumotestblu2" Logo="images\logo.png" SmallLogo="images\smalllogo.png" Description="ZumoE2ETestAppJs" ForegroundText="light" BackgroundColor="#464646" ToastCapable="true">
+      <VisualElements DisplayName="zumotestblu2" Logo="images\logo.png" SmallLogo="images\smalllogo.png" Description="Azure Mobile Apps WinJS End To End Tests" ForegroundText="light" BackgroundColor="#464646" ToastCapable="true">
         <DefaultTile ShowName="allLogos" />
         <SplashScreen Image="images\splashscreen.png" />
       </VisualElements>

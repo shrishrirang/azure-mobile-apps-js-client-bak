@@ -55,7 +55,7 @@
     <PackageCertificateThumbprint>D24F4996C3E7E2118BCA72D7046048113B2DD5C8</PackageCertificateThumbprint>
     <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
     <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
-    <PackageCertificateKeyFile>ZumoE2ETestAppJs_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateKeyFile>winjsEndToEndTests_TemporaryKey.pfx</PackageCertificateKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OutputPath>TestFramework\$(Configuration)</OutputPath>
@@ -140,8 +140,8 @@
     <Content Include="js\MobileServices.pri" />
     <Content Include="js\platformSpecificFunctions.js" />
     <Content Include="packages.config" />
-    <None Include="ZumoE2ETestAppJs_StoreKey.pfx" />
-    <None Include="ZumoE2ETestAppJs_TemporaryKey.pfx" />
+    <None Include="winjsEndToEndTests_StoreKey.pfx" />
+    <None Include="winjsEndToEndTests_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="css\" />
