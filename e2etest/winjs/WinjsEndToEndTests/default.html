@@ -10,26 +10,25 @@
     <script src="//Microsoft.WinJS.2.0/js/ui.js"></script>
 
     <!-- ZumoE2ETestAppJs references -->
-    <link href="css/default.css" rel="stylesheet" />
-    <script src="/js/default.js"></script>
-    <script src="js/MobileServices.js"></script>
-    <script src="js/lib/jquery-2.1.1.js"></script>
-    <script src="js/lib/wl.js"></script>
+    <link href="generated/shared/css/default.css" rel="stylesheet" />
+    <script src=""></script>
+    <script src="generated/dist/MobileServices.js"></script>
+    <script src="generated/shared/thirdparty/jquery-2.1.1.js"></script>
+    <script src="generated/shared/thirdparty/wl.js"></script>
 
     <!-- Zumo tests; the order of the references is important -->
 
-    <script src="js/platformSpecificFunctions.js"></script>
-    <script src="js/testFramework.js"></script>
-    <script src="js/tests/roundTripTests.js"></script>
-    <script src="js/tests/queryTestData.js"></script>
-    <script src="js/tests/mobileServiceTable.Functional.js"></script>
-    <script src="js/tests/queryTests.js"></script>
-    <script src="js/tests/updateDeleteTests.js"></script>
-    <script src="js/tests/loginTests.js"></script>
-    <script src="js/tests/miscTests.js"></script>
-    <script src="js/tests/pushTests.js"></script>
-    <script src="js/tests/apiTests.js"></script>
-    <script src="js/tests/allTests.js"></script>
+    <script src="generated/shared/testframework/testFramework.js"></script>
+    <script src="generated/shared/tests/roundTripTests.js"></script>
+    <script src="generated/shared/tests/queryTestData.js"></script>
+    <script src="generated/shared/tests/mobileServiceTable.Functional.js"></script>
+    <script src="generated/shared/tests/queryTests.js"></script>
+    <script src="generated/shared/tests/updateDeleteTests.js"></script>
+    <script src="generated/shared/tests/loginTests.js"></script>
+    <script src="generated/shared/tests/miscTests.js"></script>
+    <script src="generated/shared/tests/pushTests.js"></script>
+    <script src="generated/shared/tests/apiTests.js"></script>
+    <script src="generated/shared/tests/allTests.js"></script>
 </head>
 <body>
     <table id='mainTable'>
@@ -108,8 +107,8 @@
         </tr>
     </table>
 
-    <script type="text/javascript" src="js/platformSpecificFunctions.js"></script>
-    <script type="text/javascript" src="js/testFrameworkConnections.js"></script>
-    <script src="js/storageFramework.js"></script>    
+    <script src="generated/shared/platform/winjs/platformSpecificFunctions.js"></script>
+    <script type="text/javascript" src="generated/shared/testframework/testFrameworkConnections.js"></script>
+    <script src="generated/shared/testframework/storageFramework.js"></script>    
 </body>
 </html>

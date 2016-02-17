@@ -69,14 +69,24 @@ function setupBrowserTests() {
     fs.mkdirSync('./browser/generated');
     
     fs.symlinkSync(path.join(__dirname, '../dist'), './browser/generated/dist', 'dir');
-    fs.symlinkSync(path.join(__dirname, './shared/css'), './browser/generated/css', 'dir');
-    fs.symlinkSync(path.join(__dirname, './shared/js'), './browser/generated/js', 'dir');
-    fs.symlinkSync(path.join(__dirname, './shared/testframework'), './browser/generated/testframework', 'dir');
-    fs.symlinkSync(path.join(__dirname, './shared/tests'), './browser/generated/tests', 'dir');
-    fs.symlinkSync(path.join(__dirname, './shared/thirdparty'), './browser/generated/thirdparty', 'dir');
- 
+    fs.symlinkSync(path.join(__dirname, './shared'), './browser/generated/shared', 'dir');
+}
+
+function setupWinjsTests() {
+
+    process.chdir(__dirname);
+
+    // Clean up previous builds
+    rimraf.sync('./winjs/WinjsEndToEndTests/generated');
+    
+    fs.mkdirSync('./winjs/WinjsEndToEndTests/generated');
+    fs.mkdirSync('./winjs/WinjsEndToEndTests/generated/dist');
+    
+    fs.symlinkSync(path.join(__dirname, '../sdk/src/Generated/MobileServices.js'), './winjs/WinjsEndToEndTests/generated/dist/MobileServices.js');
+    fs.symlinkSync(path.join(__dirname, './shared'), './winjs/WinjsEndToEndTests/generated/shared', 'dir');
 }
 
 
-setupBrowserTests();
+//setupBrowserTests();
 //setupCordovaTests();
+setupWinjsTests();

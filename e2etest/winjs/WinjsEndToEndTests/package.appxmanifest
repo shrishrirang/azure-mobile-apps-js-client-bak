@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Package xmlns="http://schemas.microsoft.com/appx/2010/manifest">
-  <Identity Name="10805zumoTestUser.zumotestblu2" Version="1.0.0.0" Publisher="CN=B2D1C358-6AF8-4416-BF73-129CC1F3C152" />
+<Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest">
+  <Identity Name="10805zumoTestUser.zumotestblu2" Version="1.0.0.0" Publisher="CN=ZumoTest" />
   <Properties>
     <DisplayName>zumotestblu2</DisplayName>
     <PublisherDisplayName>zumoTestUser</PublisherDisplayName>
@@ -15,10 +15,14 @@
   </Resources>
   <Applications>
     <Application Id="App" StartPage="default.html">
-      <VisualElements DisplayName="zumotestblu2" Logo="images\logo.png" SmallLogo="images\smalllogo.png" Description="Azure Mobile Apps WinJS End To End Tests" ForegroundText="light" BackgroundColor="#464646" ToastCapable="true">
-        <DefaultTile ShowName="allLogos" />
-        <SplashScreen Image="images\splashscreen.png" />
-      </VisualElements>
+      <m2:VisualElements DisplayName="zumotestblu2" Description="Azure Mobile Apps WinJS End To End Tests" BackgroundColor="#464646" ToastCapable="true" ForegroundText="light" Square150x150Logo="images\logo.png" Square30x30Logo="images\smalllogo.png">
+        <m2:DefaultTile>
+          <m2:ShowNameOnTiles>
+            <m2:ShowOn Tile="square150x150Logo" />
+          </m2:ShowNameOnTiles>
+        </m2:DefaultTile>
+        <m2:SplashScreen Image="images\splashscreen.png" />
+      </m2:VisualElements>
     </Application>
   </Applications>
   <Capabilities>

@@ -52,100 +52,43 @@
     <TargetPlatformIdentifier>Windows</TargetPlatformIdentifier>
     <TargetPlatformVersion>8.1</TargetPlatformVersion>
     <DefaultLanguage>en-US</DefaultLanguage>
-    <PackageCertificateThumbprint>D24F4996C3E7E2118BCA72D7046048113B2DD5C8</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>5285D23AD2324020F43EF4A6C386C736A4CBCAC2</PackageCertificateThumbprint>
     <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
     <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
-    <PackageCertificateKeyFile>winjsEndToEndTests_TemporaryKey.pfx</PackageCertificateKeyFile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>TestFramework\$(Configuration)</OutputPath>
+    <PackageCertificateKeyFile>WinjsEndToEndTests_TemporaryKey.pfx</PackageCertificateKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <AppxManifest Include="package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-    <Content Include="..\..\TestFramework\css\default.css">
-      <Link>css\default.css</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\TestFramework\js\testFramework.js">
-      <Link>js\testFramework.js</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\TestFramework\js\testFrameworkConnections.js">
-      <Link>js\testFrameworkConnections.js</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\TestFramework\js\lib\jquery-2.1.1.js">
-      <Link>js\lib\jquery-2.1.1.js</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\TestFramework\js\lib\wl.js">
-      <Link>js\lib\wl.js</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\TestFramework\js\tests\allTests.js">
-      <Link>js\tests\allTests.js</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\TestFramework\js\tests\mobileServiceTable.Functional.js">
-      <Link>js\tests\mobileServiceTable.Functional.js</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\TestFramework\js\tests\apiTests.js">
-      <Link>js\tests\apiTests.js</Link>
-    </Content>
-    <Content Include="..\..\TestFramework\js\tests\loginTests.js">
-      <Link>js\tests\loginTests.js</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\TestFramework\js\tests\miscTests.js">
-      <Link>js\tests\miscTests.js</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\TestFramework\js\tests\pushTests.js">
-      <Link>js\tests\pushTests.js</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\TestFramework\js\tests\queryTestData.js">
-      <Link>js\tests\queryTestData.js</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\TestFramework\js\storageFramework.js">
-      <Link>js\storageFramework.js</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\TestFramework\js\tests\queryTests.js">
-      <Link>js\tests\queryTests.js</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\TestFramework\js\tests\roundTripTests.js">
-      <Link>js\tests\roundTripTests.js</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\TestFramework\js\tests\updateDeleteTests.js">
-      <Link>js\tests\updateDeleteTests.js</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="default.html" />
-    <Content Include="Fonts\LiveSymbol.ttf" />
+    <Content Include="generated\dist\MobileServices.js" />
+    <Content Include="generated\shared\css\default.css" />
+    <Content Include="generated\shared\platform\web\platformSpecificFunctions.js" />
+    <Content Include="generated\shared\platform\web\Promises.js" />
+    <Content Include="generated\shared\platform\winjs\platformSpecificFunctions.js" />
+    <Content Include="generated\shared\testframework\storageFramework.js" />
+    <Content Include="generated\shared\testframework\testFramework.js" />
+    <Content Include="generated\shared\testframework\testFrameworkConnections.js" />
+    <Content Include="generated\shared\tests\allTests.js" />
+    <Content Include="generated\shared\tests\apiTests.js" />
+    <Content Include="generated\shared\tests\loginTests.js" />
+    <Content Include="generated\shared\tests\miscTests.js" />
+    <Content Include="generated\shared\tests\mobileServiceTable.Functional.js" />
+    <Content Include="generated\shared\tests\pushTests.js" />
+    <Content Include="generated\shared\tests\queryTestData.js" />
+    <Content Include="generated\shared\tests\queryTests.js" />
+    <Content Include="generated\shared\tests\roundTripTests.js" />
+    <Content Include="generated\shared\tests\updateDeleteTests.js" />
+    <Content Include="generated\shared\thirdparty\jquery-2.1.1.js" />
+    <Content Include="generated\shared\thirdparty\wl.js" />
     <Content Include="images\logo.png" />
     <Content Include="images\smalllogo.png" />
     <Content Include="images\splashscreen.png" />
     <Content Include="images\storelogo.png" />
     <Content Include="js\default.js" />
-    <Content Include="js\MobileServices.intellisense.js" />
-    <Content Include="js\MobileServices.js" />
-    <Content Include="js\MobileServices.min.js" />
-    <Content Include="js\MobileServices.pri" />
-    <Content Include="js\platformSpecificFunctions.js" />
-    <Content Include="packages.config" />
     <None Include="winjsEndToEndTests_StoreKey.pfx" />
     <None Include="winjsEndToEndTests_TemporaryKey.pfx" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="css\" />
-    <Folder Include="js\tests\" />
   </ItemGroup>
   <ItemGroup>
     <SDKReference Include="Microsoft.WinJS.2.0, Version=1.0" />
