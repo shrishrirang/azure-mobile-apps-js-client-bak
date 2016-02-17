@@ -4,27 +4,28 @@
     <meta charset="utf-8" />
     <title>Azure Mobile Apps End To End Tests</title>
 
-    <link href="generated/css/default.css" rel="stylesheet" />
+    <link href="generated/shared/css/default.css" rel="stylesheet" />
 
-    <script src="generated/thirdparty/jquery-2.1.1.js"></script>
     <script src="generated/dist/MobileServices.Web.js"></script>
+
+    <script src="generated/shared/thirdparty/jquery-2.1.1.js"></script>
     
-    <script src="generated/js/Promises.js"></script>
-    <script src="generated/js/platformSpecificFunctions.js"></script>
+    <script src="generated/shared/platform/web/Promises.js"></script>
+    <script src="generated/shared/platform/web/platformSpecificFunctions.js"></script>
 
-    <script src="generated/testframework/testFramework.js"></script>
-    <script src="generated/testframework/storageFramework.js"></script>
+    <script src="generated/shared/testframework/testFramework.js"></script>
+    <script src="generated/shared/testframework/storageFramework.js"></script>
 
-    <script src="generated/tests/roundTripTests.js" type="text/javascript"></script>
-    <script src="generated/tests/mobileServiceTable.Functional.js" type="text/javascript"></script>    
-    <script src="generated/tests/queryTestData.js" type="text/javascript"></script>
-    <script src="generated/tests/queryTests.js" type="text/javascript"></script>
-    <script src="generated/tests/updateDeleteTests.js"></script>
-    <script src="generated/tests/loginTests.js" type="text/javascript"></script>
-    <script src="generated/tests/miscTests.js" type="text/javascript"></script>
-    <script src="generated/tests/pushTests.js" type="text/javascript"></script>
-    <script src="generated/tests/apiTests.js" type="text/javascript"></script>
-    <script src="generated/tests/allTests.js" type="text/javascript"></script>
+    <script src="generated/shared/tests/roundTripTests.js" type="text/javascript"></script>
+    <script src="generated/shared/tests/mobileServiceTable.Functional.js" type="text/javascript"></script>    
+    <script src="generated/shared/tests/queryTestData.js" type="text/javascript"></script>
+    <script src="generated/shared/tests/queryTests.js" type="text/javascript"></script>
+    <script src="generated/shared/tests/updateDeleteTests.js"></script>
+    <script src="generated/shared/tests/loginTests.js" type="text/javascript"></script>
+    <script src="generated/shared/tests/miscTests.js" type="text/javascript"></script>
+    <script src="generated/shared/tests/pushTests.js" type="text/javascript"></script>
+    <script src="generated/shared/tests/apiTests.js" type="text/javascript"></script>
+    <script src="generated/shared/tests/allTests.js" type="text/javascript"></script>
 
 </head>
 <body>
@@ -103,7 +104,7 @@
         </tr>
     </table>
     
-    <script src="generated/testframework/testFrameworkConnections.js"></script>
+    <script src="generated/shared/testframework/testFrameworkConnections.js"></script>
     <script type="text/javascript">
         if (window.navigator.userAgent.toLowerCase().indexOf("firefox") > 0) { //Firefox innerText define
             HTMLElement.prototype.__defineGetter__("innerText", function () {

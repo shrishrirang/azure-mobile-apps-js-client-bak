@@ -87,6 +87,6 @@ function setupWinjsTests() {
 }
 
 
-//setupBrowserTests();
+setupBrowserTests();
 //setupCordovaTests();
 setupWinjsTests();
