@@ -16,11 +16,13 @@ function setupCordovaTests() {
     process.chdir(__dirname);
 
     // Clean up previous builds
-    rimraf.sync('./cordova/www/TestFramework');
+    rimraf.sync('./cordova/www/generated');
     rimraf.sync('./cordova/platforms');
     rimraf.sync('./cordova/plugins');
+    
+    fs.mkdirSync('./cordova/www/generated');
 
-    fs.symlinkSync('./TestFramework', './cordova/www/TestFramework');
+    fs.symlinkSync('./shared', './cordova/www/generated/shared', 'dir');
 
     // Install Azure Mobile Apps Cordova plugin from GitHub. Needed only during development
     run('cd cordova && cordova plugin add https://github.com/azure/azure-mobile-apps-cordova-client.git');
