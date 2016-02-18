@@ -27,6 +27,7 @@
     "url": "https://github.com/azure/azure-mobile-apps-js-client.git"
   },
   "scripts": {
-    "build": "grunt"
+    "build": "grunt",
+    "setupTest": "node e2etest/scripts/setup.js"
   }
 }

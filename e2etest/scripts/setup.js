@@ -3,6 +3,8 @@ var rimraf = require('rimraf'),
     fs = require('fs-sync'),
     execSync = require('child_process').execSync,
     config = require('./config');
+    
+var e2eTestRoot = path.join(__dirname, '..');
 
 function run(command) {
     var result = execSync(command, {
@@ -15,7 +17,7 @@ function run(command) {
 function setupCordovaTests() {
 
     console.log('Starting Cordova setup');
-    process.chdir(__dirname);
+    process.chdir(e2eTestRoot);
 
     // Clean up previous builds
     rimraf.sync('./cordova/www/generated');
@@ -74,7 +76,7 @@ function setupBrowserTests() {
 
     console.log('Starting Browser setup');
     
-    process.chdir(__dirname);
+    process.chdir(e2eTestRoot);
 
     // Clean up previous builds
     rimraf.sync('./browser/generated');
@@ -89,7 +91,7 @@ function setupWinjsTests() {
 
     console.log('Starting WinJS setup..');
 
-    process.chdir(__dirname);
+    process.chdir(e2eTestRoot);
 
     // Clean up previous builds
     rimraf.sync('./winjs/WinjsEndToEndTests/generated');
