@@ -75,7 +75,7 @@
     <Content Include="generated\shared\tests\loginTests.js" />
     <Content Include="generated\shared\tests\miscTests.js" />
     <Content Include="generated\shared\tests\mobileServiceTable.Functional.js" />
-    <Content Include="generated\shared\tests\pushTests.js" />
+    <Content Include="generated\shared\tests\platform\winjs\pushTests.js" />
     <Content Include="generated\shared\tests\queryTestData.js" />
     <Content Include="generated\shared\tests\queryTests.js" />
     <Content Include="generated\shared\tests\roundTripTests.js" />
