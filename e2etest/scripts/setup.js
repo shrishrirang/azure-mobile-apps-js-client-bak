@@ -29,16 +29,23 @@ function setupCordovaTests() {
     
     process.chdir('./cordova');
     
-    console.log('Installing Cordova plugins..');
-    
     if (!config.cordova.refreshOnly) {
         
-        var plugin;
-        for (var i in config.cordova.plugins) {
-            var plugin = config.cordova.plugins[i];
-            console.log('- Installing plugin ' + plugin)
-            run('cordova plugin add ' + plugin);
+        // The Azure Mobile App Cordova plugin can be saved in config.xml, but this way of installation
+        // gives us control over where to install the plugins from (github / npm registry / custom path).
+        var azureMobilePlugin;
+        if (process.argv[2] === 'github') {
+            azureMobilePlugin = config.cordova.azureMobilePlugin.github;
+        } else if (process.argv[2] === 'npm') {
+            azureMobilePlugin = config.cordova.azureMobilePlugin.npm;
+        } else if (process.argv[2]) {
+            azureMobilePlugin = process.argv[2];
+        } else {
+            throw new Error('Azure Mobile Apps Cordova plugin path missing');
         }
+
+        console.log('Installing Azure Mobile Apps Cordova plugin : ' + azureMobilePlugin);
+        run('cordova plugin add ' + azureMobilePlugin);
 
         console.log('Installing Cordova platforms..');
         
@@ -65,6 +72,9 @@ function setupCordovaTests() {
             run('cordova platform add wp8');
             run('cordova platform build wp8');
         }
+
+        console.log('Cordova platforms installation and build done!');
+
     } else {
         console.log('Skipping plugin and platform installation!');
     }
@@ -103,6 +113,6 @@ function setupWinjsTests() {
 }
 
 
-setupBrowserTests();
 setupCordovaTests();
 setupWinjsTests();
+setupBrowserTests();

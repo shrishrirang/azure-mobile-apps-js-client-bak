@@ -28,6 +28,6 @@
   },
   "scripts": {
     "build": "grunt",
-    "setupTest": "node e2etest/scripts/setup.js"
+    "testsetup": "node e2etest/scripts/setup.js"
   }
 }

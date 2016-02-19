@@ -4,17 +4,10 @@ module.exports = {
         // only the source files are refreshed. Useful during development.
         refreshOnly: false,
     
-        // List of Cordova plugins to install
-        plugins: [
-            // Azure Mobile Apps plugin. Install either from the npm registry or github.
-            'https://github.com/azure/azure-mobile-apps-cordova-client.git',
-            // 'cordova-plugin-ms-azure-mobile-apps,
-            
-            // Dependencies
-            'cordova-plugin-device',
-            'https://github.com/phonegap/phonegap-plugin-push.git',
-            'cordova-plugin-console'
-        ],
+        azureMobilePlugin: {
+            github: 'https://github.com/azure/azure-mobile-apps-cordova-client.git',
+            npm: 'cordova-plugin-ms-azure-mobile-apps'
+        },
         
         // Platform to add to the Cordova project and build. The platforms will be built only if the 
         // host machine supports building that platform.
