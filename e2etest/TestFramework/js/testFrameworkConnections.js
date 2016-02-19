@@ -33,7 +33,7 @@ setDefaultButtonEventHandler();
 
 function saveLastUsedAppInfo() {
     var lastAppUrl = document.getElementById('txtAppUrl').value;
-   
+
     testPlatform.saveAppInfo(lastAppUrl);
 }
 
@@ -186,9 +186,9 @@ function testGroupSelected(index) {
 
     if (group.name === zumo.AllTestsGroupName || group.name === zumo.AllTestsUnattendedGroupName) {
         btnRunTestClick().then(
-            function () {                
+            function () {
                 if (storage.config !== undefined) {
-                    storage.ReportResults(zumo.testGroups, index);                    
+                    storage.ReportResults(zumo.testGroups, index);
                 }
             });
     }
