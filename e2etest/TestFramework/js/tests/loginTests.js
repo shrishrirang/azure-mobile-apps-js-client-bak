@@ -81,10 +81,11 @@ function defineLoginTestsNamespace() {
                 tests.push(createCRUDTest(TABLE_NAME_AUTHENTICATED, provider, TABLE_PERMISSION_USER, true));
             }
         });
-
-        tests.push(createAlternateHostLoginTest());
-        tests.push(createLoginPrefixTest());
     }
+
+    tests.push(createAlternateHostServerFlowLoginTest());
+    tests.push(createAlternateHostClientFlowLoginTest());
+    tests.push(createLoginPrefixTest());
 
     for (var i = indexOfTestsWithAuthentication; i < tests.length; i++) {
         tests[i].canRunUnattended = false;
@@ -331,8 +332,8 @@ function defineLoginTestsNamespace() {
         });
     }
 
-    function createAlternateHostLoginTest() {
-        return new zumo.Test('Login via AlternateLoginHost', function (test, done) {
+    function createAlternateHostClientFlowLoginTest() {
+        return new zumo.Test('Login via AlternateLoginHost - Client Flow', function (test, done) {
             var client = new WindowsAzure.MobileServiceClient("https://dummymobileservice.azurewebsites.net");
             client.alternateLoginHost = zumo.util.globalTestParams[zumo.constants.MOBILE_APP_URL_KEY];
             var lastIdentity = lastUserIdentityObject;
@@ -356,6 +357,22 @@ function defineLoginTestsNamespace() {
                     done(false);
                 });
             }
+        });
+    }
+
+    function createAlternateHostServerFlowLoginTest() {
+        return new zumo.Test('Login via AlternateLoginHost - ServerFlow', function (test, done) {
+            var client = new WindowsAzure.MobileServiceClient("https://dummymobileservice.azurewebsites.net");
+            client.alternateLoginHost = zumo.util.globalTestParams[zumo.constants.MOBILE_APP_URL_KEY];
+
+            client.login('facebook').done(function (user) {
+                test.addLog('Logged in as ', user);
+                done(true);
+            }, function (err) {
+                test.addLog('Error on login: ', err);
+                done(false);
+            });
+
         });
     }
 
