@@ -344,7 +344,7 @@ function defineLoginTestsNamespace() {
             }
             else {
                 for (i = 0; i < providers.length; i++) {
-                    if (lastIdentity[providers[i]] != null) {
+                    if (supportRecycledToken[providers[i]] && lastIdentity[providers[i]] != null) {
                         lastIdentityProvider = providers[i];
                         break;
                     }
