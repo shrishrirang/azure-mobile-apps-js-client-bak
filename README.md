@@ -4,44 +4,29 @@ With Microsoft Azure Mobile Apps you can add a scalable backend to your connecte
 
 ## Getting Started
 
-If you are new to Mobile Services, you can get started by following our tutorials for connecting your Mobile
-Services cloud backend to [Windows Store apps](http://azure.microsoft.com/en-us/documentation/articles/mobile-services-windows-store-get-started/),
-[Windows Phone 8 apps](http://azure.microsoft.com/en-us/documentation/articles/mobile-services-windows-phone-get-started/),
-[iOS apps](http://azure.microsoft.com/en-us/documentation/articles/mobile-services-ios-get-started/),
-and [Android apps](http://azure.microsoft.com/en-us/documentation/articles/mobile-services-android-get-started/).
+If you are new to Azure Mobile Apps, you can get started by following the [Mobile Apps documentation](https://azure.microsoft.com/en-us/documentation/learning-paths/appservice-mobileapps/)
 
-## Download Source Code
+The JavaScript SDK makes it easy to use Microsoft Azure Mobile Apps. To connect to Mobile Apps from a Cordova app refer the [Azure Mobile Apps Cordova plugin](https://github.com/azure/azure-mobile-apps-cordova-client)
 
-To get the source code of our SDKs and samples via **git** just type:
+### Usage
+
+Run the following command to get the Javascript client for Azure Mobile Apps:
+
+    npm install azure-mobile-apps-client
+    
+The SDK files are present in the package's _/dist_ directory.
+
+### Build
+    
+To build the SDK yourself, run:
 
     git clone https://github.com/Azure/azure-mobile-apps-js-client.git
-    cd ./azure-mobile-apps-js-client/
+    cd azure-mobile-apps-client
+    npm install
+    npm run build
 
-## Reference Documentation
-
-## Change log
-- [JavaScript SDK](CHANGELOG.md)
-
-## JavaScript SDK
-
-Our JavaScript SDK makes it easy to use our Microsoft Azure Mobile Apps in a Windows 8 application or an HTML client. The [Microsoft Azure Mobile Apps for WinJS SDK](http://nuget.org/packages/WindowsAzure.MobileServices.WinJS/) is available as a Nuget package or you can download the source for both WinJS and HTML using the instructions above. 
-
-### Prerequisites
-
-The Microsoft Azure Mobile Apps for WinJS SDK requires Windows 8.1 and Visual Studio 2013 Update 3. 
-
-### Building and Referencing the SDK
-
-1. Install Node.js and grunt-cli (globally) for building in Visual Studio
-2. Install the Task Runner Explorer(https://visualstudiogallery.msdn.microsoft.com/8e1b4368-4afb-467a-bc13-9650572db708) add on for VS 2013 
-3. Open the ```sdk\Microsoft.WindowsAzure.Mobile.JS.sln``` file in Visual Studio.
-4. Right click on the gruntfile.js in the solution, and select Task Runner Explorer
-5. Run the default build option
-
-Alternatively, you can use Grunt from the command line to build the project as well.
-
-For WinJS Windows Store apps, copy the ```Generated/MobileServices[.min].js```, ```Generated/MobileServices.DevIntellisense.js``` and ```Generated/MobileService.pri``` files into your WinJS project. For HTML applications, copy the ```Generated/MobileServices.Web[.min].js``` and the ```Generated/MobileServices.DevIntellisense.js``` files into your HTML\JavaScript project.
-
+The built files will be copied to the _/dist_ directory of the repository.
+    
 ### Running Unit Tests
 
 To run the WinJS Windows Store test app:
@@ -58,10 +43,12 @@ To run the HTML tests:
 2. In the Solution Explorer, select the Microsoft.WindowsAzure.Mobile.WinJS.Test project and right-click to select 'View in Browser'.
 3. The default browser will launch and run the test HTML application. Some tests may fail because due to an 'Unexpected connection failure'. This is because the test is configured to connect to a Mobile Service that does not exist. These failures can be ignored.
 
+## Change log
+- [JavaScript SDK](CHANGELOG.md)
+
 ## Useful Resources
 
-* [Quickstarts](https://github.com/Azure/azure-mobile-services-quickstarts)
-* [Samples](https://github.com/Azure/mobile-services-samples)
+* [Quickstarts](https://github.com/azure/azure-mobile-apps-quickstarts)
 * Tutorials and product overview are available at [Microsoft Azure Mobile Apps Developer Center](http://azure.microsoft.com/en-us/develop/mobile).
 * Our product team actively monitors the [Mobile Services Developer Forum](http://social.msdn.microsoft.com/Forums/en-US/azuremobile/) to assist you with any troubles.
 
