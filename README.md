@@ -6,7 +6,7 @@ With Microsoft Azure Mobile Apps you can add a scalable backend to your connecte
 
 If you are new to Azure Mobile Apps, you can get started by following the [Mobile Apps documentation](https://azure.microsoft.com/en-us/documentation/learning-paths/appservice-mobileapps/)
 
-The JavaScript SDK makes it easy to use Microsoft Azure Mobile Apps. To connect to Mobile Apps from a Cordova app refer the [Azure Mobile Apps Cordova plugin](https://github.com/azure/azure-mobile-apps-cordova-client)
+The JavaScript SDK makes it easy to use Microsoft Azure Mobile Apps. To connect to an Azure App Service from a Cordova application, refer [How to Use Apache Cordova Client Library for Azure Mobile Apps](https://azure.microsoft.com/en-us/documentation/articles/app-service-mobile-cordova-how-to-use-client-library/)
 
 ### Usage
 
@@ -25,7 +25,7 @@ To build the SDK yourself, run:
     npm install
     npm run build
 
-The built files will be copied to the _/dist_ directory of the repository.
+The built files will be copied to the _/dist_ directory.
     
 ### Running Unit Tests
 
@@ -48,7 +48,8 @@ To run the HTML tests:
 
 ## Useful Resources
 
-* [Quickstarts](https://github.com/azure/azure-mobile-apps-quickstarts)
+* [Getting Started with Azure Mobile Apps](https://azure.microsoft.com/en-us/documentation/learning-paths/appservice-mobileapps/)
+* [Quickstart](https://azure.microsoft.com/en-us/documentation/articles/app-service-mobile-cordova-get-started/)
 * Tutorials and product overview are available at [Microsoft Azure Mobile Apps Developer Center](http://azure.microsoft.com/en-us/develop/mobile).
 * Our product team actively monitors the [Mobile Services Developer Forum](http://social.msdn.microsoft.com/Forums/en-US/azuremobile/) to assist you with any troubles.
 

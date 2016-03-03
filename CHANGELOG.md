@@ -1,7 +1,7 @@
 # Azure Mobile Apps JavaScript SDK Change Log
 
 ### JavaScript SDK: Version 2.0.0-beta4
-- Fixed Authentication in Cordova apps, Ripple, ionic and browser
+- Fixed authentication for Apache Cordova apps based on Ionic Framework or running in browser environments
 - Updated the SDK to be an npm package
 
 ### JavaScript SDK: Version 1.2.7
