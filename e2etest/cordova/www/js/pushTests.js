@@ -1,3 +1,4 @@
+//TODO: Configure this
 var name = 'gcm';
 
 try {
@@ -8,8 +9,16 @@ function definePushTestsNamespace() {
         channelUri,
         notification = {
             type: 'toast',
-            payload: '{"data":{"message":"android testing..."}}',
 
+            // will only work on Android. It is a GCM template
+            template: {
+                mytemplate: { body: { data: { message: "{'Hi ' + $(message)}" } } }
+            },
+
+            //TODO: Configure this
+            payload: { "message": "value" },
+
+            payloadAndroidTemplate: { "message": "value" },
             payloadWindows: '<?xml version="1.0"?><toast><visual><binding template="ToastText01"><text id="1">hello world2</text></binding></visual></toast>',
             payloadIos: '{"aps":{"alert":"Notification testing"}}',
             payloadAndroid: '{"data":{"message":"android testing..."}}'
@@ -68,16 +77,20 @@ function definePushTestsNamespace() {
                              channelUri = channel.uri;
                              receivedNotification = undefined;
                              
-        zumo.getClient().push.register(name, channelUri)
+        //zumo.getClient().push.register(name, channelUri)
         //{ "mytemplate" : { "body": {"data":{"message":"android testing..."}} }, "headers" : [], "tags" : [ "general" ] } }
-        //zumo.getClient().push.register(name, '{ "mytemplate" : { "body": {"data":{"message":"android testing..."}} }, "headers" : [] }')
+        zumo.getClient().push.register(name,
+            channelUri,
+            //TODO: configure this. This has to be a template or undefined depending on what we want to use it for.
+            notification.template)
                              .then(function () {
                                    window.alert('invoking send api');
                                    return zumo.getClient().invokeApi('push',
                                                                      {
                                                                      body: {
                                                                      method: 'send',
-                                                                     type: name,
+                                                                     //TODO: configure this. type can be 'template' or name
+                                                                     type: 'template',
                                                                      payload: notification.payload,
                                                                      token: 'dummy',
                                                                      wnsType: notification.type
@@ -118,7 +131,7 @@ function definePushTestsNamespace() {
     
 
 
-    
+    /*
     tests.push(new zumo.Test('InitialDeleteRegistrations', function (test, done) {
         channelUri = channel.uri;
         return zumo.getClient().invokeApi('deleteRegistrationsForChannel', { method: 'DELETE', parameters: { channelUri: channelUri } })
@@ -179,7 +192,6 @@ function definePushTestsNamespace() {
     });
     }));
 
-    /*
     tests.push(new zumo.Test('RegisterWithTemplatesAndSecondaryTiles', function (test, done) {
 
         channelUri = channel.uri;
