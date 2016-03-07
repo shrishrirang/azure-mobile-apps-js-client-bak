@@ -21,6 +21,7 @@
     "remapify": "~2.0.3"
   },
   "license": "Apache-2.0",
+  "main": "dist/MobileServices.Web.min.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/azure/azure-mobile-apps-js-client.git"
