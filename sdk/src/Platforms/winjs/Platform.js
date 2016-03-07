@@ -59,27 +59,6 @@ exports.async = function async(func) {
     };
 };
 
-exports.addToMobileServicesClientNamespace = function (declarations) {
-    /// <summary>
-    /// Define a collection of declarations in the Mobile Services Client namespace.
-    /// </summary>
-    /// <param name="declarations" type="Object">
-    /// Object consisting of names and values to define in the namespace.
-    /// </param>
-
-    try {
-        WinJS.Namespace.define('WindowsAzure', declarations);
-    } catch (ex) {
-        // This can fail due to a WinRT issue where another assembly defining a
-        // non-JavaScript type with a Microsoft namespace.  The wrapper object
-        // created to represent the namespace doesn't allow expando
-        // properties...  so it will never let any additional JavaScript
-        // namespaces be defined under it.  We only see this with our test
-        // library at the moment, but it could also appear if customers are
-        // using other Microsoft libraries in WinJS.        
-    }
-};
-
 exports.readSetting = function readSetting(name) {
     /// <summary>
     /// Read a setting from a global configuration store.

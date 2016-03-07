@@ -83,25 +83,6 @@ exports.async = function async(func) {
     };
 };
 
-exports.addToMobileServicesClientNamespace = function (declarations) {
-    /// <summary>
-    /// Define a collection of declarations in the Mobile Services Client namespace.
-    /// </summary>
-    /// <param name="declarations" type="Object">
-    /// Object consisting of names and values to define in the namespace.
-    /// </param>
-
-    // First ensure our 'WindowsAzure' namespace exists
-    var namespaceObject = global.WindowsAzure = global.WindowsAzure || {};
-    
-    // Now add each of the declarations to the namespace
-    for (var key in declarations) {
-        if (declarations.hasOwnProperty(key)) {
-            namespaceObject[key] = declarations[key];
-        }
-    }
-};
-
 exports.readSetting = function readSetting(name) {
     /// <summary>
     /// Read a setting from a global configuration store.
