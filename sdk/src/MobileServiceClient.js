@@ -103,17 +103,14 @@ function MobileServiceClient(applicationUrl) {
     if (Push) {
         this.push = new Push(this, MobileServiceClient._applicationInstallationId);
     }
+    
 }
 
-
-
-// Export the MobileServiceClient class
+// Define the module exports
 exports.MobileServiceClient = MobileServiceClient;
 
-// Define the MobileServiceClient in a namespace (note: this has global effects
-// unless the platform we're using chooses to ignore it because exports are
-// good enough).
-Platform.addToMobileServicesClientNamespace({ MobileServiceClient: MobileServiceClient });
+// Define the JS bundle exports 
+exports.exports = MobileServiceClient;
 
 MobileServiceClient.prototype.withFilter = function (serviceFilter) {
     /// <summary>

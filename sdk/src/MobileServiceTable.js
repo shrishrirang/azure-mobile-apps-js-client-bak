@@ -35,13 +35,6 @@ var MobileServiceSystemColumns = {
     Deleted: "deleted"
 };
 
-Platform.addToMobileServicesClientNamespace({
-    MobileServiceTable:
-        {
-            SystemProperties: MobileServiceSystemProperties
-        }
-});
-
 function MobileServiceTable(tableName, client) {
     /// <summary>
     /// Initializes a new instance of the MobileServiceTable class.
@@ -72,8 +65,13 @@ function MobileServiceTable(tableName, client) {
     };
 }
 
-// Export the MobileServiceTable class
+// Define the module exports
 exports.MobileServiceTable = MobileServiceTable;
+
+// Define the JS bundle exports
+exports.exports = {
+    SystemProperties: MobileServiceSystemProperties
+};
 
 // We have an internal _read method using callbacks since it's used by both
 // table.read(query) and query.read().
