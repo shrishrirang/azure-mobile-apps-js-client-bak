@@ -10,6 +10,7 @@ var _ = require('./Utilities/Extensions');
 var Validate = require('./Utilities/Validate');
 var Platform = require('Platforms/Platform');
 var Query = require('query.js/lib/Query').Query;
+var constants = require('./constants');
 
 // Name of the reserved Mobile Services ID member.
 var idPropertyName = "id";
@@ -130,11 +131,11 @@ MobileServiceTable.prototype._read = function (query, parameters, callback) {
     if (_.isString(query)) {
         queryString = query;
         if (!_.isNullOrEmpty(query)) {
-            features.push(WindowsAzure.MobileServiceClient._zumoFeatures.TableReadRaw);
+            features.push(constants.features.TableReadRaw);
         }
     } else if (_.isObject(query) && !_.isNull(query.toOData)) {
         if (query.getComponents) {
-            features.push(WindowsAzure.MobileServiceClient._zumoFeatures.TableReadQuery);
+            features.push(constants.features.TableReadQuery);
             var components = query.getComponents();
             projection = components.projection;
             if (components.table) {
@@ -178,7 +179,7 @@ MobileServiceTable.prototype._read = function (query, parameters, callback) {
     }
 
     var headers = { };
-    headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
+    headers[constants.apiVersionHeaderName] = constants.apiVersion;
 
     // Make the request
     this.getMobileServiceClient()._request(
@@ -298,7 +299,7 @@ MobileServiceTable.prototype.insert = Platform.async(
         }
 
         var headers = { };
-        headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
+        headers[constants.apiVersionHeaderName] = constants.apiVersion;
 
         // Make the request
         this.getMobileServiceClient()._request(
@@ -357,10 +358,10 @@ MobileServiceTable.prototype.update = Platform.async(
 
         if (!_.isNullOrEmpty(version)) {
             headers['If-Match'] = getEtagFromVersion(version);
-            features.push(WindowsAzure.MobileServiceClient._zumoFeatures.OptimisticConcurrency);
+            features.push(constants.features.OptimisticConcurrency);
         }
 
-        headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
+        headers[constants.apiVersionHeaderName] = constants.apiVersion;
 
         features = addQueryParametersFeaturesIfApplicable(features, parameters);
 
@@ -450,11 +451,11 @@ MobileServiceTable.prototype.refresh = Platform.async(
             urlFragment = _.url.combinePathAndQuery(urlFragment, queryString);
         }
 
-        var features = [WindowsAzure.MobileServiceClient._zumoFeatures.TableRefreshCall];
+        var features = [constants.features.TableRefreshCall];
         features = addQueryParametersFeaturesIfApplicable(features, parameters);
 
         var headers = { };
-        headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
+        headers[constants.apiVersionHeaderName] = constants.apiVersion;
 
         // Make the request
         this.getMobileServiceClient()._request(
@@ -528,7 +529,7 @@ MobileServiceTable.prototype.lookup = Platform.async(
         }
 
         var headers = { };
-        headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
+        headers[constants.apiVersionHeaderName] = constants.apiVersion;
 
         // Make the request
         this.getMobileServiceClient()._request(
@@ -579,10 +580,10 @@ MobileServiceTable.prototype.del = Platform.async(
         if (_.isString(instance[idPropertyName])) {
             if (!_.isNullOrEmpty(instance[MobileServiceSystemColumns.Version])) {
                 headers['If-Match'] = getEtagFromVersion(instance[MobileServiceSystemColumns.Version]);
-                features.push(WindowsAzure.MobileServiceClient._zumoFeatures.OptimisticConcurrency);
+                features.push(constants.features.OptimisticConcurrency);
             }
         }
-        headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
+        headers[constants.apiVersionHeaderName] = constants.apiVersion;
 
         features = addQueryParametersFeaturesIfApplicable(features, parameters);
 
@@ -718,7 +719,7 @@ function addQueryParametersFeaturesIfApplicable(features, userQueryParameters) {
     }
 
     if (hasQueryParameters) {
-        features.push(WindowsAzure.MobileServiceClient._zumoFeatures.AdditionalQueryParameters);
+        features.push(constants.features.AdditionalQueryParameters);
     }
 
     return features;
