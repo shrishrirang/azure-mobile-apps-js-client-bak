@@ -7,6 +7,7 @@
 /// <reference path="Generated\MobileServices.DevIntellisense.js" />
 
 var _ = require('./Utilities/Extensions'),
+    constants = require('./constants'),
     Validate = require('./Utilities/Validate'),
     Platform = require('Platforms/Platform'),
     MobileServiceTable = require('./MobileServiceTable').MobileServiceTable,
@@ -17,18 +18,6 @@ try {
     Push = require('./Push/Push').Push;
 } catch (e) { }
 
-var _zumoFeatures = {
-    JsonApiCall: "AJ",               // Custom API call, where the request body is serialized as JSON
-    GenericApiCall: "AG",            // Custom API call, where the request body is sent 'as-is'
-    AdditionalQueryParameters: "QS", // Table or API call, where the caller passes additional query string parameters
-    OptimisticConcurrency: "OC",     // Table update / delete call, using Optimistic Concurrency (If-Match headers)
-    TableRefreshCall: "RF",          // Refresh table call
-    TableReadRaw: "TR",              // Table reads where the caller uses a raw query string to determine the items to be returned
-    TableReadQuery: "TQ",            // Table reads where the caller uses a function / query OM to determine the items to be returned
-};
-var _zumoFeaturesHeaderName = "X-ZUMO-FEATURES";
-var _zumoApiVersionHeaderName = "ZUMO-API-VERSION";
-var _zumoApiVersion = "2.0.0";
 var _alternateLoginHost = null;
 Object.defineProperties(MobileServiceClient.prototype, {
     alternateLoginHost: {
@@ -103,17 +92,14 @@ function MobileServiceClient(applicationUrl) {
     if (Push) {
         this.push = new Push(this, MobileServiceClient._applicationInstallationId);
     }
+    
 }
 
-
-
-// Export the MobileServiceClient class
+// Define the module exports
 exports.MobileServiceClient = MobileServiceClient;
 
-// Define the MobileServiceClient in a namespace (note: this has global effects
-// unless the platform we're using chooses to ignore it because exports are
-// good enough).
-Platform.addToMobileServicesClientNamespace({ MobileServiceClient: MobileServiceClient });
+// Define the JS bundle exports 
+exports.exports = MobileServiceClient;
 
 MobileServiceClient.prototype.withFilter = function (serviceFilter) {
     /// <summary>
@@ -260,8 +246,8 @@ MobileServiceClient.prototype._request = function (method, uriFragment, content,
         options.headers["X-ZUMO-VERSION"] = this.version;
     }
 
-    if (_.isNull(options.headers[_zumoFeaturesHeaderName]) && features && features.length) {
-        options.headers[_zumoFeaturesHeaderName] = features.join(',');
+    if (_.isNull(options.headers[constants.featuresHeaderName]) && features && features.length) {
+        options.headers[constants.featuresHeaderName] = features.join(',');
     }
 
     // Add any content as JSON
@@ -423,8 +409,8 @@ MobileServiceClient.prototype.invokeApi = Platform.async(
         }
 
         // Add version header on API requests
-        if (_.isNull(headers[_zumoApiVersionHeaderName])) {
-            headers[_zumoApiVersionHeaderName] = _zumoApiVersion;
+        if (_.isNull(headers[constants.apiVersionHeaderName])) {
+            headers[constants.apiVersionHeaderName] = constants.apiVersion;
         }
 
         // Construct the URL
@@ -437,12 +423,12 @@ MobileServiceClient.prototype.invokeApi = Platform.async(
         var features = [];
         if (!_.isNullOrEmpty(body)) {
             features.push(_.isString(body) ?
-                _zumoFeatures.GenericApiCall :
-                _zumoFeatures.JsonApiCall);
+                constants.features.GenericApiCall :
+                constants.features.JsonApiCall);
         }
 
         if (!_.isNull(parameters)) {
-            features.push(_zumoFeatures.AdditionalQueryParameters);
+            features.push(constants.features.AdditionalQueryParameters);
         }
 
         // Make the request
@@ -531,18 +517,3 @@ MobileServiceClient._applicationInstallationId = getApplicationInstallationId();
 /// Get or set the static _userAgent by calling into the Platform.
 /// </summary>
 MobileServiceClient._userAgent = Platform.getUserAgent();
-
-/// <summary>
-/// The features that are sent to the server for telemetry.
-/// </summary>
-MobileServiceClient._zumoFeatures = _zumoFeatures;
-
-/// <summary>
-/// The header / querystring to use to specify the API Version
-/// </summary>
-MobileServiceClient._zumoApiVersionHeaderName = _zumoApiVersionHeaderName;
-
-/// <summary>
-/// The current Zumo API Version
-/// </summary>
-MobileServiceClient._zumoApiVersion = _zumoApiVersion;

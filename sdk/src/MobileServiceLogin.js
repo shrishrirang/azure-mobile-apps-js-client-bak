@@ -64,13 +64,11 @@ function MobileServiceLogin(client, ignoreFilters) {
     };
 }
 
-// Export the MobileServiceLogin class
+// Define the module exports
 exports.MobileServiceLogin = MobileServiceLogin;
 
-// Define the MobileServiceLogin in a namespace (note: this has global effects
-// unless the platform we're using chooses to ignore it because exports are
-// good enough).
-Platform.addToMobileServicesClientNamespace({ MobileServiceLogin: MobileServiceLogin });
+// Define the JS bundle exports
+exports.exports = MobileServiceLogin; 
 
 MobileServiceLogin.prototype.loginWithOptions = function (provider, options, callback) {
     /// <summary>
