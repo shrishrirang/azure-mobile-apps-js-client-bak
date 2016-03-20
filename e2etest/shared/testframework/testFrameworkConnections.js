@@ -185,12 +185,16 @@ function testGroupSelected(index) {
     });
 
     if (group.name === zumo.AllTestsGroupName || group.name === zumo.AllTestsUnattendedGroupName) {
-        btnRunTestClick().then(
-            function () {                
-                if (storage.config !== undefined) {
-                    storage.ReportResults(zumo.testGroups, index);                    
-                }
-            });
+        btnRunTestClick().then(function () {
+            return testPlatform.getAppConfig();
+        })
+        .then(function (appConfig) {
+            // The WebIntent plugin has trouble reading booleans. Work around it by comparing the string value to 'true' and '1'
+            if (appConfig.generateReport === 'true' || appConfig.generateReport === '1') {
+                storage.setConfig(appConfig);
+                storage.ReportResults(zumo.testGroups, index);
+            }
+        });
     }
 }
 

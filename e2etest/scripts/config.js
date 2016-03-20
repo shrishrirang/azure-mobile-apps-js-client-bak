@@ -1,3 +1,7 @@
+// ----------------------------------------------------------------------------
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// ----------------------------------------------------------------------------
+
 module.exports = {
     cordova: {
         // If this flag is set to true, plugins, platforms are left untouched and
@@ -12,8 +16,8 @@ module.exports = {
         // Platform to add to the Cordova project and build. The platforms will be built only if the 
         // host machine supports building that platform.
         platforms: {
-            windows: true,
-            android: false,
+            windows: false,
+            android: true,
             ios: false,
             wp8: false
         }

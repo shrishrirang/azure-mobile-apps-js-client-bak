@@ -1,15 +1,15 @@
 ﻿function createStorageNamespace() {
 
-    // intialize configuration
-    var config = parseQuery(window.location.search.substr(1));
-    var platform = "HTML-Javascript";
-    var containerName = "javascript";
+    var _config = {};
+    
+    function setConfig(config) {
+        _config = config;
 
-    function setConfig(str) {
-        config = parseQuery(str);
-        storage.config = config;
-        platform = "WinStore-WinJS";
-        containerName = "winjs";
+        if (_config.containerUrl.slice(-1) !== '/') {
+            _config.containerUrl += '/';
+        }
+        _config.clientPlatform = 'Cordova.' + device.platform;
+        _config.configName = _config.serverPlatform + '-' + _config.clientPlatform;
     }
 
     function parseRunResult(testGroup, testGroupMap) {
@@ -32,7 +32,8 @@
     function createMasterRunResult(testGrp, runId, fileName) {
         var testResult = getStatusCount(testGrp);
         var test = {
-            full_name: config.runtime + "-" + platform,
+            full_name: _config.clientPlatform,
+            backend: _config.serverPlatform,
             outcome: testGrp.failedTestCount == 0 ? statusToOutcome(0) : statusToOutcome(1),
             start_time: getFileTime(Date.parse(testGrp.startTime)),
             end_time: getFileTime(Date.parse(testGrp.endTime)),
@@ -71,8 +72,8 @@
         for (var i = 0; i < tests.length; i++) {
             var blobName = getGuid() + ".txt";
 
-            var requestUrl = containerUrl + containerName + "/" + blobName + "?" + config.accessToken;
-            tests[i].filename = containerName + "/" + blobName;
+            var requestUrl = containerUrl + _config.configName + "/" + blobName + "?" + atob(_config.storageAccessToken);
+            tests[i].filename = _config.configName + "/" + blobName;
             var promise = putBlob(requestUrl, tests[i].logs);
             uploadPromises.push(promise);
         }
@@ -99,7 +100,7 @@
         var def;
         def = $.Deferred();
         var xhr = new XMLHttpRequest();
-        var requestUrl = blobUrl + "?" + config.accessToken;
+        var requestUrl = blobUrl + "?" + atob(_config.storageAccessToken);
         xhr.open('PUT', requestUrl);
         xhr.onreadystatechange = function () {
             if (xhr.readyState == 4 && xhr.status === 200) {
@@ -125,17 +126,16 @@
         var testCount = testGrp.tests.length;
         var startTime = Date.parse(testGrp.startTime);        
         var testGroupMap = groupTestMapping(testResultsGroup);
-        var rootContainerUrl = config.containerUrl;
 
         // upload individual log files
-        uploadBlob(config.containerUrl, testGrp.tests);
+        uploadBlob(_config.containerUrl, testGrp.tests);
 
-        var masterResultBlobUrl = rootContainerUrl + platform + "-master.json?" + config.accessToken;
+        var masterResultBlobUrl = _config.containerUrl + _config.configName + "-master.json?" + atob(_config.storageAccessToken);
 
         //Post result for master test run                
 
-        detailFileName = platform + "-detail.json"
-        var masterRunResult = createMasterRunResult(testGrp, config.masterRunId, detailFileName);
+        detailFileName = _config.configName + "-detail.json"
+        var masterRunResult = createMasterRunResult(testGrp, _config.masterRunId, detailFileName);
         var masterJsonStr = JSON.stringify(masterRunResult);
         var allPromises = []
 
@@ -145,10 +145,10 @@
         ////post test results
         var result = parseRunResult(testResultsGroup[index], testGroupMap);
 
-        var masterResultBlobUrl = rootContainerUrl + detailFileName + "?" + config.accessToken;
+        var masterResultBlobUrl = _config.containerUrl + detailFileName + "?" + atob(_config.storageAccessToken);
         suiteJsonStr = JSON.stringify(result);
-        var suiteResultPormise = putBlob(masterResultBlobUrl, suiteJsonStr)
-        allPromises.push(suiteResultPormise);
+        var suiteResultPromise = putBlob(masterResultBlobUrl, suiteJsonStr)
+        allPromises.push(suiteResultPromise);
         $.when.apply($, allPromises);
 
         setTimeout(closeBrowserWindow, 5000);
@@ -219,6 +219,7 @@
         }
         return query;
     }
+
     function getGuid() {
         var pad4 = function (str) { return "0000".substring(str.length) + str; };
         var hex4 = function () { return pad4(Math.floor(Math.random() * 0x10000 /* 65536 */).toString(16)); };
@@ -227,7 +228,7 @@
     }
     return {
         ReportResults: ReportResults,
-        config: config,
+        config: _config,
         setConfig: setConfig
     };
 }

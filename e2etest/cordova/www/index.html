@@ -26,6 +26,14 @@
         <meta name="msapplication-tap-highlight" content="no" />
         <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <!-- Good default declaration:
+        * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+        * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+        * Disables use of eval() and inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+            * Enable inline JS: add 'unsafe-inline' to default-src
+            * Enable eval(): add 'unsafe-eval' to default-src
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com http: https:; style-src 'self'; media-src *">
+    -->
 
         <title>ZumoE2ETestAppJs</title>
 
@@ -56,12 +64,10 @@
     </head>
     <body>
         <script type="text/javascript" src="js/index.js"></script>
-        <script type="text/javascript" src="generated/shared/testframework/lib/wl.js"></script>
+        <script type="text/javascript" src="generated/shared/thirdparty/wl.js"></script>
         <script type="text/javascript">
             app.initialize();
         </script>
-
-
         <table id='mainTable'>
             <tr style="height: 100px;">
                 <th colspan='2' class='borderedCell mainTitle'>Zumo E2E Test App - JS</th>

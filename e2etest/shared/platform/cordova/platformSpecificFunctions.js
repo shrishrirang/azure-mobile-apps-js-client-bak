@@ -4,6 +4,45 @@
 
 function createPlatformSpecificFunctions() {
 
+    // Currently only implemented for Android
+    function getApplicationParam(name) {
+        var config = {};
+
+        var def = $.Deferred();
+
+        if (device.platform === 'Android') {
+            window.plugins.webintent.getExtra(name,
+                function (value) {
+                    def.resolve(value);
+                }, function () {
+                    def.resolve();
+                }
+            );
+        } else {
+            def.resolve();
+        }
+
+        return def;
+    }
+
+    function getAppConfig() {
+        return $.when(
+            getApplicationParam('serverPlatform'),
+            getApplicationParam('appUrl'),
+            getApplicationParam('containerUrl'),
+            getApplicationParam('storageAccessToken'),
+            getApplicationParam('generateReport'))
+            .then(function (serverPlatform, appUrl, containerUrl, storageAccessToken, generateReport) {
+                return {
+                    serverPlatform: serverPlatform,
+                    appUrl: appUrl,
+                    containerUrl: containerUrl,
+                    storageAccessToken: storageAccessToken,
+                    generateReport: generateReport
+                };
+            });
+    }
+
     var alertFunction;
     if (typeof alert === 'undefined') {
         alertFunction = function (text, done) {
@@ -34,6 +73,7 @@ function createPlatformSpecificFunctions() {
         alert: alertFunction,
         saveAppInfo: saveAppInfo,
         IsHTMLApplication: true,
+        getAppConfig: getAppConfig
     };
 }
 

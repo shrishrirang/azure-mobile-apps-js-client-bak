@@ -1,3 +1,7 @@
+// ----------------------------------------------------------------------------
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// ----------------------------------------------------------------------------
+
 var rimraf = require('rimraf'),
     path = require('path'),
     fs = require('fs-sync'),
@@ -7,6 +11,8 @@ var rimraf = require('rimraf'),
 var e2eTestRoot = path.join(__dirname, '..');
 
 function run(command) {
+    
+    console.log('Running : ' + command);
     var result = execSync(command, {
         encoding: 'utf8'
     });
@@ -21,8 +27,6 @@ function setupCordovaTests() {
 
     // Clean up previous builds
     rimraf.sync('./cordova/www/generated');
-    rimraf.sync('./cordova/platforms');
-    rimraf.sync('./cordova/plugins');
     
     fs.copy('./shared', './cordova/www/generated/shared');
     fs.copy('./shared', './cordova/www/generated/shared');
@@ -31,6 +35,9 @@ function setupCordovaTests() {
     
     if (!config.cordova.refreshOnly) {
         
+        rimraf.sync('./platforms');
+        rimraf.sync('./plugins');
+
         // The Azure Mobile App Cordova plugin can be saved in config.xml, but this way of installation
         // gives us control over where to install the plugins from (github / npm registry / custom path).
         var azureMobilePlugin;
@@ -52,25 +59,25 @@ function setupCordovaTests() {
         if (config.cordova.platforms.windows && process.platform === 'win32') {
             console.log('Preparing for windows..');
             run('cordova platform add windows');
-            run('cordova platform build windows');
+            run('cordova build windows');
         }
         
         if (config.cordova.platforms.android) {
             console.log('Preparing for android..');
             run('cordova platform add android');
-            run('cordova platform build android');
+            run('cordova build android');
         }
         
         if (config.cordova.platforms.ios && process.platform === 'darwin') {
             console.log('Preparing for ios..');
             run('cordova platform add ios');
-            run('cordova platform build ios');
+            run('cordova build ios');
         }
         
         if (config.cordova.platforms.wp8 && process.platform === 'win32') {
             console.log('Preparing for wp8..');
             run('cordova platform add wp8');
-            run('cordova platform build wp8');
+            run('cordova build wp8');
         }
 
         console.log('Cordova platforms installation and build done!');

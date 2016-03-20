@@ -4,6 +4,12 @@
 
 function createPlatformSpecificFunctions() {
 
+    function getAppConfig() {
+        var def = $.Deferred();
+        def.resolve({});
+        return def.Promise();
+    }
+
     var alertFunction;
     if (typeof alert === 'undefined') {
         alertFunction = function (text, done) {
@@ -33,6 +39,7 @@ function createPlatformSpecificFunctions() {
         alert: alertFunction,
         saveAppInfo: saveAppInfo,
         IsHTMLApplication: false,
+        getAppConfig: getAppConfig,
         getPushChannel: getPushChannel
     };
 }
