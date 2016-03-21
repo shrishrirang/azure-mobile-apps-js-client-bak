@@ -17,6 +17,7 @@ function createZumoNamespace() {
     var ClientVersionKey = 'client-version';
     var ServerVersionKey = 'server-version';
     var RuntimeFeaturesKey = 'runtime-features';
+    var MobileAppUrl = 'appUrl';
 
     function ZumoTest(name, execution, requiredRuntimeFeatures) {
         /// <summary>
@@ -289,6 +290,7 @@ function createZumoNamespace() {
         if (mustInitialize) {
             if (appUrl) {
                 client = new WindowsAzure.MobileServiceClient(appUrl);
+                zumo.util.globalTestParams[zumo.constants.MOBILE_APP_URL_KEY] = appUrl;
                 return true;
             } else {
                 testPlatform.alert('Please enter valid application URL', 'Error', function () {
@@ -409,8 +411,7 @@ function createZumoNamespace() {
                 return true;
             case 'object':
                 for (key in expected) {
-                    if (key.indexOf("__") > -1)
-                    {
+                    if (key.indexOf("__") > -1) {
                         continue;
                     }
                     if (expected.hasOwnProperty(key)) {
@@ -550,7 +551,8 @@ function createZumoNamespace() {
         constants: {
             CLIENT_VERSION_KEY: ClientVersionKey,
             SERVER_VERSION_KEY: ServerVersionKey,
-            RUNTIME_FEATURES_KEY: RuntimeFeaturesKey
+            RUNTIME_FEATURES_KEY: RuntimeFeaturesKey,
+            MOBILE_APP_URL_KEY: MobileAppUrl
         },
         runtimeFeatureNames: {
             STRINGREPLACE: 'stringReplace',

@@ -1,4 +1,5 @@
 ﻿// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
@@ -59,6 +60,7 @@ function defineLoginTestsNamespace() {
         }
     }
 
+
     // Run the Live SDK and SSO tests only on versions of windows that support WebAuthenticationBroker
     if (window.Windows &&
         window.Windows.Security &&
@@ -80,6 +82,10 @@ function defineLoginTestsNamespace() {
             }
         });
     }
+
+    tests.push(createAlternateHostServerFlowLoginTest());
+    tests.push(createAlternateHostClientFlowLoginTest());
+    tests.push(createLoginPrefixTest());
 
     for (var i = indexOfTestsWithAuthentication; i < tests.length; i++) {
         tests[i].canRunUnattended = false;
@@ -129,7 +135,6 @@ function defineLoginTestsNamespace() {
                 test.addLog('Last identity object is null. Cannot run this test.');
                 done(false);
             } else {
-                var token = {};
                 client.login(provider, lastIdentity[provider]).done(function (user) {
                     test.addLog('Logged in as ', user);
                     done(true);
@@ -327,10 +332,74 @@ function defineLoginTestsNamespace() {
         });
     }
 
+    function createAlternateHostClientFlowLoginTest() {
+        return new zumo.Test('Login via AlternateLoginHost - Client Flow', function (test, done) {
+            var client = new WindowsAzure.MobileServiceClient("https://dummymobileservice.azurewebsites.net");
+            client.alternateLoginHost = zumo.util.globalTestParams[zumo.constants.MOBILE_APP_URL_KEY];
+            var lastIdentity = lastUserIdentityObject;
+            var lastIdentityProvider;
+            if (!lastIdentity) {
+                test.addLog('Last identity object is null. Cannot run this test.');
+                done(false);
+            }
+            else {
+                for (i = 0; i < providers.length; i++) {
+                    if (supportRecycledToken[providers[i]] && lastIdentity[providers[i]] != null) {
+                        lastIdentityProvider = providers[i];
+                        break;
+                    }
+                }
+                client.login(lastIdentityProvider, lastIdentity[lastIdentityProvider]).done(function (user) {
+                    test.addLog('Logged in as ', user);
+                    done(true);
+                }, function (err) {
+                    test.addLog('Error on login: ', err);
+                    done(false);
+                });
+            }
+        });
+    }
+
+    function createAlternateHostServerFlowLoginTest() {
+        return new zumo.Test('Login via AlternateLoginHost - ServerFlow', function (test, done) {
+            var client = new WindowsAzure.MobileServiceClient("https://dummymobileservice.azurewebsites.net");
+            client.alternateLoginHost = zumo.util.globalTestParams[zumo.constants.MOBILE_APP_URL_KEY];
+
+            client.login('facebook').done(function (user) {
+                test.addLog('Logged in as ', user);
+                done(true);
+            }, function (err) {
+                test.addLog('Error on login: ', err);
+                done(false);
+            });
+
+        });
+    }
+
+    function createLoginPrefixTest() {
+        return new zumo.Test('Set AlternateLoginPrefix to dummy', function (test, done) {
+            var client = zumo.getClient();
+            client.loginUriPrefix = '/foo/bar';
+            client.login('microsoftaccount', { access_token: 'zumo' }).done(function (user) {
+                test.addLog('Login via dummy loginUriPrefix should have failed ', user);
+                done(false);
+            }, function (err) {
+                if (err.request.status === 404) {
+                    test.addLog('Expected error on login: ', err);
+                    done(true);
+                    return;
+                }
+                var errorMsg = 'Expected status: 404. Recieved: ' + err.request.status;
+                test.addLog('Did not find expected error on login failure', errorMsg);
+                done(false);
+            });
+        });
+    }
+
     function createLogoutTest() {
         return new zumo.Test('Log out', function (test, done) {
             var client = zumo.getClient();
-            client.logout().then(function() {
+            client.logout().then(function () {
                 test.addLog('Logged out');
                 done(true);
             });

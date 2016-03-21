@@ -33,7 +33,7 @@ setDefaultButtonEventHandler();
 
 function saveLastUsedAppInfo() {
     var lastAppUrl = document.getElementById('txtAppUrl').value;
-   
+
     testPlatform.saveAppInfo(lastAppUrl);
 }
 

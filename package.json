@@ -1,9 +1,10 @@
 {
-  "name": "azure-mobile-apps-js-client",
+  "name": "azure-mobile-apps-client",
   "description": "Javascript client for Azure Mobile Apps. For more details visit http://azure.microsoft.com/en-us/develop/mobile",
-  "version": "2.0.0-beta4",
+  "version": "2.0.0-beta5",
   "devDependencies": {
     "browserify": "~11.1.0",
+    "browserify-derequire": "~0.9.4",
     "es6-promise": "^3.1.2",
     "esprima": "~2.6.0",
     "fs-sync": "~1.0.2",
@@ -25,6 +26,7 @@
     "wd": "^0.4.0"
   },
   "license": "Apache-2.0",
+  "main": "dist/MobileServices.Web.min.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/azure/azure-mobile-apps-js-client.git"

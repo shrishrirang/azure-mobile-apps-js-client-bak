@@ -13,7 +13,7 @@ module.exports = function(grunt) {
         files: {
             // Entry points common to all platforms
             core: [
-                'sdk/src/MobileServiceClient.js',
+                'sdk/src/index.js',
             ],
             // List of Web entry points
             web: [
@@ -87,6 +87,12 @@ module.exports = function(grunt) {
         },
         browserify: {
             options: {
+                browserifyOptions: {
+                    standalone: 'WindowsAzure'
+                },
+                plugin: [
+                    [ 'browserify-derequire' ]
+                ],
                 banner: header
             },
             web: {
