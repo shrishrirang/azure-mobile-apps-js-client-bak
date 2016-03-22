@@ -75,8 +75,11 @@ var loginWindowWaitTime = 20 /* seconds */ * 1000 /* milli seconds */,
                                ' --es generateReport ' + argv.generateReport,
       newCommandTimeout: 20 /* minute(s) */ * 60 /* seconds */ 
     },
+    noNewWindowError = 'no new window',
+    unknownProviderError = 'unknown provider',
     driver;
 
+// Stop the automation and exit with appropriate status code
 function shutdown(error) {
     driver.quit();
 
@@ -89,6 +92,7 @@ function shutdown(error) {
     }
 }
 
+// Poll the specified URL for the test results.
 function pollResult(resultUrl) {
     setTimeout(function() {
         console.log('Checking if results are available');
@@ -104,7 +108,7 @@ function pollResult(resultUrl) {
     }, resultPollInterval);
 };
 
-// Waits for a login window, enters credentials and proceeds
+// Waits for a login window, enters credentials and submits the form
 function login() {
     
     var provider,
@@ -130,7 +134,7 @@ function login() {
                 }
             }
             
-            throw 'no unprocessed window';
+            throw noNewWindowError;
         })
         
         // Wait for the window to load
@@ -152,7 +156,7 @@ function login() {
                 }
             }
     
-            throw 'unknown provider';
+            throw unknownProviderError;
         })
         
         // Enter the user name
@@ -189,6 +193,7 @@ function login() {
         .clear()
         .sendKeys(password)
         
+        // Submit the credentials
         .then(function() {
             console.log('Submitting form');
         })
@@ -205,18 +210,18 @@ function login() {
             ++loginCount;
             
             console.log(provider + ' login successful!');
-            console.log('providers processed so far: ' + loginCount);
+            console.log('Providers processed so far: ' + loginCount);
             
             setTimeout(function() {
                 login();
             }, loginWindowWaitTime);
         }, function(error) {
-            // If there is no unprocessed window yet, retry.
+            // If there is no new window corresponding to a provider we recognize, retry.
             var retry;
-            if (error === 'unknown provider') {
+            if (error === unknownProviderError) {
                 console.log('Selected window is not a supported provider window.');
                 retry = true;
-            } else if (error === 'no unprocessed window') {
+            } else if (error === noNewWindowError) {
                 console.log('No unprocessed provider window. Retrying..');
                 retry = true;
             } else {
@@ -235,7 +240,7 @@ function login() {
 
 console.log('capabilities : ' + JSON.stringify(capabilities));
 
-// Poll the result URL to detect test execution completion
+// Poll the test results URL to detect test execution completion
 var resultUrl = argv.containerUrl;
 if (resultUrl.slice(-1) !== '/') {
     resultUrl = resultUrl + '/';
@@ -255,7 +260,6 @@ if (argv.timeout) {
 
 // Define the automation chain
 driver = wd.promiseChainRemote(appiumServer);
-
 driver
     .chain()
     .then(function() {
