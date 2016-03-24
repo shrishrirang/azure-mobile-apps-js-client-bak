@@ -24,6 +24,20 @@ function defineTableGenericFunctionalTestsNamespace() {
         globaldone(false);
     }
 
+    function getTestSystemProperties() {
+        return [
+            WindowsAzure.MobileServiceTable.SystemProperties.None,
+            WindowsAzure.MobileServiceTable.SystemProperties.All,
+            WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt | WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt | WindowsAzure.MobileServiceTable.SystemProperties.Version,
+            WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt | WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt,
+            WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt | WindowsAzure.MobileServiceTable.SystemProperties.Version,
+            WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt,
+            WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt | WindowsAzure.MobileServiceTable.SystemProperties.Version,
+            WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt,
+            WindowsAzure.MobileServiceTable.SystemProperties.Version
+        ];
+    }
+
     function emptyTable(table) {
         return table.read().then(function (results) {
             if (!results || results.length == 0) {
@@ -114,14 +128,14 @@ function defineTableGenericFunctionalTestsNamespace() {
         emptyTable(table).then(function () {
             return table.insert({ id: 'an id', name: 'a value' });
         }).then(function (item) {
-            savedVersion = item.__version;
+            savedVersion = item.version;
             item.name = 'Hello!';
             return table.update(item);
         }).then(function (item) {
-            var a1 = assert.areNotEqual(item.__version, savedVersion);
+            var a1 = assert.areNotEqual(item.version, savedVersion);
             item.name = 'But Wait!';
-            correctVersion = item.__version;
-            item.__version = savedVersion;
+            correctVersion = item.version;
+            item.version = savedVersion;
             newItem = item;
             return table.update(item);
         }).then(function (items) { 
@@ -129,15 +143,15 @@ function defineTableGenericFunctionalTestsNamespace() {
         }, function (error) {            
             if (assert.areEqual(test, 412, error.request.status) &&
                         error.message.indexOf("Precondition Failed") > -1 &&
-                        assert.areEqual(test, error.serverInstance.__version, correctVersion) &&
+                        assert.areEqual(test, error.serverInstance.version, correctVersion) &&
                         assert.areEqual(test, error.serverInstance.name, 'Hello!')) {
-                newItem.__version = correctVersion;
+                newItem.version = correctVersion;
                 return table.update(newItem);
             } else {
                 throw new Error('Incorrect error returned from update');
             }
         }).then(function (item) {
-            if (assert.areNotEqual(item.__version, correctVersion)) {
+            if (assert.areNotEqual(item.version, correctVersion)) {
                 done(true);
             } else {
                 throw new Error('Incorrect version found');
@@ -343,83 +357,84 @@ function defineTableGenericFunctionalTestsNamespace() {
             var promise;
 
             savedItems.push(item);
+            var testSystemProperties = getTestSystemProperties();
             for (index = 0; index < testSystemProperties.length; index++) {
                 table.systemProperties = testSystemProperties[index];
                 test.addLog('testing properties: ' + table.systemProperties);
 
-                var orderTests = table.orderBy('__createdAt').read().then(function (items) {
+                var orderTests = table.orderBy('createdAt').read().then(function (items) {
                     for (var i = 0; i < items.length - 1; i++) {
                         if (!(items[i].id < items[i + 1].id)) {
-                            test.addLog('__createdAt order wrong');
+                            test.addLog('createdAt order wrong');
                             success = false;
                             break;
                         }
                     }
 
-                    return table.orderBy('__updatedAt').read();
+                    return table.orderBy('updatedAt').read();
                 }).then(function (items) {
                     for (var i = 0; i < items.length - 1; i++) {
                         if (!(items[i].id < items[i + 1].id)) {
-                            test.addLog('__updatedAt order wrong');
+                            test.addLog('updatedAt order wrong');
                             success = false;
                             break;
                         }
                     }
 
-                    return table.orderBy('__version').read();
+                    return table.orderBy('version').read();
                 }).then(function (items) {
                     for (var i = 0; i < items.length - 1; i++) {
                         if (!(items[i].id < items[i + 1].id)) {
-                            test.addLog('__version order wrong');
+                            test.addLog('version order wrong');
                             success = false;
                             break;
                         }
                     }
 
-                    return table.select('id', '__createdAt').read();
+                    return table.select('id', 'createdAt').read();
                      
                     // Node only
                     /*
-                    return table.where(function (value) { return this.__createdAt >= value; }, savedItems[3].__createdAt).read()
+                    return table.where(function (value) { return this.createdAt >= value; }, savedItems[3].createdAt).read()
                             .then(function (items) {
                                 if (!assert.areEqual(test, 2, items.length)) {
                                     success = false;
                                 }
 
-                                return table.where(function (value) { return this.__updatedAt >= value; }, savedItems[3].__updatedAt).read();
+                                return table.where(function (value) { return this.updatedAt >= value; }, savedItems[3].updatedAt).read();
                             }).then(function (items) {
                                 if (!assert.areEqual(test, 2, items.length)) {
                                     success = false;
                                 }
-                                return table.where({ __version: savedItems[3].__version }).read();
+                                return table.where({ version: savedItems[3].version }).read();
                             }).then(function (items) {
                                 if (!assert.areEqual(test, 1, items.length)) {
                                     success = false;
                                 }
 
-                                return table.select('id', '__createdAt').read();
+                                return table.select('id', 'createdAt').read();
                             });
                     */
                 }).then(function (items) {
                     for (var i = 0; i < items.length; i++) {
-                        if (items[i].__createdAt == null) {
-                            test.addLog('missing __createdAt');
+                        if (items[i].createdAt == null) {
+                            test.addLog('missing createdAt');
                             success = false;
                             break;
                         }
                     }
-                    return table.select('id', '__updatedAt').read();
+                    return table.select('id', 'updatedAt').read();
                 }).then(function (items) {
                     for (var i = 0; i < items.length; i++) {
-                        if (items[i].__updatedAt == null) {
-                            test.addLog('missing __updatedAt');
+                        if (items[i].updatedAt == null) {
+                            test.addLog('missing updatedAt');
                         }
                     }
-                    return table.select('id', '__version').read();
+                    return table.select('id', 'version').read();
                 }).then(function (items) {
                     for (var i = 0; i < items.length; i++) {
-                        if (items[i].__version == null) {
-                            test.addLog('missing __version');
+                        if (items[i].version == null) {
+                            test.addLog('missing version');
                         }
                     }
                 });
@@ -438,242 +453,242 @@ function defineTableGenericFunctionalTestsNamespace() {
     }));
 
     // BUG #2133523: .NET runtime should respond 400 if query requests invalid system properties
-    tests.push(new zumo.Test('AsyncTableOperationsWithInvalidSystemPropertiesQuerystring', function (test, done) {
-        var client = zumo.getClient(),
-            savedItem;
-        var table = client.getTable(stringIdTableName);
+    //tests.push(new zumo.Test('AsyncTableOperationsWithInvalidSystemPropertiesQuerystring', function (test, done) {
+    //    var client = zumo.getClient(),
+    //        savedItem;
+    //    var table = client.getTable(stringIdTableName);
 
-        var forLink = [newLink()]
-        var i = 0;
-        forLink[i].resolve(i);
+    //    var forLink = [newLink()]
+    //    var i = 0;
+    //    forLink[i].resolve(i);
 
-        testInvalidSystemPropertyQueryStrings.forEach(function (systemProperties) {
-            i = i + 1;
-            forLink[i] = newLink();
-            forLink[i - 1].then(function (i2) {
-                systemProperties = testInvalidSystemPropertyQueryStrings[i2];
-                var systemPropertiesKeyValue = systemProperties.split('='),
-                    userParams = {};
+    //    testInvalidSystemPropertyQueryStrings.forEach(function (systemProperties) {
+    //        i = i + 1;
+    //        forLink[i] = newLink();
+    //        forLink[i - 1].then(function (i2) {
+    //            systemProperties = testInvalidSystemPropertyQueryStrings[i2];
+    //            var systemPropertiesKeyValue = systemProperties.split('='),
+    //                userParams = {};
 
-                userParams[systemPropertiesKeyValue[0]] = systemPropertiesKeyValue[1];
-                test.addLog('querystring: ' + systemProperties);
-                var insertPromise = newLink();
-                table.insert({ id: 'an id', name: 'a value' }, userParams).then(function (item) {
-                    forLink[i2 + 1].reject();
-                }, function (error) {
-                    insertPromise.resolve();
-                });
+    //            userParams[systemPropertiesKeyValue[0]] = systemPropertiesKeyValue[1];
+    //            test.addLog('querystring: ' + systemProperties);
+    //            var insertPromise = newLink();
+    //            table.insert({ id: 'an id', name: 'a value' }, userParams).then(function (item) {
+    //                forLink[i2 + 1].reject();
+    //            }, function (error) {
+    //                insertPromise.resolve();
+    //            });
 
-                var readPromise = newLink();
-                insertPromise.then(function () {
-                    return table.read('', userParams).then(function (items) {
-                        forLink[i2 + 1].reject();
-                    }, function (error) {
-                        readPromise.resolve();
-                    })
-                })
+    //            var readPromise = newLink();
+    //            insertPromise.then(function () {
+    //                return table.read('', userParams).then(function (items) {
+    //                    forLink[i2 + 1].reject();
+    //                }, function (error) {
+    //                    readPromise.resolve();
+    //                })
+    //            })
 
-                var wherePromise = newLink();
-                readPromise.then(function () {
-                    return table.where({ __version: 'AAA' }).read(userParams).then(function (items) {
-                        forLink[i2 + 1].reject();
-                    }, function (error) {
-                        wherePromise.resolve();
-                    })
-                });
+    //            var wherePromise = newLink();
+    //            readPromise.then(function () {
+    //                return table.where({ version: 'AAA' }).read(userParams).then(function (items) {
+    //                    forLink[i2 + 1].reject();
+    //                }, function (error) {
+    //                    wherePromise.resolve();
+    //                })
+    //            });
 
-                var lookupPromise = newLink();
-                readPromise.then(function () {
-                    return table.lookup('an id', userParams).then(function (items) {
-                        forLink[i2 + 1].reject();
-                    }, function (error) {
-                        lookupPromise.resolve();
-                    })
-                });
+    //            var lookupPromise = newLink();
+    //            readPromise.then(function () {
+    //                return table.lookup('an id', userParams).then(function (items) {
+    //                    forLink[i2 + 1].reject();
+    //                }, function (error) {
+    //                    lookupPromise.resolve();
+    //                })
+    //            });
 
 
-                lookupPromise.then(function () {
-                    table.update({ id: 'an id', name: 'new value' }, userParams).then(function (items) {
-                        forLink[i2 + 1].reject();
-                    }, function (error) {
-                        forLink[i2 + 1].resolve(i2 + 1);
-                    })
-                });
-            })
-        })
-        $.when.apply($, forLink).then(function () {
-            done(true);
-        }, function () {
-            done(false);
-        });
-    }, [zumo.runtimeFeatureNames.NodeRuntime_Only]));
+    //            lookupPromise.then(function () {
+    //                table.update({ id: 'an id', name: 'new value' }, userParams).then(function (items) {
+    //                    forLink[i2 + 1].reject();
+    //                }, function (error) {
+    //                    forLink[i2 + 1].resolve(i2 + 1);
+    //                })
+    //            });
+    //        })
+    //    })
+    //    $.when.apply($, forLink).then(function () {
+    //        done(true);
+    //    }, function () {
+    //        done(false);
+    //    });
+    //}, [zumo.runtimeFeatureNames.NodeRuntime_Only]));
 
     // BUG #1706815 (OData query for version field (string <--> byte[] mismatch)
-    tests.push(new zumo.Test('AsyncTableOperationsWithAllSystemPropertiesUsingCustomSystemParameters', function (test, done) {
-        var client = zumo.getClient(),
-            savedItem;
-        var table = client.getTable(stringIdTableName);
+    //tests.push(new zumo.Test('AsyncTableOperationsWithAllSystemPropertiesUsingCustomSystemParameters', function (test, done) {
+    //    var client = zumo.getClient(),
+    //        savedItem;
+    //    var table = client.getTable(stringIdTableName);
 
-        var forLink = [newLink()]
-        var i = 0;
-        forLink[i].resolve(i);
+    //    var forLink = [newLink()]
+    //    var i = 0;
+    //    forLink[i].resolve(i);
 
-        testValidSystemPropertyQueryStrings.forEach(function (systemProperties) {
-            i = i + 1;
-            forLink[i] = newLink();
-            forLink[i - 1].then(function (i2) {
-                systemProperties = testValidSystemPropertyQueryStrings[i2];
-                var systemPropertiesKeyValue = systemProperties.split('='),
-                                    userParams = {
-                                    },
-                                    savedVersion;
+    //    testValidSystemPropertyQueryStrings.forEach(function (systemProperties) {
+    //        i = i + 1;
+    //        forLink[i] = newLink();
+    //        forLink[i - 1].then(function (i2) {
+    //            systemProperties = testValidSystemPropertyQueryStrings[i2];
+    //            var systemPropertiesKeyValue = systemProperties.split('='),
+    //                                userParams = {
+    //                                },
+    //                                savedVersion;
 
-                userParams[systemPropertiesKeyValue[0]] = systemPropertiesKeyValue[1];
+    //            userParams[systemPropertiesKeyValue[0]] = systemPropertiesKeyValue[1];
 
-                var lowerCaseSysProperties = systemProperties.toLowerCase();
-                shouldHaveCreatedAt = lowerCaseSysProperties.indexOf('created') !== -1,
-                shouldHaveUpdatedAt = lowerCaseSysProperties.indexOf('updated') !== -1,
-                shouldHaveVersion = lowerCaseSysProperties.indexOf('version') !== -1;
+    //            var lowerCaseSysProperties = systemProperties.toLowerCase();
+    //            shouldHaveCreatedAt = lowerCaseSysProperties.indexOf('created') !== -1,
+    //            shouldHaveUpdatedAt = lowerCaseSysProperties.indexOf('updated') !== -1,
+    //            shouldHaveVersion = lowerCaseSysProperties.indexOf('version') !== -1;
 
-                if (lowerCaseSysProperties.indexOf('*') !== -1) {
-                    shouldHaveCreatedAt = shouldHaveUpdatedAt = shouldHaveVersion = true;
-                }
+    //            if (lowerCaseSysProperties.indexOf('*') !== -1) {
+    //                shouldHaveCreatedAt = shouldHaveUpdatedAt = shouldHaveVersion = true;
+    //            }
 
-                table.read().then(function (results) {
-                    var readPromise = newLink();
-                    var promises = [];
-                    results.forEach(function (result) {
-                        var delProm = newLink();
-                        promises.push(delProm);
-                        table.del(result).then(function () { delProm.resolve(); });
-                    });
-                    $.when.apply($, promises).done(function () {
-                        readPromise.resolve();
-                    });
-                    return readPromise;
-                }, function () { forLink[i2 + 1].reject(); }).then(function () {
-                    var insertPromise = newLink();
-                    table.insert({ id: 'an id', name: 'a value' }, userParams).then(function (item) {
-                        insertPromise.resolve(item);
-                    });
-                    return insertPromise;
-                }, function () { forLink[i2 + 1].reject(); })
-               .then(function (item) {
-                   var insertPromise2 = newLink();
-                   var a1 = assert.areEqual(test, shouldHaveCreatedAt, item.__createdAt !== undefined);
-                   var a2 = assert.areEqual(test, shouldHaveUpdatedAt, item.__updatedAt !== undefined);
-                   var a3 = assert.areEqual(test, shouldHaveVersion, item.__version !== undefined);
-                   savedItem = item;
-                   if (a1 && a2 && a3) {
-                       table.read('', userParams).then(function (item) {
-                           insertPromise2.resolve(item);
-                       },
-                       function () { forLink[i2 + 1].reject(); });
-                   }
-                   else {
-                       insertPromise2.reject();
-                   }
-                   return insertPromise2;
-               }, function () { forLink[i2 + 1].reject(); })
-               .then(function (items) {
-                   var wherePromise = newLink();
-                   var a4 = assert.areEqual(test, 1, items.length);
-                   var item = items[0];
-                   var create = assert.areEqual(test, shouldHaveCreatedAt, item.__createdAt !== undefined);
-                   var update = assert.areEqual(test, shouldHaveUpdatedAt, item.__updatedAt !== undefined);
-                   var version = assert.areEqual(test, shouldHaveVersion, item.__version !== undefined);
+    //            table.read().then(function (results) {
+    //                var readPromise = newLink();
+    //                var promises = [];
+    //                results.forEach(function (result) {
+    //                    var delProm = newLink();
+    //                    promises.push(delProm);
+    //                    table.del(result).then(function () { delProm.resolve(); });
+    //                });
+    //                $.when.apply($, promises).done(function () {
+    //                    readPromise.resolve();
+    //                });
+    //                return readPromise;
+    //            }, function () { forLink[i2 + 1].reject(); }).then(function () {
+    //                var insertPromise = newLink();
+    //                table.insert({ id: 'an id', name: 'a value' }, userParams).then(function (item) {
+    //                    insertPromise.resolve(item);
+    //                });
+    //                return insertPromise;
+    //            }, function () { forLink[i2 + 1].reject(); })
+    //           .then(function (item) {
+    //               var insertPromise2 = newLink();
+    //               var a1 = assert.areEqual(test, shouldHaveCreatedAt, item.createdAt !== undefined);
+    //               var a2 = assert.areEqual(test, shouldHaveUpdatedAt, item.updatedAt !== undefined);
+    //               var a3 = assert.areEqual(test, shouldHaveVersion, item.version !== undefined);
+    //               savedItem = item;
+    //               if (a1 && a2 && a3) {
+    //                   table.read('', userParams).then(function (item) {
+    //                       insertPromise2.resolve(item);
+    //                   },
+    //                   function () { forLink[i2 + 1].reject(); });
+    //               }
+    //               else {
+    //                   insertPromise2.reject();
+    //               }
+    //               return insertPromise2;
+    //           }, function () { forLink[i2 + 1].reject(); })
+    //           .then(function (items) {
+    //               var wherePromise = newLink();
+    //               var a4 = assert.areEqual(test, 1, items.length);
+    //               var item = items[0];
+    //               var create = assert.areEqual(test, shouldHaveCreatedAt, item.createdAt !== undefined);
+    //               var update = assert.areEqual(test, shouldHaveUpdatedAt, item.updatedAt !== undefined);
+    //               var version = assert.areEqual(test, shouldHaveVersion, item.version !== undefined);
 
 
-                   var whereCriteria = null;
-                   if (shouldHaveCreatedAt) {
-                       whereCriteria = { __createdAt: savedItem.__createdAt }
-                   }
+    //               var whereCriteria = null;
+    //               if (shouldHaveCreatedAt) {
+    //                   whereCriteria = { createdAt: savedItem.createdAt }
+    //               }
 
-                   if (shouldHaveUpdatedAt) {
-                       whereCriteria = { __updatedAt: savedItem.__updatedAt }
-                   }
+    //               if (shouldHaveUpdatedAt) {
+    //                   whereCriteria = { updatedAt: savedItem.updatedAt }
+    //               }
 
-                   if (shouldHaveVersion) {
-                       whereCriteria = { __version: savedItem.__version }
-                   }
+    //               if (shouldHaveVersion) {
+    //                   whereCriteria = { version: savedItem.version }
+    //               }
 
-                   if (create && update && version && a4) {
-                       table.where(whereCriteria).read(userParams).then(function (item) {
-                           wherePromise.resolve(item);
-                       }, function () { forLink[i2 + 1].reject(); });
-                   }
-                   else {
-                       wherePromise.reject();
-                   }
-                   return wherePromise;
-               }, function () { forLink[i2 + 1].reject(); })
-               .then(function (items) {
-                   var a4 = assert.areEqual(test, 1, items.length);
-                   var item = items[0];
-                   var create = assert.areEqual(test, shouldHaveCreatedAt, item.__createdAt !== undefined);
-                   var update = assert.areEqual(test, shouldHaveUpdatedAt, item.__updatedAt !== undefined);
-                   var version = assert.areEqual(test, shouldHaveVersion, item.__version !== undefined);
+    //               if (create && update && version && a4) {
+    //                   table.where(whereCriteria).read(userParams).then(function (item) {
+    //                       wherePromise.resolve(item);
+    //                   }, function () { forLink[i2 + 1].reject(); });
+    //               }
+    //               else {
+    //                   wherePromise.reject();
+    //               }
+    //               return wherePromise;
+    //           }, function () { forLink[i2 + 1].reject(); })
+    //           .then(function (items) {
+    //               var a4 = assert.areEqual(test, 1, items.length);
+    //               var item = items[0];
+    //               var create = assert.areEqual(test, shouldHaveCreatedAt, item.createdAt !== undefined);
+    //               var update = assert.areEqual(test, shouldHaveUpdatedAt, item.updatedAt !== undefined);
+    //               var version = assert.areEqual(test, shouldHaveVersion, item.version !== undefined);
 
-                   var lookupPromise = newLink();
-                   if (create && update && version && a4) {
-                       table.lookup(savedItem.id, userParams).then(function (item) {
-                           lookupPromise.resolve(item);
-                       }, function () {
-                           forLink[i2 + 1].reject();
-                       })
-                   }
-                   else {
-                       forLink[i2 + 1].reject();
-                   }
-                   return lookupPromise;
-               }, function () { forLink[i2 + 1].reject(); })
-               .then(function (item) {
-                   var updatePromise = newLink();
-                   var a1 = (assert.areEqual(test, shouldHaveCreatedAt, item.__createdAt !== undefined) &&
-                             assert.areEqual(test, shouldHaveUpdatedAt, item.__updatedAt !== undefined) &&
-                         assert.areEqual(test, shouldHaveVersion, item.__version !== undefined));
+    //               var lookupPromise = newLink();
+    //               if (create && update && version && a4) {
+    //                   table.lookup(savedItem.id, userParams).then(function (item) {
+    //                       lookupPromise.resolve(item);
+    //                   }, function () {
+    //                       forLink[i2 + 1].reject();
+    //                   })
+    //               }
+    //               else {
+    //                   forLink[i2 + 1].reject();
+    //               }
+    //               return lookupPromise;
+    //           }, function () { forLink[i2 + 1].reject(); })
+    //           .then(function (item) {
+    //               var updatePromise = newLink();
+    //               var a1 = (assert.areEqual(test, shouldHaveCreatedAt, item.createdAt !== undefined) &&
+    //                         assert.areEqual(test, shouldHaveUpdatedAt, item.updatedAt !== undefined) &&
+    //                     assert.areEqual(test, shouldHaveVersion, item.version !== undefined));
 
-                   savedItem.name = 'Hello!';
-                   savedVersion = item.__version;
+    //               savedItem.name = 'Hello!';
+    //               savedVersion = item.version;
 
-                   if (a1) {
-                       table.update(savedItem, userParams).then(function (item) {
-                           updatePromise.resolve(item);
-                       }, function () {
-                           forLink[i2 + 1].reject();
-                       })
-                   }
-                   else {
-                       updatePromise.reject();
-                   }
-                   return updatePromise;
-               }, function () { forLink[i2 + 1].reject(); })
-               .then(function (item) {
-                   var a1 = (assert.areEqual(test, shouldHaveCreatedAt, item.__createdAt !== undefined) &&
-                                        assert.areEqual(test, shouldHaveUpdatedAt, item.__updatedAt !== undefined) &&
-                                        assert.areEqual(test, shouldHaveVersion, item.__version !== undefined));
-                   if (shouldHaveVersion) {
-                       a1 = a1 && assert.areNotEqual(item.__version, savedVersion);
-                   }
+    //               if (a1) {
+    //                   table.update(savedItem, userParams).then(function (item) {
+    //                       updatePromise.resolve(item);
+    //                   }, function () {
+    //                       forLink[i2 + 1].reject();
+    //                   })
+    //               }
+    //               else {
+    //                   updatePromise.reject();
+    //               }
+    //               return updatePromise;
+    //           }, function () { forLink[i2 + 1].reject(); })
+    //           .then(function (item) {
+    //               var a1 = (assert.areEqual(test, shouldHaveCreatedAt, item.createdAt !== undefined) &&
+    //                                    assert.areEqual(test, shouldHaveUpdatedAt, item.updatedAt !== undefined) &&
+    //                                    assert.areEqual(test, shouldHaveVersion, item.version !== undefined));
+    //               if (shouldHaveVersion) {
+    //                   a1 = a1 && assert.areNotEqual(item.version, savedVersion);
+    //               }
 
-                   if (a1) {
-                       table.del(item).then(function (item) {
-                           forLink[i2 + 1].resolve(i2 + 1);
-                       }, function () {
-                           forLink[i2 + 1].reject();
-                       })
-                   } else {
-                       forLink[i2 + 1].reject();
-                   }
-               })
-            })
-        })
-        $.when.apply($, forLink).then(function () {
-            done(true);
-        }, function () {
-            done(false);
-        });
-    }, [zumo.runtimeFeatureNames.NodeRuntime_Only]));
+    //               if (a1) {
+    //                   table.del(item).then(function (item) {
+    //                       forLink[i2 + 1].resolve(i2 + 1);
+    //                   }, function () {
+    //                       forLink[i2 + 1].reject();
+    //                   })
+    //               } else {
+    //                   forLink[i2 + 1].reject();
+    //               }
+    //           })
+    //        })
+    //    })
+    //    $.when.apply($, forLink).then(function () {
+    //        done(true);
+    //    }, function () {
+    //        done(false);
+    //    });
+    //}, [zumo.runtimeFeatureNames.NodeRuntime_Only]));
 
     tests.push(new zumo.Test('LookupAsyncWithNosuchItemAgainstStringIdTable', function (test, done) {
         globaldone = done;
@@ -1050,7 +1065,7 @@ function defineTableGenericFunctionalTestsNamespace() {
 
         var updatePromise = newLink();
         insertPromise.then(function (item) {
-            savedVersion = item.__version;
+            savedVersion = item.version;
             item.name = 'Hello!';
             table.update(item).then(function (items) {
                 updatePromise.resolve(items);
@@ -1059,19 +1074,19 @@ function defineTableGenericFunctionalTestsNamespace() {
 
         var deletePromise = newLink();
         updatePromise.then(function (item) {
-            var a1 = assert.areNotEqual(item.__version, savedVersion);
+            var a1 = assert.areNotEqual(item.version, savedVersion);
             item.name = 'But Wait!';
-            correctVersion = item.__version;
-            item.__version = savedVersion;
+            correctVersion = item.version;
+            item.version = savedVersion;
             table.del(item).then(function (item) {
                 deletePromise.reject();
             }, function (error) {
                 var a1 = (assert.areEqual(test, 412, error.request.status) &&
                           error.message.indexOf("Precondition Failed") > -1 &&
-                          assert.areEqual(test, error.serverInstance.__version, correctVersion) &&
+                          assert.areEqual(test, error.serverInstance.version, correctVersion) &&
                           assert.areEqual(test, error.serverInstance.name, 'Hello!'));
                 if (a1) {
-                    item.__version = correctVersion;
+                    item.version = correctVersion;
                     deletePromise.resolve(item);
                 }
                 else {
@@ -1127,205 +1142,205 @@ function defineTableGenericFunctionalTestsNamespace() {
     }));
 
     // BUG #1706815 (OData query for version field (string <--> byte[] mismatch)
-    tests.push(new zumo.Test('AsyncTableOperationsWithAllSystemProperties', function (test, done) {
-        globalTest = test;
-        globaldone = done;
+    //tests.push(new zumo.Test('AsyncTableOperationsWithAllSystemProperties', function (test, done) {
+    //    globalTest = test;
+    //    globaldone = done;
 
-        var table = zumo.getClient().getTable(stringIdTableName),
-            savedItem,
-            savedVersion,
-            savedUpdatedAt;
+    //    var table = zumo.getClient().getTable(stringIdTableName),
+    //        savedItem,
+    //        savedVersion,
+    //        savedUpdatedAt;
 
-        table.systemProperties = WindowsAzure.MobileServiceTable.SystemProperties.All;  //All
+    //    table.systemProperties = WindowsAzure.MobileServiceTable.SystemProperties.All;  //All
 
-        var insertPromise = emptyTable(table).then(function () {
-            return table.insert({ id: 'an id', Name: 'a value' });
-        });
+    //    var insertPromise = emptyTable(table).then(function () {
+    //        return table.insert({ id: 'an id', Name: 'a value' });
+    //    });
 
-        var readPromise = newLink();
-        insertPromise.then(function (item) {
-            if (item.__createdAt != null && item.__updatedAt != null && item.__version != null) {
-                table.read().then(function (item) {
-                    readPromise.resolve(item);
-                }, failFn);
-            }
-            else {
-                readPromise.reject();
-            }
-            return readPromise;
-        }, failFn);
+    //    var readPromise = newLink();
+    //    insertPromise.then(function (item) {
+    //        if (item.createdAt != null && item.updatedAt != null && item.version != null) {
+    //            table.read().then(function (item) {
+    //                readPromise.resolve(item);
+    //            }, failFn);
+    //        }
+    //        else {
+    //            readPromise.reject();
+    //        }
+    //        return readPromise;
+    //    }, failFn);
 
 
-        var wherePromise = newLink();
-        readPromise.then(function (items) {
-            assert.areEqual(test, 1, items.length)
-            var item = items[0];
-            if (item.__createdAt != null && item.__updatedAt != null && item.__version != null) {
-                savedItem = item;
-            }
-            else {
-                wherePromise.reject;
-            }
-            table.where(function (value) {
-                return this.__version == value
-            }, item.__version).read().then(
-                function (items) {
-                    wherePromise.resolve(items);
-                }, failFn);
-            return wherePromise;
-        }, failFn);
+    //    var wherePromise = newLink();
+    //    readPromise.then(function (items) {
+    //        assert.areEqual(test, 1, items.length)
+    //        var item = items[0];
+    //        if (item.createdAt != null && item.updatedAt != null && item.version != null) {
+    //            savedItem = item;
+    //        }
+    //        else {
+    //            wherePromise.reject;
+    //        }
+    //        table.where(function (value) {
+    //            return this.version == value
+    //        }, item.version).read().then(
+    //            function (items) {
+    //                wherePromise.resolve(items);
+    //            }, failFn);
+    //        return wherePromise;
+    //    }, failFn);
 
-        var wherePromise2 = newLink();
-        wherePromise.then(function (items) {
-            assert.areEqual(test, 1, items.length)
-            var item = items[0];
-            if (item.__createdAt == null || item.__updatedAt == null || item.__version == null) {
-                wherePromise2.reject();
-            }
-            table.where(function (value) {
-                return this.__createdAt == value
-            }, savedItem.__createdAt).read().then(
-                function (items) {
-                    wherePromise2.resolve(items);
-                }, failFn);
-            return wherePromise2;
-        }, failFn);
+    //    var wherePromise2 = newLink();
+    //    wherePromise.then(function (items) {
+    //        assert.areEqual(test, 1, items.length)
+    //        var item = items[0];
+    //        if (item.createdAt == null || item.updatedAt == null || item.version == null) {
+    //            wherePromise2.reject();
+    //        }
+    //        table.where(function (value) {
+    //            return this.createdAt == value
+    //        }, savedItem.createdAt).read().then(
+    //            function (items) {
+    //                wherePromise2.resolve(items);
+    //            }, failFn);
+    //        return wherePromise2;
+    //    }, failFn);
 
-        var wherePromise3 = newLink();
-        wherePromise2.then(function (items) {
-            assert.areEqual(test, 1, items.length)
-            var item = items[0];
-            if (item.__createdAt == null || item.__updatedAt == null || item.__version == null) {
-                wherePromise3.reject();
-            }
-            table.where(function (value) {
-                return this.__updatedAt == value
-            }, savedItem.__updatedAt).read().then(
-                function (items) {
-                    wherePromise3.resolve(items);
-                }, failFn);
-            return wherePromise3;
-        }, failFn);
+    //    var wherePromise3 = newLink();
+    //    wherePromise2.then(function (items) {
+    //        assert.areEqual(test, 1, items.length)
+    //        var item = items[0];
+    //        if (item.createdAt == null || item.updatedAt == null || item.version == null) {
+    //            wherePromise3.reject();
+    //        }
+    //        table.where(function (value) {
+    //            return this.updatedAt == value
+    //        }, savedItem.updatedAt).read().then(
+    //            function (items) {
+    //                wherePromise3.resolve(items);
+    //            }, failFn);
+    //        return wherePromise3;
+    //    }, failFn);
 
-        var lookupPromise = newLink();
-        wherePromise3.then(function (items) {
-            assert.areEqual(test, 1, items.length)
-            var item = items[0];
-            if (item.__createdAt == null || item.__updatedAt == null || item.__version == null) {
-                lookupPromise.reject();
-            }
-            table.lookup(savedItem.id).then(function (items) {
-                lookupPromise.resolve(items);
-            }, failFn);
-            return lookupPromise;
-        }, failFn);
+    //    var lookupPromise = newLink();
+    //    wherePromise3.then(function (items) {
+    //        assert.areEqual(test, 1, items.length)
+    //        var item = items[0];
+    //        if (item.createdAt == null || item.updatedAt == null || item.version == null) {
+    //            lookupPromise.reject();
+    //        }
+    //        table.lookup(savedItem.id).then(function (items) {
+    //            lookupPromise.resolve(items);
+    //        }, failFn);
+    //        return lookupPromise;
+    //    }, failFn);
 
-        var updatePromise = newLink();
-        lookupPromise.then(function (item) {
-            var a1 = assert.areEqual(test, item.id, savedItem.id);
-            var a2 = assert.areEqual(test, item.__updatedAt.valueOf(), savedItem.__updatedAt.valueOf());
-            var a3 = assert.areEqual(test, item.__createdAt.valueOf(), savedItem.__createdAt.valueOf());
-            var a4 = assert.areEqual(test, item.__version, savedItem.__version);
+    //    var updatePromise = newLink();
+    //    lookupPromise.then(function (item) {
+    //        var a1 = assert.areEqual(test, item.id, savedItem.id);
+    //        var a2 = assert.areEqual(test, item.updatedAt.valueOf(), savedItem.updatedAt.valueOf());
+    //        var a3 = assert.areEqual(test, item.createdAt.valueOf(), savedItem.createdAt.valueOf());
+    //        var a4 = assert.areEqual(test, item.version, savedItem.version);
 
-            savedItem.name = 'Hello';
-            savedVersion = savedItem.__version; //WinJS Mutates
-            savedUpdatedAt = savedItem.__updatedAt.valueOf();
+    //        savedItem.name = 'Hello';
+    //        savedVersion = savedItem.version; //WinJS Mutates
+    //        savedUpdatedAt = savedItem.updatedAt.valueOf();
 
-            if (a1 && a2 && a3 && a4) {
-                table.update(savedItem).then(function (items) {
-                    updatePromise.resolve(items);
-                }, failFn);
-            }
-            else {
-                updatePromise.reject();
-            }
-            return updatePromise;
-        }, failFn);
+    //        if (a1 && a2 && a3 && a4) {
+    //            table.update(savedItem).then(function (items) {
+    //                updatePromise.resolve(items);
+    //            }, failFn);
+    //        }
+    //        else {
+    //            updatePromise.reject();
+    //        }
+    //        return updatePromise;
+    //    }, failFn);
 
-        var readPromise2 = newLink();
-        updatePromise.then(function (item) {
-            var a1 = assert.areEqual(test, item.id, savedItem.id);
-            var a2 = assert.areEqual(test, item.__createdAt.valueOf(), savedItem.__createdAt.valueOf());
-            var a3 = assert.areNotEqual(test, item.__version, savedVersion);
-            var a4 = (test, item.__updatedAt.valueOf() != savedUpdatedAt);
-            savedItem = item;
+    //    var readPromise2 = newLink();
+    //    updatePromise.then(function (item) {
+    //        var a1 = assert.areEqual(test, item.id, savedItem.id);
+    //        var a2 = assert.areEqual(test, item.createdAt.valueOf(), savedItem.createdAt.valueOf());
+    //        var a3 = assert.areNotEqual(test, item.version, savedVersion);
+    //        var a4 = (test, item.updatedAt.valueOf() != savedUpdatedAt);
+    //        savedItem = item;
 
-            if (a1 && a2 && a3 && a4) {
-                table.read().then(function (items) {
-                    readPromise2.resolve(items);
-                }, failFn);
-            }
-            else {
-                readPromise2.reject();
-            }
+    //        if (a1 && a2 && a3 && a4) {
+    //            table.read().then(function (items) {
+    //                readPromise2.resolve(items);
+    //            }, failFn);
+    //        }
+    //        else {
+    //            readPromise2.reject();
+    //        }
 
-            return readPromise2;
-        }, failFn);
+    //        return readPromise2;
+    //    }, failFn);
 
-        readPromise2.then(function (items) {
-            var item = items[0];
-            var a1 = assert.areEqual(test, item.id, savedItem.id);
-            var a2 = assert.areEqual(test, item.__updatedAt.valueOf(), savedItem.__updatedAt.valueOf());
-            var a3 = assert.areEqual(test, item.__createdAt.valueOf(), savedItem.__createdAt.valueOf());
-            var a4 = assert.areEqual(test, item.__version, savedItem.__version);
+    //    readPromise2.then(function (items) {
+    //        var item = items[0];
+    //        var a1 = assert.areEqual(test, item.id, savedItem.id);
+    //        var a2 = assert.areEqual(test, item.updatedAt.valueOf(), savedItem.updatedAt.valueOf());
+    //        var a3 = assert.areEqual(test, item.createdAt.valueOf(), savedItem.createdAt.valueOf());
+    //        var a4 = assert.areEqual(test, item.version, savedItem.version);
 
-            if (a1 && a2 && a3 && a4) {
-                table.del(savedItem).then(
-                    function () {
-                        done(true);
-                    },
-                    function (error) {
-                        done(false);
-                    });
-            }
-            else {
-                done(false);
-            }
-        }, failFn);
+    //        if (a1 && a2 && a3 && a4) {
+    //            table.del(savedItem).then(
+    //                function () {
+    //                    done(true);
+    //                },
+    //                function (error) {
+    //                    done(false);
+    //                });
+    //        }
+    //        else {
+    //            done(false);
+    //        }
+    //    }, failFn);
 
-    }, [zumo.runtimeFeatureNames.NodeRuntime_Only]));
+    //}, [zumo.runtimeFeatureNames.NodeRuntime_Only]));
 
     //RDBug 1734883:SDK: JS: Account for broken client-server contract when talking to .NET based runtimes
-    tests.push(new zumo.Test('AsyncTableOperationsWithSystemPropertiesSetExplicitly', function (test, done) {
-        globalTest = test;
-        globaldone = done;
+    //tests.push(new zumo.Test('AsyncTableOperationsWithSystemPropertiesSetExplicitly', function (test, done) {
+    //    globalTest = test;
+    //    globaldone = done;
 
-        var table = zumo.getClient().getTable(stringIdTableName),
-            props = WindowsAzure.MobileServiceTable.SystemProperties;
+    //    var table = zumo.getClient().getTable(stringIdTableName),
+    //        props = WindowsAzure.MobileServiceTable.SystemProperties;
 
-        table.systemProperties = props.Version | props.CreatedAt | props.UpdatedAt;
+    //    table.systemProperties = props.Version | props.CreatedAt | props.UpdatedAt;
 
-        emptyTable(table).then(function () {
-            return table.insert({ name: 'a value' });
-        }).then(function (item) {
-            if (item.__createdAt != null && item.__updatedAt != null && item.__version != null) {
-                table.systemProperties = props.Version | props.CreatedAt;
-                return table.insert({ name: 'a value' });
-            } else {
-                throw new Error('Incorrect system properties');
-            }
-        }).then(function (item) {
-            if (item.__createdAt != null && item.__updatedAt == null && item.__version != null) {
-                table.systemProperties = props.UpdatedAt | props.CreatedAt;
-                return table.insert({ name: 'a value' });
-            } else {
-                throw new Error('Incorrect system properties');
-            }
-        }).then(function (item) {
-            if (item.__createdAt != null && item.__updatedAt != null && item.__version == null) {
-                table.systemProperties = props.UpdatedAt;
-                return table.insert({ name: 'a value' });
-            } else {
-                throw new Error('Incorrect system properties');
-            }
-        }).then(function (item) {
-            if (!(item.__createdAt == null && item.__updatedAt != null && item.__version == null)) {
-                throw new Error('Incorrect system properties');
-            }
-        }).then(function () {
-            done(true);
-        }, failFn);
-    }, [zumo.runtimeFeatureNames.NodeRuntime_Only]));
+    //    emptyTable(table).then(function () {
+    //        return table.insert({ name: 'a value' });
+    //    }).then(function (item) {
+    //        if (item.createdAt != null && item.updatedAt != null && item.version != null) {
+    //            table.systemProperties = props.Version | props.CreatedAt;
+    //            return table.insert({ name: 'a value' });
+    //        } else {
+    //            throw new Error('Incorrect system properties');
+    //        }
+    //    }).then(function (item) {
+    //        if (item.createdAt != null && item.updatedAt == null && item.version != null) {
+    //            table.systemProperties = props.UpdatedAt | props.CreatedAt;
+    //            return table.insert({ name: 'a value' });
+    //        } else {
+    //            throw new Error('Incorrect system properties');
+    //        }
+    //    }).then(function (item) {
+    //        if (item.createdAt != null && item.updatedAt != null && item.version == null) {
+    //            table.systemProperties = props.UpdatedAt;
+    //            return table.insert({ name: 'a value' });
+    //        } else {
+    //            throw new Error('Incorrect system properties');
+    //        }
+    //    }).then(function (item) {
+    //        if (!(item.createdAt == null && item.updatedAt != null && item.version == null)) {
+    //            throw new Error('Incorrect system properties');
+    //        }
+    //    }).then(function () {
+    //        done(true);
+    //    }, failFn);
+    //}, [zumo.runtimeFeatureNames.NodeRuntime_Only]));
 
     return {
         name: 'MobileServiceTableGenericFunctional',
@@ -1364,50 +1379,50 @@ function assert() {
 
 testValidSystemPropertyQueryStrings = [
     "__systemProperties=*",
-    "__systemProperties=__createdAt",
-    "__systemProperties=__createdAt,__updatedAt",
-    "__systemProperties=__createdAt,__version",
-    "__systemProperties=__createdAt,__updatedAt,__version",
-    "__systemProperties=__createdAt,__version,__updatedAt",
-    "__systemProperties=__updatedAt",
-    "__systemProperties=__updatedAt,__createdAt",
-    "__systemProperties=__updatedAt,__createdAt,__version",
-    "__systemProperties=__updatedAt,__version",
-    "__systemProperties=__updatedAt,__version, __createdAt",
-    "__systemProperties=__version",
-    "__systemProperties=__version,__createdAt",
-    "__systemProperties=__version,__createdAt,__updatedAt",
-    "__systemProperties=__version,__updatedAt",
-    "__systemProperties=__version,__updatedAt, __createdAt",
+    "__systemProperties=createdAt",
+    "__systemProperties=createdAt,updatedAt",
+    "__systemProperties=createdAt,version",
+    "__systemProperties=createdAt,updatedAt,version",
+    "__systemProperties=createdAt,version,updatedAt",
+    "__systemProperties=updatedAt",
+    "__systemProperties=updatedAt,createdAt",
+    "__systemProperties=updatedAt,createdAt,version",
+    "__systemProperties=updatedAt,version",
+    "__systemProperties=updatedAt,version, createdAt",
+    "__systemProperties=version",
+    "__systemProperties=version,createdAt",
+    "__systemProperties=version,createdAt,updatedAt",
+    "__systemProperties=version,updatedAt",
+    "__systemProperties=version,updatedAt, createdAt",
 
     // Trailing commas, extra commas
-    "__systemProperties=__createdAt,",
-    "__systemProperties=__createdAt,__updatedAt,",
-    "__systemProperties=__createdAt,__updatedAt,__version,",
-    "__systemProperties=,__createdAt",
-    "__systemProperties=__createdAt,,__updatedAt",
-    "__systemProperties=__createdAt, ,__updatedAt,__version",
-    "__systemProperties=__createdAt,,",
-    "__systemProperties=__createdAt, ,",
+    "__systemProperties=createdAt,",
+    "__systemProperties=createdAt,updatedAt,",
+    "__systemProperties=createdAt,updatedAt,version,",
+    "__systemProperties=,createdAt",
+    "__systemProperties=createdAt,,updatedAt",
+    "__systemProperties=createdAt, ,updatedAt,version",
+    "__systemProperties=createdAt,,",
+    "__systemProperties=createdAt, ,",
 
     // Trailing, leading whitespace
     "__systemProperties= *",
     "__systemProperties=\t*\t",
-    "__systemProperties= __createdAt ",
-    "__systemProperties=\t__createdAt,\t__updatedAt\t",
-    "__systemProperties=\r__createdAt,\r__updatedAt,\t__version\r",
-    "__systemProperties=\n__createdAt\n",
-    "__systemProperties=__createdAt,\n__updatedAt",
-    "__systemProperties=__createdAt, __updatedAt, __version",
+    "__systemProperties= createdAt ",
+    "__systemProperties=\tcreatedAt,\tupdatedAt\t",
+    "__systemProperties=\rcreatedAt,\rupdatedAt,\tversion\r",
+    "__systemProperties=\ncreatedAt\n",
+    "__systemProperties=createdAt,\nupdatedAt",
+    "__systemProperties=createdAt, updatedAt, version",
 
     // Different casing
     "__SystemProperties=*",
-    "__SystemProperties=__createdAt",
-    "__SYSTEMPROPERTIES=__createdAt,__updatedAt",
-    "__systemproperties=__createdAt,__updatedAt,__version",
-    "__SystemProperties=__CreatedAt",
-    "__SYSTEMPROPERTIES=__createdAt,__UPDATEDAT",
-    "__systemproperties=__createdat,__UPDATEDAT,__veRsion",
+    "__SystemProperties=createdAt",
+    "__SYSTEMPROPERTIES=createdAt,updatedAt",
+    "__systemproperties=createdAt,updatedAt,version",
+    "__SystemProperties=CreatedAt",
+    "__SYSTEMPROPERTIES=createdAt,UPDATEDAT",
+    "__systemproperties=createdat,UPDATEDAT,version",
 
     // Sans __ prefix
     "__systemProperties=createdAt",
@@ -1416,8 +1431,8 @@ testValidSystemPropertyQueryStrings = [
     "__systemProperties=updatedAt,version,createdAt",
 
     // Combinations of above
-    "__SYSTEMPROPERTIES=__createdAt, updatedat",
-    "__systemProperties=__CreatedAt,,\t__VERSION",
+    "__SYSTEMPROPERTIES=createdAt, updatedat",
+    "__systemProperties=CreatedAt,,\tVERSION",
     "__systemProperties= updatedat ,,"
 ];
 
@@ -1445,32 +1460,20 @@ var baseValidStringIds = function () {
 
 testInvalidSystemPropertyQueryStrings = [
     // Unknown system Properties
-    "__invalidSystemProperties=__createdAt,__version",
-    "__systemProperties=__created",
+    "__invalidSystemProperties=createdAt,version",
+    "__systemProperties=created",
     "__systemProperties=updated At",
     "__systemProperties=notASystemProperty",
     "__systemProperties=_version",
 
 // System properties not comma separated
-    "__systemProperties=__createdAt __updatedAt",
-    "__systemProperties=__createdAt\t__version",
+    "__systemProperties=createdAt updatedAt",
+    "__systemProperties=createdAt\tversion",
     "__systemProperties=createdAt updatedAt version",
-    "__systemProperties=__createdAt__version",
+    "__systemProperties=createdAtversion",
 
 // All and individual system properties requested
-"__systemProperties=*,__updatedAt"
-];
-
-testSystemProperties = [
-WindowsAzure.MobileServiceTable.SystemProperties.None,
-WindowsAzure.MobileServiceTable.SystemProperties.All,
-WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt | WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt | WindowsAzure.MobileServiceTable.SystemProperties.Version,
-WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt | WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt,
-WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt | WindowsAzure.MobileServiceTable.SystemProperties.Version,
-WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt,
-WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt | WindowsAzure.MobileServiceTable.SystemProperties.Version,
-WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt,
-WindowsAzure.MobileServiceTable.SystemProperties.Version
+"__systemProperties=*,updatedAt"
 ];
 
 invalidStringIds = [

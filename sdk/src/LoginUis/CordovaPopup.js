@@ -45,7 +45,7 @@ exports.login = function (startUri, endUri, callback) {
 
     // iOS inAppBrowser issue requires this wrapping
     setTimeout(function () {
-        var loginWindow = window.open(startPage, "_blank", "location=no"),
+        var loginWindow = window.open(startPage, "_blank", "location=no,hardwareback=no"),
             flowHasFinished = false,
             loadEventHandler = function (evt) {
                 if (!flowHasFinished && evt.url.indexOf(endUri) === 0) {

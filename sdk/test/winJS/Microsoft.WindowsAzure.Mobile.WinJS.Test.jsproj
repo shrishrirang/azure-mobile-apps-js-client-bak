@@ -82,7 +82,7 @@
     <Content Include="js\default.js" />
     <Content Include="css\default.css" />
     <Content Include="js\MobileServices.intellisense.js" />
-    <Content Include="js\MobileServices.Internals.js" />
+    <Content Include="js\MobileServices.js" />
     <Content Include="js\MobileServices.pri" />
     <Content Include="tests\functional\basics.js" />
     <Content Include="tests\functional\blogging.js" />
@@ -118,7 +118,7 @@
   <Target Name="CreateTestLibrary">
     <!-- Get dependencies from src project -->
     <Message Importance="high" Text="Copying over dependencies from the src project" />
-    <Copy SourceFiles="..\..\src\Generated\MobileServices.Internals.js" DestinationFolder="js" />
+    <Copy SourceFiles="..\..\src\Generated\MobileServices.js" DestinationFolder="js" />
     <Copy SourceFiles="..\..\src\MobileServices.intellisense.js" DestinationFolder="js" />
     <Copy SourceFiles="..\..\src\Generated\MobileServices.pri" DestinationFolder="js" />
   </Target>

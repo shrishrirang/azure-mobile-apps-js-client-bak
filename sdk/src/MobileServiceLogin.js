@@ -12,6 +12,8 @@ var Platform = require('Platforms/Platform');
 
 var loginUrl = ".auth/login";
 var loginDone = "done";
+var sessionModeKey = 'session_mode';
+var sessionModeValueToken = 'token';
 
 function MobileServiceLogin(client, ignoreFilters) {
     /// <summary>
@@ -62,13 +64,11 @@ function MobileServiceLogin(client, ignoreFilters) {
     };
 }
 
-// Export the MobileServiceLogin class
+// Define the module exports
 exports.MobileServiceLogin = MobileServiceLogin;
 
-// Define the MobileServiceLogin in a namespace (note: this has global effects
-// unless the platform we're using chooses to ignore it because exports are
-// good enough).
-Platform.addToMobileServicesClientNamespace({ MobileServiceLogin: MobileServiceLogin });
+// Define the JS bundle exports
+exports.exports = MobileServiceLogin; 
 
 MobileServiceLogin.prototype.loginWithOptions = function (provider, options, callback) {
     /// <summary>
@@ -376,7 +376,10 @@ function loginWithProviderAndToken(login, provider, token, parameters, callback)
     // one-at-a-time restriction.
     login._loginState = { inProcess: true, cancelCallback: null };
 
-    var url = loginUrl + '/' + provider;
+    var url = _.url.combinePathSegments(client.alternateLoginHost || client.applicationUrl,
+                                        client.loginUriPrefix || loginUrl,
+                                        provider);
+
     if (!_.isNull(parameters)) {
         var queryString = _.url.getQueryString(parameters);
         url = _.url.combinePathAndQuery(url, queryString);
@@ -424,12 +427,19 @@ function loginWithLoginControl(login, provider, useSingleSignOn, parameters, cal
         client.alternateLoginHost || client.applicationUrl,
         client.loginUriPrefix || loginUrl,
         provider);
-    var endUri = null;
 
-    if (!_.isNull(parameters)) {
-        var queryString = _.url.getQueryString(parameters);
-        startUri = _.url.combinePathAndQuery(startUri, queryString);
+    var endUri = null,
+        queryParams = {},
+        key;
+
+    // Make a copy of the query parameters and set the session mode to token.
+    for (key in parameters) {
+        queryParams[key] = parameters[key];
     }
+    queryParams[sessionModeKey] = sessionModeValueToken;
+
+    var queryString = _.url.getQueryString(queryParams);
+    startUri = _.url.combinePathAndQuery(startUri, queryString);
 
     // If not single sign-on, then we need to construct a non-null end uri.
     if (!useSingleSignOn) {

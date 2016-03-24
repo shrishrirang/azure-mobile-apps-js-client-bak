@@ -3,6 +3,7 @@
 // ----------------------------------------------------------------------------
 var Validate = require('../Utilities/Validate'),
     Platform = require('Platforms/Platform'),
+    constants = require('../constants'),
     _ = require('../Utilities/Extensions');
 
 exports.Push = Push;
@@ -72,7 +73,7 @@ function executeRequest(client, method, pushChannel, content, installationId, ca
     Validate.notNullOrEmpty(pushChannel, 'pushChannel');
 
     var headers = { 'If-Modified-Since': 'Mon, 27 Mar 1972 00:00:00 GMT' };
-    headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
+    headers[constants.features.apiVersionHeaderName] = constants.features.apiVersion;
 
     client._request(
         method,

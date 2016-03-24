@@ -7,7 +7,7 @@
 /// <reference path="..\..\js\MobileServices.Internals.js" />
 /// <reference path="..\..\generated\Tests.js" />
 
-var Extensions = require('Extensions');
+var Extensions = require('../../../../src/Utilities/Extensions');
 
 $testGroup('Extensions.js',
 
@@ -171,6 +171,54 @@ $testGroup('Extensions.js',
         $assert.isFalse(Extensions.isDate(function () { }), 'function');
         $assert.isTrue(Extensions.isDate(new Date()), 'date');
         $assert.isFalse(Extensions.isDate({}), 'obj');
+    }),
+
+    $test('isInteger')
+    .description('Verify Extensions.isFunction')
+    .check(function () {
+        $assert.isFalse(Extensions.isInteger(null), 'null');
+        $assert.isFalse(Extensions.isInteger(), 'undefined');
+        $assert.isFalse(Extensions.isInteger('a'), 'string');
+        $assert.isFalse(Extensions.isInteger({}), 'object');
+        $assert.isFalse(Extensions.isInteger([]), 'array');
+        $assert.isFalse(Extensions.isInteger(function () { }), 'function');
+        $assert.isFalse(Extensions.isInteger(false), 'bool');
+        $assert.isFalse(Extensions.isInteger('1'), 'integer as a string');
+
+        $assert.isTrue(Extensions.isInteger(0x12), 'hex');
+        $assert.isTrue(Extensions.isInteger(11), 'int');
+        $assert.isTrue(Extensions.isInteger(0), 'zero');
+        $assert.isTrue(Extensions.isInteger(0.0), 'zero');
+        $assert.isTrue(Extensions.isInteger(-0.0), 'zero');
+        $assert.isTrue(Extensions.isInteger(11.0), 'int');
+        $assert.isTrue(Extensions.isInteger(-11.0), 'negative int');
+        $assert.isTrue(Extensions.isInteger(11), 'negative int');
+    }),
+
+    $test('isFunction')
+    .description('Verify Extensions.isFunction')
+    .check(function () {
+        $assert.isFalse(Extensions.isFunction(null), 'null');
+        $assert.isFalse(Extensions.isFunction(), 'undefined');
+        $assert.isFalse(Extensions.isFunction('a'), 'string');
+        $assert.isFalse(Extensions.isFunction({}), 'object');
+        $assert.isFalse(Extensions.isFunction(1), 'number');
+        $assert.isFalse(Extensions.isFunction([]), 'array');
+        $assert.isFalse(Extensions.isFunction(false), 'bool');
+        $assert.isTrue(Extensions.isFunction(function () { }), 'function');
+    }),
+
+    $test('isArray')
+    .description('Verify Extensions.isArray')
+    .check(function () {
+        $assert.isFalse(Extensions.isArray(null), 'null');
+        $assert.isFalse(Extensions.isArray(), 'undefined');
+        $assert.isFalse(Extensions.isArray('a'), 'string');
+        $assert.isFalse(Extensions.isArray({}), 'object');
+        $assert.isFalse(Extensions.isArray(1), 'number');
+        $assert.isFalse(Extensions.isArray(false), 'bool');
+        $assert.isFalse(Extensions.isArray(function () { }), 'function');
+        $assert.isTrue(Extensions.isArray([]), 'array');
     }),
 
     $test('toJson')
