@@ -23,6 +23,7 @@ module.exports = function(grunt) {
             ],
             // List of Cordova entry points
             cordova: [
+                'sdk/src/Platforms/cordova/MobileServiceSQLiteStore.js',
                 '<%= files.core %>',
             ],
             // List of WinJS entry points
@@ -139,19 +140,18 @@ module.exports = function(grunt) {
                     preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
                 }
             },
-// Uncomment this when Cordova UTs are added
-//            cordovaTest: {
-//                src: [
-//                    '<%= files.cordova %>',
-//                    './sdk/test/web/js/TestFrameworkAdapter.js',
-//                    './sdk/test/web/js/TestClientHelper.js',
-//                    '<%= files.testcore %>'
-//                ],
-//                dest: './sdk/test/cordova/www/js/Generated/Tests.js',
-//                options: {
-//                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
-//                }
-//            },
+            cordovaTest: {
+                src: [
+                    '<%= files.cordova %>',
+                    './sdk/test/web/js/TestFrameworkAdapter.js',
+                    './sdk/test/web/js/TestClientHelper.js',
+                    '<%= files.testcore %>'
+                ],
+                dest: './sdk/test/cordova/www/js/Generated/Tests.js',
+                options: {
+                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
+                }
+            },
             winjsTest: {
                 src: [
                     '<%= files.winjs %>',
@@ -171,6 +171,13 @@ module.exports = function(grunt) {
                 dest: 'dist/',
                 expand: true,
                 cwd: 'sdk/src/Generated/'
+            },
+            cordovaTest: {
+                files: [
+                  {src: ['sdk/src/Generated/MobileServices.Web.Internals.js'], dest: 'sdk/test/cordova/www/js/Generated/MobileServices.Web.Internals.js'},
+                  {src: ['sdk/test/web/css/styles.css'], dest: 'sdk/test/cordova/www/css/Generated/styles.css'},
+                  {src: ['**'], dest: 'sdk/test/cordova/www/js/External/qunit/', cwd: 'node_modules/qunitjs/qunit', expand: true}
+                ]
             }
         },
         watch: {
