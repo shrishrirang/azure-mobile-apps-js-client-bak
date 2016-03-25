@@ -43,7 +43,7 @@ module.exports = function(grunt) {
             ],
             // List of all javascript files that we want to validate and watch
             // i.e. all javascript files except those that are installed, generated during build, third party files, etc
-            all: [
+            ours: [
                 'Gruntfile.js',
                 'sdk/src/**/*.js',
                 'sdk/test/**/*.js',
@@ -51,12 +51,12 @@ module.exports = function(grunt) {
                 '!sdk/test/cordova/platforms/**',
                 '!sdk/test/**/bin/**',
                 '!sdk/test/**/plugins/**',
-                '!**/node_modules/**',
-                '!**/MobileServices.*js'
+                '!sdk/test/cordova/www/js/External/**',
+                '!**/node_modules/**'
             ]
         },        
         jshint: {
-            all: '<%= files.all %>'
+            ours: '<%= files.ours %>'
         },
         concat: {
             constants: {
@@ -181,7 +181,7 @@ module.exports = function(grunt) {
             }
         },
         watch: {
-            files: '<%= files.all %>',
+            files: '<%= files.ours %>',
             tasks: ['concat', 'browserify', 'uglify', 'copy']
         }
     });
