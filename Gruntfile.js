@@ -1,5 +1,3 @@
-/// <binding BeforeBuild='default' />
-/// <vs BeforeBuild='default' />
 var remapify = require('remapify');
 
 function definePlatformMappings(mappings) {
