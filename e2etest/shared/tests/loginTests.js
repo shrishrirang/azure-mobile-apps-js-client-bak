@@ -86,6 +86,7 @@ function defineLoginTestsNamespace() {
     tests.push(createAlternateHostServerFlowLoginTest());
     tests.push(createAlternateHostClientFlowLoginTest());
     tests.push(createLoginPrefixTest());
+    tests.push(createLogoutTest());
 
     for (var i = indexOfTestsWithAuthentication; i < tests.length; i++) {
         tests[i].canRunUnattended = false;
