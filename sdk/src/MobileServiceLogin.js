@@ -64,12 +64,6 @@ function MobileServiceLogin(client, ignoreFilters) {
     };
 }
 
-// Define the module exports
-exports.MobileServiceLogin = MobileServiceLogin;
-
-// Define the JS bundle exports
-exports.exports = MobileServiceLogin; 
-
 MobileServiceLogin.prototype.loginWithOptions = function (provider, options, callback) {
     /// <summary>
     /// Log a user into a Mobile Services application given a provider name with
@@ -465,3 +459,6 @@ function loginWithLoginControl(login, provider, useSingleSignOn, parameters, cal
         login._loginState.cancelCallback = platformResult.cancelCallback;
     }
 }
+
+// Define the module exports
+module.exports = MobileServiceLogin;

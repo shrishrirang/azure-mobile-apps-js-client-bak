@@ -84,11 +84,6 @@
     <Content Include="js\MobileServices.intellisense.js" />
     <Content Include="js\MobileServices.js" />
     <Content Include="js\MobileServices.pri" />
-    <Content Include="tests\functional\basics.js" />
-    <Content Include="tests\functional\blogging.js" />
-    <Content Include="tests\functional\dates.js" />
-    <Content Include="tests\functional\mobileServiceTable.Functional.js" />
-    <Content Include="tests\functional\todo.js" />
     <Content Include="tests\TestFramework.js" />
     <Content Include="tests\TestInterface.js" />
     <Content Include="tests\unit\extensions.js" />
@@ -105,6 +100,7 @@
     <ProjectReference Include="..\framework\Microsoft.WindowsAzure.Mobile.WinJS.TestFramework.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="tests\functional\" />
     <Folder Include="tests\winJsOnly\" />
   </ItemGroup>
   <ItemGroup>

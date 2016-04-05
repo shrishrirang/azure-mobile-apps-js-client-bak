@@ -21,7 +21,7 @@ var tableRouteSeperatorName = "tables";
 var idNames = ["ID", "Id", "id", "iD"];
 var nextLinkRegex = /^(.*?);\s*rel\s*=\s*(\w+)\s*$/;
 
-var MobileServiceSystemProperties = {
+var SystemProperties = {
     None: 0,
     CreatedAt: 1,
     UpdatedAt: 2,
@@ -66,13 +66,7 @@ function MobileServiceTable(tableName, client) {
     };
 }
 
-// Define the module exports
-exports.MobileServiceTable = MobileServiceTable;
-
-// Define the JS bundle exports
-exports.exports = {
-    SystemProperties: MobileServiceSystemProperties
-};
+MobileServiceTable.SystemProperties = SystemProperties;
 
 // We have an internal _read method using callbacks since it's used by both
 // table.read(query) and query.read().
@@ -724,3 +718,6 @@ function addQueryParametersFeaturesIfApplicable(features, userQueryParameters) {
 
     return features;
 }
+
+// Define the module exports
+module.exports = MobileServiceTable;
