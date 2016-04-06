@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-var MobileServiceTable = require('../../../../src/MobileServiceTable');
+var MobileServiceTable = require('../../src/MobileServiceTable');
 
 exports.validStringIds = [
              "id",

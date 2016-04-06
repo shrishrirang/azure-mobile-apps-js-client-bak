@@ -7,7 +7,7 @@
 /// <reference path="..\..\js\MobileServices.Internals.js" />
 /// <reference path="..\..\generated\Tests.js" />
 
-var Extensions = require('../../../../src/Utilities/Extensions');
+var Extensions = require('../src/Utilities/Extensions');
 
 $testGroup('Extensions.js',
 

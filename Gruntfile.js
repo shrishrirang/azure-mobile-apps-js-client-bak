@@ -23,20 +23,10 @@ module.exports = function(grunt) {
             cordova: [
                 '<%= files.core %>',
             ],
-            // List of WinJS entry points
-            winjs: [
-                '<%= files.core %>',
-            ],
-            // List of entry points for WinjS with intellisense support
-            intellisense: [
-                '<%= files.winjs %>',
-                'sdk/src/Internals/DevIntellisense.js',
-            ],
             // Entry points common to tests for all platforms
             testcore: [
-                'sdk/test/winJS/tests/utilities/*.js',
-                'sdk/test/winJS/tests/unit/*.js',
-                'sdk/test/winJS/tests/functional/*.js'
+                'sdk/test/framework/*.js',
+                'sdk/test/*.js'
             ],
             // List of all javascript files that we want to validate and watch
             // i.e. all javascript files except those that are installed, generated during build, third party files, etc
@@ -79,10 +69,6 @@ module.exports = function(grunt) {
             cordova: {
                 src: 'sdk/src/Generated/MobileServices.Cordova.js',
                 dest: 'sdk/src/Generated/MobileServices.Cordova.min.js'
-            },
-            winjs: {
-                src: 'sdk/src/Generated/MobileServices.js',
-                dest: 'sdk/src/Generated/MobileServices.min.js'
             }
         },
         browserify: {
@@ -109,30 +95,12 @@ module.exports = function(grunt) {
                     preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
                 }
             },
-            winjs: {
-                src: '<%= files.winjs %>',
-                dest: './sdk/src/Generated/MobileServices.js',
-                options: {
-                        preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/winjs', expose: 'Platforms' } ] )
-                }
-            },
-            intellisense: {
-                src: [
-                    '<%= files.intellisense %>'
-                ],
-                dest: './sdk/src/Generated/MobileServices.DevIntellisense.js',
-                options: {
-                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/winjs', expose: 'Platforms' } ] )
-                }
-            },
             webTest: {
                 src: [
                     '<%= files.web %>',
-                    './sdk/test/web/js/TestFrameworkAdapter.js',
-                    './sdk/test/web/js/TestClientHelper.js',
                     '<%= files.testcore %>'
                 ],
-                dest: './sdk/test/web/Generated/Tests.js',
+                dest: './sdk/test/Generated/Tests.js',
                 options: {
                     preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
                 }
@@ -150,18 +118,6 @@ module.exports = function(grunt) {
 //                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
 //                }
 //            },
-            winjsTest: {
-                src: [
-                    '<%= files.winjs %>',
-                    'sdk/test/winJS/tests/TestFramework.js',
-                    'sdk/test/winJS/tests/TestInterface.js',
-                    '<%= files.testcore %>'
-                ],
-                dest: './sdk/test/winJS/Generated/Tests.js',
-                options: {
-                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/winjs', expose: 'Platforms' } ] )
-                }
-            }
         },
         copy: {
             web: {

@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-var MobileServiceClient = require('../../../../src/MobileServiceClient');
+var MobileServiceClient = require('../src/MobileServiceClient');
 
 $testGroup('push',
     $test('register makes PUT HTTP request with URL containing installation ID')

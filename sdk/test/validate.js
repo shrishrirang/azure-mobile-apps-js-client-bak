@@ -7,7 +7,7 @@
 /// <reference path="..\..\js\Zumo.Internals.js" />
 /// <reference path="..\..\generated\Tests.js" />
 
-var Validate = require('../../../../src/Utilities/Validate');
+var Validate = require('../src/Utilities/Validate');
 
 $testGroup('Validate.js',
 

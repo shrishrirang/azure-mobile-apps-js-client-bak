@@ -10,10 +10,10 @@
 // Declare JSHint globals
 /*global MobileServiceClient:false */
 
-var testData = require('../utilities/constants'),
+var testData = require('./utilities/constants'),
     Platform = require('Platforms/Platform'),
-    MobileServiceClient = require('../../../../src/MobileServiceClient'),
-    MobileServiceTable = require('../../../../src/MobileServiceTable');
+    MobileServiceClient = require('../src/MobileServiceClient'),
+    MobileServiceTable = require('../src/MobileServiceTable');
 
 $testGroup('MobileServiceTables.js',
     $test('table.read() with no id results')
