@@ -7,9 +7,6 @@
 /// <reference path="..\..\js\MobileServices.Internals.js" />
 /// <reference path="..\..\generated\Tests.js" />
 
-// Declare JSHint globals
-/*global MobileServiceClient:false */
-
 var testData = require('./utilities/constants'),
     Platform = require('Platforms/Platform'),
     MobileServiceClient = require('../src/MobileServiceClient'),

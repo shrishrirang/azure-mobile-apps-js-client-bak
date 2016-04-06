@@ -125,11 +125,27 @@ module.exports = function(grunt) {
                 dest: 'dist/',
                 expand: true,
                 cwd: 'sdk/src/Generated/'
+            },
+            cordova: {
+                src: 'MobileServices.Cordova.*js',
+                dest: 'dist/',
+                expand: true,
+                cwd: 'sdk/src/Generated/'
             }
         },
         watch: {
-            files: '<%= files.all %>',
-            tasks: ['concat', 'browserify', 'uglify', 'copy']
+            all: {
+                files: '<%= files.all %>',
+                tasks: ['concat', 'browserify', 'copy']
+            },
+            web: {
+                files: '<%= files.all %>',
+                tasks: ['concat', 'browserify:web', 'browserify:webTest', 'copy:web']
+            },
+            cordova: {
+                files: '<%= files.all %>',
+                tasks: ['concat', 'browserify:cordova', 'copy:cordova']
+            }
         }
     });
 
@@ -142,7 +158,11 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-copy');
         
     // Default task(s).
-    grunt.registerTask('default', ['concat', 'browserify', 'uglify', 'copy', 'jshint']);
+    grunt.registerTask('build', ['concat', 'browserify', 'uglify', 'copy', 'jshint']);
+    grunt.registerTask('buildweb', ['concat', 'browserify:web', 'browserify:webTest', 'copy:web']);
+    grunt.registerTask('buildcordova', ['concat', 'browserify:cordova', 'copy:cordova']);
+
+    grunt.registerTask('default', ['build']);
 };
 
 var header = '// ----------------------------------------------------------------------------\n' +
