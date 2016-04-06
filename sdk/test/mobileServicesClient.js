@@ -2,27 +2,23 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.2.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.2.0\js\base.js" />
-/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.2.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.2.0\js\ui.js" />
-/// <reference path="..\..\js\MobileServices.Internals.js" />
-/// <reference path="..\..\generated\Tests.js" />
-
 // revert isvalidate, isarray, etc from validate.js, extensions.js and corresponding 2 test files and *.resjson
 
-var Platform = require('Platforms/Platform');
+var Platform = require('Platforms/Platform'),
+    MobileServiceClient = require('../src/MobileServiceClient');
 
 $testGroup('MobileServiceClient.js',
 
     $test('constructor')
     .description('Verify the constructor correctly initializes the client.')
     .check(function () {
-        $assertThrows(function () { new WindowsAzure.MobileServiceClient(); });
-        $assertThrows(function () { new WindowsAzure.MobileServiceClient(null); });
-        $assertThrows(function () { new WindowsAzure.MobileServiceClient(''); });
-        $assertThrows(function () { new WindowsAzure.MobileServiceClient(2); });
+        $assertThrows(function () { new MobileServiceClient(); });
+        $assertThrows(function () { new MobileServiceClient(null); });
+        $assertThrows(function () { new MobileServiceClient(''); });
+        $assertThrows(function () { new MobileServiceClient(2); });
 
         var uri = "http://www.test.com",
-            client = new WindowsAzure.MobileServiceClient(uri);
+            client = new MobileServiceClient(uri);
 
         $assert.areEqual(uri, client.applicationUrl);
         $assert.isTrue(client.getTable);
@@ -43,13 +39,18 @@ $testGroup('MobileServiceClient.js',
             };
         };
 
-        var reachableHost = typeof Windows === "object" ? "http://www.windowsazure.com/" : $getClient().applicationUrl,
-            reachablePath = typeof Windows === "object" ? "en-us/develop/overview/" : "crossdomain/bridge?origin=http://localhost",
-            client = new WindowsAzure.MobileServiceClient(reachableHost);
+        var client = new MobileServiceClient('http://something');
 
-        client = client.withFilter(createFilter('A')).withFilter(createFilter('B')).withFilter(createFilter('C'));
+        client = client
+                    .withFilter(createFilter('should not be called'))
+                    .withFilter((function (req, next, callback) {
+                        callback(null, { status: 200, responseText: '' });
+                    }))
+                    .withFilter(createFilter('A'))
+                    .withFilter(createFilter('B'))
+                    .withFilter(createFilter('C'));
 
-        return Platform.async(client._request).call(client, 'GET', reachablePath, null).then(function (rsp) {
+        return Platform.async(client._request).call(client, 'GET', 'http://anything', null).then(function (rsp) {
             $assert.areEqual(descend, 'CBA');
             $assert.areEqual(rise, 'ABC');
         });
@@ -58,7 +59,7 @@ $testGroup('MobileServiceClient.js',
     $test('withFilter')
     .description('Verify withFilter intercepts calls')
     .checkAsync(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.type, 'POST');
             callback(null, { status: 200, responseText: '{"authenticationToken":"zumo","user":{"userId":"bob"}}' });
@@ -74,7 +75,7 @@ $testGroup('MobileServiceClient.js',
     $test('login_Verify_login_mechanics')
     .tag('login')
     .checkAsync(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.type, 'POST');
             $assert.contains(req.url, ".auth/login");
@@ -93,7 +94,7 @@ $testGroup('MobileServiceClient.js',
     $test('loginWithOptions_token')
     .tag('login')
     .checkAsync(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.type, 'POST');
             $assert.contains(req.url, ".auth/login");
@@ -298,11 +299,11 @@ $testGroup('MobileServiceClient.js',
             .tag('login')
             .check(function () {
                 $assertThrows(function () {
-                    var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+                    var client = new MobileServiceClient("http://www.test.com");
                     client.alternateLoginHost = "invalidUrl";
                 });
                 $assertThrows(function () {
-                    var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+                    var client = new MobileServiceClient("http://www.test.com");
                     client.alternateLoginHost = "http://www.alternateloginHostHttp.com";
                 });
             }),
@@ -319,7 +320,7 @@ $testGroup('MobileServiceClient.js',
     $test('logout')
     .description('Verify Authentication.logout clears currentUser')
     .checkAsync(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client.currentUser = { userId: 'bob', mobileServiceAuthenticationToken: 'abcd' };
 
         return client.logout().then(function () {
@@ -330,7 +331,7 @@ $testGroup('MobileServiceClient.js',
     $test('static initialization of appInstallId')
     .description('Verify the app installation id is created statically.')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com"),
+        var client = new MobileServiceClient("http://www.test.com"),
             settingsKey = "MobileServices.Installation.config",
             settings = typeof Windows === "object" ? Windows.Storage.ApplicationData.current.localSettings.values[settingsKey]
                                                    : Platform.readSetting(settingsKey);
@@ -340,7 +341,7 @@ $testGroup('MobileServiceClient.js',
     $test('CustomAPI - error response as json object')
     .description('Verify the custom API error messages')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.type, 'POST');
             $assert.areEqual(req.url, 'http://www.test.com/api/checkins/post');
@@ -357,7 +358,7 @@ $testGroup('MobileServiceClient.js',
     $test('CustomAPI - error response as json object without content-type')
     .description('Verify the custom API error messages')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.type, 'POST');
             $assert.areEqual(req.url, 'http://www.test.com/api/checkins/post');
@@ -374,7 +375,7 @@ $testGroup('MobileServiceClient.js',
     $test('CustomAPI - error response as json string')
     .description('Verify the custom API error messages')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.type, 'POST');
             $assert.areEqual(req.url, 'http://www.test.com/api/checkins/post');
@@ -391,7 +392,7 @@ $testGroup('MobileServiceClient.js',
     $test('CustomAPI - error as text')
     .description('Verify the custom API error messages')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.type, 'POST');
             $assert.areEqual(req.url, 'http://www.test.com/api/checkins/post');
@@ -408,7 +409,7 @@ $testGroup('MobileServiceClient.js',
     $test('CustomAPI - error as text without content type')
     .description('Verify the custom API error messages')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.type, 'POST');
             $assert.areEqual(req.url, 'http://www.test.com/api/checkins/post');
@@ -425,7 +426,7 @@ $testGroup('MobileServiceClient.js',
     $test('CustomAPI - just api name')
     .description('Verify the custom API url formatting')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.type, 'POST');
             $assert.areEqual(req.url, 'http://www.test.com/api/checkins/post');
@@ -443,7 +444,7 @@ $testGroup('MobileServiceClient.js',
     $test('CustomAPI - name and content')
     .description('Verify the custom API url formatting')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.type, 'POST');
             $assert.areEqual(req.url, 'http://www.test.com/api/scenarios/verifyRequestAccess');
@@ -460,7 +461,7 @@ $testGroup('MobileServiceClient.js',
     $test('CustomAPI - string content')
     .description('Verify sending string content')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.data, 'apples');
             callback(null, { status: 200, responseText: '{"result":3}', getResponseHeader: function () { return 'application/json'; } });
@@ -475,7 +476,7 @@ $testGroup('MobileServiceClient.js',
     $test('CustomAPI - boolean content')
     .description('Verify sending boolean content')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.data, "true");
             callback(null, { status: 200, responseText: '{"result":3}', getResponseHeader: function () { return 'application/json'; } });
@@ -490,7 +491,7 @@ $testGroup('MobileServiceClient.js',
     $test('CustomAPI - date object')
     .description('Verify sending date object')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.data, "\"2013-04-14T06:01:59.000Z\"");
             callback(null, { status: 200, responseText: '{"result":3}', getResponseHeader: function () { return 'application/json'; } });
@@ -506,7 +507,7 @@ $testGroup('MobileServiceClient.js',
     $test('CustomAPI - array content')
     .description('Verify sending array content')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.data, '[\"a\",\"b\",\"c\"]');
             callback(null, { status: 200, responseText: '{"result":3 }', getResponseHeader: function () { return 'application/json'; } });
@@ -521,7 +522,7 @@ $testGroup('MobileServiceClient.js',
     $test('CustomAPI - name with querystring and method')
     .description('Verify the custom API url formatting')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.type, 'GET');
             $assert.areEqual(req.url, 'http://www.test.com/api/calculator/add?a=1&b=2');
@@ -538,7 +539,7 @@ $testGroup('MobileServiceClient.js',
     $test('CustomAPI - name and method with param')
     .description('Verify the custom API url formatting')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.type, 'GET');
             $assert.areEqual(req.url, 'http://www.test.com/api/calculator/add?a=1&b=2');
@@ -555,7 +556,7 @@ $testGroup('MobileServiceClient.js',
     $test('CustomAPI - Return XML')
     .description('Verify the custom API url formatting')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.type, 'GET');
             $assert.areEqual(req.url, 'http://www.test.com/api/scenarios/getXmlResponse');
@@ -572,7 +573,7 @@ $testGroup('MobileServiceClient.js',
     $test('CustomAPI - name, body, method, and headers')
     .description('Verify the custom API url formatting')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.type, 'POST');
             $assert.areEqual(req.url, 'http://www.test.com/api/scenarios/verifyRequestAccess');
@@ -592,7 +593,7 @@ $testGroup('MobileServiceClient.js',
     $test('CustomAPI - Custom headers and return XML not JSON')
     .description('Verify the custom API url formatting')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.type, 'POST');
             $assert.areEqual(req.url, 'http://www.test.com/api/scenarios/verifyRequestAccess');
@@ -610,7 +611,7 @@ $testGroup('MobileServiceClient.js',
     $test('CustomAPI - Send content-type instead of Content-Type')
     .description('Verify the custom API url formatting')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.type, 'POST');
             $assert.areEqual(req.url, 'http://www.test.com/api/scenarios/verifyRequestAccess');
@@ -627,7 +628,7 @@ $testGroup('MobileServiceClient.js',
 
     $test('CustomAPI - specifies accept: application/json header by default')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.headers.accept, 'application/json');
             callback(null, { status: 200 });
@@ -639,7 +640,7 @@ $testGroup('MobileServiceClient.js',
 
     $test('CustomAPI - specifies accept: application/json header by default when options are passed')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.headers.accept, 'application/json');
             callback(null, { status: 200 });
@@ -651,7 +652,7 @@ $testGroup('MobileServiceClient.js',
 
     $test('CustomAPI - specifies accept: application/json header by default when headers are passed')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.headers.accept, 'application/json');
             callback(null, { status: 200 });
@@ -663,7 +664,7 @@ $testGroup('MobileServiceClient.js',
 
     $test('CustomAPI - Does not override existing accept headers')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.headers.accept, 'application/xml');
             callback(null, { status: 200 });
@@ -676,7 +677,7 @@ $testGroup('MobileServiceClient.js',
     $test('Features - CustomAPI - Call with object (JSON-ified)')
     .description('Verify the features headers for custom calls')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.headers["X-ZUMO-FEATURES"], "AJ");
             callback(null, { status: 200, getResponseHeader: function () { return 'application/json'; } });
@@ -694,7 +695,7 @@ $testGroup('MobileServiceClient.js',
     $test('Features - CustomAPI - Call with object (JSON-ified) and parameters')
     .description('Verify the features headers for custom calls')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.headers["X-ZUMO-FEATURES"], "AJ,QS");
             callback(null, { status: 200, getResponseHeader: function () { return 'application/json'; } });
@@ -713,7 +714,7 @@ $testGroup('MobileServiceClient.js',
     $test('Features - CustomAPI - Call with non-object (not JSON-ified)')
     .description('Verify the features headers for custom calls')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.headers["X-ZUMO-FEATURES"], "AG");
             callback(null, { status: 200, getResponseHeader: function () { return 'application/json'; } });
@@ -732,7 +733,7 @@ $testGroup('MobileServiceClient.js',
     $test('Features - CustomAPI - Call with object (JSON-ified)')
     .description('Verify the features headers for custom calls')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.headers["X-ZUMO-FEATURES"], "AG,QS");
             callback(null, { status: 200, getResponseHeader: function () { return 'application/json'; } });
@@ -752,7 +753,7 @@ $testGroup('MobileServiceClient.js',
     $test('Features - CustomAPI - Call with no body')
     .description('Verify the features headers for custom calls')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.headers["X-ZUMO-FEATURES"], "QS");
             callback(null, { status: 200, getResponseHeader: function () { return 'application/json'; } });
@@ -770,7 +771,7 @@ $testGroup('MobileServiceClient.js',
     $test('Features - CustomAPI - Headers parameters is not modified')
     .description('Verify the features headers for custom calls')
     .check(function () {
-        var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+        var client = new MobileServiceClient("http://www.test.com");
         var reqHeaders = { 'Content-Type': 'application/xml' };
         client = client.withFilter(function (req, next, callback) {
             $assert.areEqual(req.headers["X-ZUMO-FEATURES"], "AG");
@@ -788,7 +789,7 @@ $testGroup('MobileServiceClient.js',
 );
 
 function testLoginParameters(args, expectedStartUri, expectedEndUri, alternateLoginHost, loginUriPrefix) {
-    var client = new WindowsAzure.MobileServiceClient("http://www.test.com");
+    var client = new MobileServiceClient("http://www.test.com");
     client.alternateLoginHost = alternateLoginHost;
     client.loginUriPrefix = loginUriPrefix;
 
@@ -819,7 +820,7 @@ function testLoginParameters(args, expectedStartUri, expectedEndUri, alternateLo
 
 function testLoginWithToken(args, serviceUrl, alternateLoginHost, loginUriPrefix, expectedLoginUri) {
 
-    var client = new WindowsAzure.MobileServiceClient(serviceUrl);
+    var client = new MobileServiceClient(serviceUrl);
 
     client = client.withFilter(function (req, next, callback) {
         $assert.areEqual(req.url, expectedLoginUri);
