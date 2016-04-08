@@ -2,6 +2,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
+var MobileServiceTable = require('../../../../src/MobileServiceTable');
+
 exports.validStringIds = [
              "id",
              "true",
@@ -70,13 +72,13 @@ exports.nonStringNonIntIds = [
 exports.testNonSystemProperties = ["someProperty", "_createdAt", "_updatedAt", "_version", "X__createdAt"];
 exports.testValidSystemProperties = ["createdAt", "updatedAt", "version", "deleted"];
 exports.testSystemProperties = [
-    WindowsAzure.MobileServiceTable.SystemProperties.None,
-    WindowsAzure.MobileServiceTable.SystemProperties.All,
-    WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt | WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt | WindowsAzure.MobileServiceTable.SystemProperties.Version,
-    WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt | WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt,
-    WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt | WindowsAzure.MobileServiceTable.SystemProperties.Version,
-    WindowsAzure.MobileServiceTable.SystemProperties.CreatedAt,
-    WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt | WindowsAzure.MobileServiceTable.SystemProperties.Version,
-    WindowsAzure.MobileServiceTable.SystemProperties.UpdatedAt,
-    WindowsAzure.MobileServiceTable.SystemProperties.Version
+    MobileServiceTable.SystemProperties.None,
+    MobileServiceTable.SystemProperties.All,
+    MobileServiceTable.SystemProperties.CreatedAt | MobileServiceTable.SystemProperties.UpdatedAt | MobileServiceTable.SystemProperties.Version,
+    MobileServiceTable.SystemProperties.CreatedAt | MobileServiceTable.SystemProperties.UpdatedAt,
+    MobileServiceTable.SystemProperties.CreatedAt | MobileServiceTable.SystemProperties.Version,
+    MobileServiceTable.SystemProperties.CreatedAt,
+    MobileServiceTable.SystemProperties.UpdatedAt | MobileServiceTable.SystemProperties.Version,
+    MobileServiceTable.SystemProperties.UpdatedAt,
+    MobileServiceTable.SystemProperties.Version
 ];
