@@ -4,7 +4,7 @@
 
 // These exports serve as the JS bundle exports
 module.exports = {
-    MobileServiceClient: require('./MobileServiceClient').exports,
-    MobileServiceLogin: require('./MobileServiceLogin').exports,
-    MobileServiceTable: require('./MobileServiceTable').exports
+    MobileServiceClient: require('./MobileServiceClient'),
+    MobileServiceLogin: require('./MobileServiceLogin'),
+    MobileServiceTable: require('./MobileServiceTable')
 };
