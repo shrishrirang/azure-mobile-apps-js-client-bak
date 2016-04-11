@@ -20,7 +20,7 @@
     "grunt-exec": "~0.4.6",
     "http-server": "^0.9.0",
     "query.js": "WindowsAzure/queryjs.git#02642e588694159a28db8ed736b4a4458c5bad9a",
-    "qunitjs": "~1.18.0",
+    "qunitjs": "~1.19.0",
     "remapify": "~2.0.3",
     "request": "^2.69.0",
     "rimraf": "^2.5.2",
