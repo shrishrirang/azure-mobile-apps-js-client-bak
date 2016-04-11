@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-var Extensions = require('../src/Utilities/Extensions');
+var Extensions = require('../../../src/Utilities/Extensions');
 
 $testGroup('Extensions.js',
 

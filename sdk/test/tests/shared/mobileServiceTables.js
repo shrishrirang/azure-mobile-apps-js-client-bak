@@ -2,10 +2,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-var testData = require('./utilities/constants'),
+var testData = require('../../misc/constants'),
     Platform = require('Platforms/Platform'),
-    MobileServiceClient = require('../src/MobileServiceClient'),
-    MobileServiceTable = require('../src/MobileServiceTable');
+    MobileServiceClient = require('../../../src/MobileServiceClient'),
+    MobileServiceTable = require('../../../src/MobileServiceTable');
 
 $testGroup('MobileServiceTables.js',
     $test('table.read() with no id results')

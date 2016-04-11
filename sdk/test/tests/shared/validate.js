@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-var Validate = require('../src/Utilities/Validate');
+var Validate = require('../../../src/Utilities/Validate');
 
 $testGroup('Validate.js',
 

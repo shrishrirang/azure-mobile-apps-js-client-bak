@@ -35,13 +35,14 @@
   "scripts": {
     "build": "grunt build",
     "buildall": "grunt build",
-    "buildweb": "grunt buildweb",
+    "buildbrowser": "grunt buildbrowser",
     "buildcordova": "grunt buildcordova",
     "watch": "grunt watch:all",
     "watchall": "grunt watch:all",
-    "watchweb": "grunt watch:web",
+    "watchbrowser": "grunt watch:web",
     "watchcordova": "grunt watch:cordova",
-    "ut": "http-server -o ./sdk/test/index.html -c-1",
+    "browserut": "http-server -p 8081 -o http://localhost:8081/sdk/test/app/browser/index.html -c-1",
+    "hostcordovaut": "http-server -p 8080 -o http://localhost:8080/sdk/test/app/cordova/www/index.html -c-1",
     "testsetup": "node e2etest/scripts/setup.js"
   }
 }

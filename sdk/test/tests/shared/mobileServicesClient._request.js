@@ -3,7 +3,7 @@
 // ----------------------------------------------------------------------------
 
 var Platform = require('Platforms/Platform'),
-    MobileServiceClient = require('../src/MobileServiceClient');
+    MobileServiceClient = require('../../../src/MobileServiceClient');
 
 $testGroup('MobileServiceClient._request',
 
