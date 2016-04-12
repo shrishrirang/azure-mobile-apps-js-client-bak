@@ -25,8 +25,8 @@ module.exports = function(grunt) {
             ],
             // Entry points common to tests for all platforms
             testcore: [
-                'sdk/test/framework/*.js',
-                'sdk/test/*.js'
+                'sdk/test/misc/**/*.js',
+                'sdk/test/tests/shared/**/*.js'
             ],
             // List of all javascript files that we want to validate and watch
             // i.e. all javascript files except those that are installed, generated during build, third party files, etc
@@ -35,11 +35,9 @@ module.exports = function(grunt) {
                 'sdk/src/**/*.js',
                 'sdk/test/**/*.js',
                 '!**/[gG]enerated/*.js',
-                '!sdk/test/cordova/platforms/**',
+                '!sdk/test/app/cordova/platforms/**',
                 '!sdk/test/**/bin/**',
-                '!sdk/test/**/plugins/**',
-                '!**/node_modules/**',
-                '!**/MobileServices.*js'
+                '!sdk/test/**/plugins/**'
             ]
         },        
         jshint: {
@@ -54,7 +52,7 @@ module.exports = function(grunt) {
                     process: wrapResourceFile,
                 },
                 src: ['sdk/src/Strings/**/Resources.resjson'],
-                dest: 'sdk/src/Generated/Constants.js'
+                dest: 'sdk/src/generated/Constants.js'
             },
         },
         uglify: {
@@ -63,12 +61,12 @@ module.exports = function(grunt) {
                 mangle: false
             },
             web: {
-                src: 'sdk/src/Generated/MobileServices.Web.js',
-                dest: 'sdk/src/Generated/MobileServices.Web.min.js'
+                src: 'sdk/src/generated/MobileServices.Web.js',
+                dest: 'sdk/src/generated/MobileServices.Web.min.js'
             },
             cordova: {
-                src: 'sdk/src/Generated/MobileServices.Cordova.js',
-                dest: 'sdk/src/Generated/MobileServices.Cordova.min.js'
+                src: 'sdk/src/generated/MobileServices.Cordova.js',
+                dest: 'sdk/src/generated/MobileServices.Cordova.min.js'
             }
         },
         browserify: {
@@ -83,14 +81,14 @@ module.exports = function(grunt) {
             },
             web: {
                 src: '<%= files.web %>',
-                dest: './sdk/src/Generated/MobileServices.Web.js',
+                dest: './sdk/src/generated/MobileServices.Web.js',
                 options: {
                     preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
                 }
             },
             cordova: {
                 src: '<%= files.cordova %>',
-                dest: './sdk/src/Generated/MobileServices.Cordova.js',
+                dest: './sdk/src/generated/MobileServices.Cordova.js',
                 options: {
                     preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
                 }
@@ -100,37 +98,46 @@ module.exports = function(grunt) {
                     '<%= files.web %>',
                     '<%= files.testcore %>'
                 ],
-                dest: './sdk/test/Generated/Tests.js',
+                dest: './sdk/test/app/browser/generated/tests.js',
                 options: {
                     preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
                 }
             },
-// Uncomment this when Cordova UTs are added
-//            cordovaTest: {
-//                src: [
-//                    '<%= files.cordova %>',
-//                    './sdk/test/web/js/TestFrameworkAdapter.js',
-//                    './sdk/test/web/js/TestClientHelper.js',
-//                    '<%= files.testcore %>'
-//                ],
-//                dest: './sdk/test/cordova/www/js/Generated/Tests.js',
-//                options: {
-//                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
-//                }
-//            },
+            cordovaTest: {
+                src: [
+                    '<%= files.cordova %>',
+                    '<%= files.testcore %>'
+                ],
+                dest: './sdk/test/app/cordova/www/scripts/generated/tests.js',
+                options: {
+                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
+                }
+            },
         },
         copy: {
             web: {
                 src: 'MobileServices.Web.*js',
                 dest: 'dist/',
                 expand: true,
-                cwd: 'sdk/src/Generated/'
+                cwd: 'sdk/src/generated/'
             },
             cordova: {
                 src: 'MobileServices.Cordova.*js',
                 dest: 'dist/',
                 expand: true,
-                cwd: 'sdk/src/Generated/'
+                cwd: 'sdk/src/generated/'
+            },
+            webTest: {
+                src: '*',
+                dest: 'sdk/test/app/browser/external/qunit/',
+                expand: true,
+                cwd: 'node_modules/qunitjs/qunit'
+            },
+            cordovaTest: {
+                src: '*',
+                dest: 'sdk/test/app/cordova/www/external/qunit/',
+                expand: true,
+                cwd: 'node_modules/qunitjs/qunit'
             }
         },
         watch: {
@@ -140,11 +147,11 @@ module.exports = function(grunt) {
             },
             web: {
                 files: '<%= files.all %>',
-                tasks: ['concat', 'browserify:web', 'browserify:webTest', 'copy:web']
+                tasks: ['concat', 'browserify:web', 'browserify:webTest', 'copy:web', 'copy:webTest']
             },
             cordova: {
                 files: '<%= files.all %>',
-                tasks: ['concat', 'browserify:cordova', 'copy:cordova']
+                tasks: ['concat', 'browserify:cordova', 'browserify:cordovaTest', 'copy:cordova', 'copy:cordovaTest']
             }
         }
     });
@@ -159,8 +166,8 @@ module.exports = function(grunt) {
         
     // Default task(s).
     grunt.registerTask('build', ['concat', 'browserify', 'uglify', 'copy', 'jshint']);
-    grunt.registerTask('buildweb', ['concat', 'browserify:web', 'browserify:webTest', 'copy:web']);
-    grunt.registerTask('buildcordova', ['concat', 'browserify:cordova', 'copy:cordova']);
+    grunt.registerTask('buildbrowser', ['concat', 'browserify:web', 'browserify:webTest', 'copy:web', 'copy:webTest']);
+    grunt.registerTask('buildcordova', ['concat', 'browserify:cordova', 'browserify:cordovaTest', 'copy:cordova', 'copy:cordovaTest']);
 
     grunt.registerTask('default', ['build']);
 };
