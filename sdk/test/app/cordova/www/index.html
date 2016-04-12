@@ -14,7 +14,14 @@
         <title>Azure Mobile Apps Cordova tests</title>
     </head>
     <body>
-        
+        <form>
+            <input id="refresh" type="text" size="25">
+            <input type="button" onclick="window.location.href = document.getElementById('refresh').value;" value="Refresh">
+        </form>
+        <script>
+            document.getElementById('refresh').value = window.location.href;
+        </script>
+            
         <!--
         QUnit dynamically creates a toolbar and adds DOM nodes to it. However, adding dynamic
         content is not supported on Windows 8.1 (Details: http://go.microsoft.com/fwlink/?LinkID=247104).
@@ -38,24 +45,27 @@
             var toolbarId = "qunit-testrunner-toolbar",
                 toolbarFilter = id(toolbarId);
 
-            toolbarFilter.appendChild = function () {
-                var child = arguments[0];
+            // Do the following only if we are running in WinJS context.
+            if (window.MSApp) {
+                toolbarFilter.appendChild = function() {
+                    var child = arguments[0];
 
-                // Safely add the child to the QUnit toolbar
-                MSApp.execUnsafeLocalFunction(function () {
-                    // Lookup QUnit's toolbar by setting the ID of the filter to ""
-                    toolbarFilter.id = "";
-                    var qunitToolbar = id("qunit-testrunner-toolbar");
+                    // Safely add the child to the QUnit toolbar
+                    MSApp.execUnsafeLocalFunction(function() {
+                        // Lookup QUnit's toolbar by setting the ID of the filter to ""
+                        toolbarFilter.id = "";
+                        var qunitToolbar = id("qunit-testrunner-toolbar");
 
-                    // Append the child to qunit's toolbar
-                    qunitToolbar.appendChild(child);
+                        // Append the child to qunit's toolbar
+                        qunitToolbar.appendChild(child);
 
-                    // Start filtering method calls to the QUnit toolbar again
-                    toolbarFilter.id = toolbarId;
-                });
-            };
+                        // Start filtering method calls to the QUnit toolbar again
+                        toolbarFilter.id = toolbarId;
+                    });
+                };
+            }
         </script>
-        
+
         <script type="text/javascript" src="cordova.js"></script>
         <script src="external/qunit/qunit.js"></script>
         <script src="scripts/generated/tests.js"></script>

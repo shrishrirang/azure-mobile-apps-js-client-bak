@@ -41,8 +41,8 @@
     "watchall": "grunt watch:all",
     "watchbrowser": "grunt watch:web",
     "watchcordova": "grunt watch:cordova",
-    "browserut": "http-server -p 8081 -o http://localhost:8081/sdk/test/app/browser/index.html -c-1",
-    "hostcordovaut": "http-server -p 8080 -o http://localhost:8080/sdk/test/app/cordova/www/index.html -c-1",
+    "browserut": "http-server sdk/test/app/browser/ -p 8081 -o http://localhost:8081/index.html -c-1",
+    "hostandroidut": "http-server sdk/test/app/cordova/platforms/android/assets/www/ -p 8080 -c-1",
     "testsetup": "node e2etest/scripts/setup.js"
   }
 }
