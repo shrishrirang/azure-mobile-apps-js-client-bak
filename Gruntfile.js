@@ -28,23 +28,22 @@ module.exports = function(grunt) {
                 'sdk/test/misc/**/*.js',
                 'sdk/test/tests/shared/**/*.js'
             ],
-            // Javascript SDK and test files that we want to watch for changes
-            watch: [
+            // List of all javascript files that we want to validate and watch
+            // i.e. all javascript files except those that are installed, generated during build, third party files, etc
+            all: [
                 'Gruntfile.js',
                 'sdk/src/**/*.js',
                 'sdk/test/**/*.js',
-                '!**/[Gg]enerated/*.js',
+                '!**/[Gg]enerated/**',
+                '!**/[Ee]xternal/**',
                 '!sdk/test/app/cordova/platforms/**',
+                '!sdk/test/app/cordova/merges/**',
                 '!sdk/test/**/bin/**',
                 '!sdk/test/**/plugins/**'
             ]
         },        
         jshint: {
-            all: [
-                'Gruntfile.js',
-                'sdk/src/**/*.js',
-                '!**/[Gg]enerated/*.js'
-            ]
+            all: '<%= files.all %>'
         },
         concat: {
             constants: {
@@ -145,15 +144,15 @@ module.exports = function(grunt) {
         },
         watch: {
             all: {
-                files: '<%= files.watch %>',
+                files: '<%= files.all %>',
                 tasks: ['concat', 'browserify', 'copy']
             },
             web: {
-                files: '<%= files.watch %>',
+                files: '<%= files.all %>',
                 tasks: ['concat', 'browserify:web', 'browserify:webTest', 'copy:web', 'copy:webTest']
             },
             cordova: {
-                files: '<%= files.watch %>',
+                files: '<%= files.all %>',
                 tasks: ['concat', 'browserify:cordova', 'browserify:cordovaTest', 'copy:cordova', 'copy:cordovaTest']
             }
         }
