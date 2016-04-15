@@ -1,4 +1,5 @@
 ﻿// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
@@ -10,25 +11,21 @@ function defineLoginTestsNamespace() {
     var tests = [];
     var i;
     var TABLE_PERMISSION_PUBLIC = 1;
-    var TABLE_PERMISSION_APPLICATION = 2;
-    var TABLE_PERMISSION_USER = 3;
-    var TABLE_PERMISSION_ADMIN = 4;
+    var TABLE_PERMISSION_USER = 2;
     var TABLE_NAME_PUBLIC = 'public';
-    var TABLE_NAME_APPLICATION = 'application';
     var TABLE_NAME_AUTHENTICATED = 'authenticated';
-    var TABLE_NAME_ADMIN = 'admin';
 
     var tables = [
         { name: TABLE_NAME_PUBLIC, permission: TABLE_PERMISSION_PUBLIC },
-        { name: TABLE_NAME_APPLICATION, permission: TABLE_PERMISSION_APPLICATION },
-        { name: TABLE_NAME_AUTHENTICATED, permission: TABLE_PERMISSION_USER },
-        { name: TABLE_NAME_ADMIN, permission: TABLE_PERMISSION_ADMIN }];
+        { name: TABLE_NAME_AUTHENTICATED, permission: TABLE_PERMISSION_USER }
+    ];
 
     var supportRecycledToken = {
         facebook: true,
         google: false, // Known bug - Drop login via Google token until Google client flow is reintroduced
-        twitter: false,
-        microsoftaccount: false
+        twitter: true,
+        microsoftaccount: true,
+        aad: false
     };
 
     tests.push(createLogoutTest());
@@ -43,7 +40,7 @@ function defineLoginTestsNamespace() {
 
     var lastUserIdentityObject = null;
 
-    var providers = ['facebook', 'google', 'twitter', 'microsoftaccount'];
+    var providers = ['facebook', 'google', 'twitter', 'microsoftaccount', 'aad'];
     for (i = 0; i < providers.length; i++) {
         var provider = providers[i];
         tests.push(createLogoutTest());
@@ -63,8 +60,14 @@ function defineLoginTestsNamespace() {
         }
     }
 
-    if (!testPlatform.IsHTMLApplication) {
-        //In Browser, default is single signon and LIVE SDK is not supported
+
+    // Run the Live SDK and SSO tests only on versions of windows that support WebAuthenticationBroker
+    if (window.Windows &&
+        window.Windows.Security &&
+        window.Windows.Security.Authentication &&
+        window.Windows.Security.Authentication.Web &&
+        window.Windows.Security.Authentication.Web.WebAuthenticationBroker) {
+
         tests.push(createLogoutTest());
         tests.push(createLiveSDKLoginTest());
         tests.push(createCRUDTest(TABLE_NAME_AUTHENTICATED, 'microsoftaccount', TABLE_PERMISSION_USER, true));
@@ -79,6 +82,10 @@ function defineLoginTestsNamespace() {
             }
         });
     }
+
+    tests.push(createAlternateHostServerFlowLoginTest());
+    tests.push(createAlternateHostClientFlowLoginTest());
+    tests.push(createLoginPrefixTest());
 
     for (var i = indexOfTestsWithAuthentication; i < tests.length; i++) {
         tests[i].canRunUnattended = false;
@@ -98,7 +105,7 @@ function defineLoginTestsNamespace() {
                 test.addLog('Logged in via Live SDK: ', wlLoginResult);
                 WL.api({ path: 'me', method: 'GET' }).then(function (wlMeResult) {
                     test.addLog('My information: ', wlMeResult);
-                    var token = { authenticationToken: wlLoginResult.session.authentication_token };
+                    var token = { access_token: wlLoginResult.session.access_token };
                     client.login('microsoftaccount', token).done(function (user) {
                         test.addLog('Logged in as ', user);
                         done(true);
@@ -119,7 +126,7 @@ function defineLoginTestsNamespace() {
 
     function createClientSideLoginTest(provider) {
         /// <param name="provider" type="String" mayBeNull="true">The name of the authentication provider for
-        ///            the client. Currently only 'facebook' and 'google' are supported for this test.</param>
+        ///            the client.</param>
         return new zumo.Test('Login via token for ' + provider, function (test, done) {
             /// <param name="test" type="zumo.Test">The test associated with this execution.</param>
             var client = zumo.getClient();
@@ -128,20 +135,13 @@ function defineLoginTestsNamespace() {
                 test.addLog('Last identity object is null. Cannot run this test.');
                 done(false);
             } else {
-                var token = {};
-                if (provider === 'facebook' || provider === 'google') {
-                    token.access_token = lastIdentity[provider].accessToken;
-                    client.login(provider, token).done(function (user) {
-                        test.addLog('Logged in as ', user);
-                        done(true);
-                    }, function (err) {
-                        test.addLog('Error on login: ', err);
-                        done(false);
-                    });
-                } else {
-                    test.addLog('Client-side login for ' + provider + ' is not implemented or not supported.');
+                client.login(provider, lastIdentity[provider]).done(function (user) {
+                    test.addLog('Logged in as ', user);
+                    done(true);
+                }, function (err) {
+                    test.addLog('Error on login: ', err);
                     done(false);
-                }
+                });
             }
         });
     }
@@ -157,12 +157,11 @@ function defineLoginTestsNamespace() {
         /// <return type="zumo.Test"/>
         var testName = 'CRUD, ' + (userIsAuthenticated ? ('auth by ' + provider) : 'unauthenticated');
         testName = testName + ', table with ';
-        testName = testName + ['public', 'application', 'user', 'admin'][tablePermission - 1];
+        testName = testName + [TABLE_NAME_PUBLIC, TABLE_NAME_AUTHENTICATED][tablePermission - 1];
         testName = testName + ' permission.';
         return new zumo.Test(testName, function (test, done) {
             /// <param name="test" type="zumo.Test">The test associated with this execution.</param>
             var crudShouldWork = tablePermission === TABLE_PERMISSION_PUBLIC ||
-                tablePermission === TABLE_PERMISSION_APPLICATION ||
                 (tablePermission === TABLE_PERMISSION_USER && userIsAuthenticated);
             var client = zumo.getClient();
             var table = client.getTable(tableName);
@@ -241,16 +240,12 @@ function defineLoginTestsNamespace() {
                         } else {
                             var retrievedItem = items[0];
                             var usersFeatureEnabled = retrievedItem.UsersEnabled;
-                            if (retrievedItem.Identities) {
-                                lastUserIdentityObject = JSON.parse(items[0].Identities);
+                            if (retrievedItem.identities) {
+                                lastUserIdentityObject = JSON.parse(items[0].identities);
                                 test.addLog('Identities object: ', lastUserIdentityObject);
-                                var providerName = provider;
-                                if (providerName.toLowerCase() === 'microsoftaccount') {
-                                    providerName = 'microsoft';
-                                }
-                                var providerIdentity = lastUserIdentityObject[providerName];
+                                var providerIdentity = lastUserIdentityObject[provider];
                                 if (!providerIdentity) {
-                                    test.addLog('Error, cannot fetch the identity for provider ', providerName);
+                                    test.addLog('Error, cannot fetch the identity for provider ', provider);
                                     done(false);
                                     return;
                                 }
@@ -337,12 +332,77 @@ function defineLoginTestsNamespace() {
         });
     }
 
+    function createAlternateHostClientFlowLoginTest() {
+        return new zumo.Test('Login via AlternateLoginHost - Client Flow', function (test, done) {
+            var client = new WindowsAzure.MobileServiceClient("https://dummymobileservice.azurewebsites.net");
+            client.alternateLoginHost = zumo.util.globalTestParams[zumo.constants.MOBILE_APP_URL_KEY];
+            var lastIdentity = lastUserIdentityObject;
+            var lastIdentityProvider;
+            if (!lastIdentity) {
+                test.addLog('Last identity object is null. Cannot run this test.');
+                done(false);
+            }
+            else {
+                for (i = 0; i < providers.length; i++) {
+                    if (supportRecycledToken[providers[i]] && lastIdentity[providers[i]] != null) {
+                        lastIdentityProvider = providers[i];
+                        break;
+                    }
+                }
+                client.login(lastIdentityProvider, lastIdentity[lastIdentityProvider]).done(function (user) {
+                    test.addLog('Logged in as ', user);
+                    done(true);
+                }, function (err) {
+                    test.addLog('Error on login: ', err);
+                    done(false);
+                });
+            }
+        });
+    }
+
+    function createAlternateHostServerFlowLoginTest() {
+        return new zumo.Test('Login via AlternateLoginHost - ServerFlow', function (test, done) {
+            var client = new WindowsAzure.MobileServiceClient("https://dummymobileservice.azurewebsites.net");
+            client.alternateLoginHost = zumo.util.globalTestParams[zumo.constants.MOBILE_APP_URL_KEY];
+
+            client.login('facebook').done(function (user) {
+                test.addLog('Logged in as ', user);
+                done(true);
+            }, function (err) {
+                test.addLog('Error on login: ', err);
+                done(false);
+            });
+
+        });
+    }
+
+    function createLoginPrefixTest() {
+        return new zumo.Test('Set AlternateLoginPrefix to dummy', function (test, done) {
+            var client = zumo.getClient();
+            client.loginUriPrefix = '/foo/bar';
+            client.login('microsoftaccount', { access_token: 'zumo' }).done(function (user) {
+                test.addLog('Login via dummy loginUriPrefix should have failed ', user);
+                done(false);
+            }, function (err) {
+                if (err.request.status === 404) {
+                    test.addLog('Expected error on login: ', err);
+                    done(true);
+                    return;
+                }
+                var errorMsg = 'Expected status: 404. Recieved: ' + err.request.status;
+                test.addLog('Did not find expected error on login failure', errorMsg);
+                done(false);
+            });
+        });
+    }
+
     function createLogoutTest() {
         return new zumo.Test('Log out', function (test, done) {
             var client = zumo.getClient();
-            client.logout();
-            test.addLog('Logged out');
-            done(true);
+            client.logout().then(function () {
+                test.addLog('Logged out');
+                done(true);
+            });
         });
     }
 

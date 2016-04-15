@@ -1142,7 +1142,7 @@ $testGroup('MobileServiceTables.js',
                         $assert.isFalse(results === originalModelObject);
                         $assert.areEqual(results.title, 'test');     // We have the server response properties
                         $assert.areEqual(results.id, testId);
-                        $assert.areEqual(results.custom, null);        // but no original properties carried over
+                        $assert.areEqual(results.custom, undefined);        // but no original properties carried over
                         $assert.areEqual(results.price, 200);
                         $assert.areEqual(originalModelObject.id, testId); // And the original is unchanged
                         $assert.areEqual(originalModelObject.price, 100);

@@ -1,10 +1,10 @@
 // ----------------------------------------------------------------------------
 // Copyright (c) Microsoft Corporation. All rights reserved
-// AzureMobileServices - v1.3.1
+// AzureMobileServices - v2.0.0-beta
 // ----------------------------------------------------------------------------
 
 (function (global) {
-	var $__fileVersion__ = '1.3.1';
+	var $__fileVersion__ = '2.0.0-beta';
     /// <field name="$__modules__">
     /// Map module names to either their cached exports or a function which
     /// will define the module's exports when invoked.
@@ -46,9 +46,6 @@
 		// Copyright (c) Microsoft Corporation. All rights reserved.
 		// ----------------------------------------------------------------------------
 		
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\base.js" />
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
-		/// <reference path="..\Generated\MobileServices.DevIntellisense.js" />
 		
 		// Declare JSHint globals
 		/*global XMLHttpRequest:false */
@@ -552,7 +549,20 @@
 		
 		        var start = url.substring(0, 7).toLowerCase();
 		        return (start  == "http://" || start == "https:/");
+		    },
+		
+		    isHttps: function (url) {
+		        /// <summary>
+		        /// Simple check to verify if url begins with https:/
+		        /// </summary>
+		        if (_.isNullOrEmpty(url)) {
+		            return false;
+		        }
+		
+		        var start = url.substring(0, 7).toLowerCase();
+		        return (start == "https:/");
 		    }
+		
 		};
 		
 		exports.tryParseIsoDateString = function (text) {
@@ -638,9 +648,6 @@
 		// Copyright (c) Microsoft Corporation. All rights reserved.
 		// ----------------------------------------------------------------------------
 		
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\base.js" />
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
-		/// <reference path="Generated\MobileServices.DevIntellisense.js" />
 		
 		var _ = require('Extensions');
 		var Validate = require('Validate');
@@ -663,25 +670,54 @@
 		    TableReadQuery: "TQ",            // Table reads where the caller uses a function / query OM to determine the items to be returned
 		};
 		var _zumoFeaturesHeaderName = "X-ZUMO-FEATURES";
+		var _zumoApiVersionHeaderName = "ZUMO-API-VERSION";
+		var _zumoApiVersion = "2.0.0";
+		var _alternateLoginHost = null;
+		Object.defineProperties(MobileServiceClient.prototype, {
+		    alternateLoginHost: {
+		        get: function () {
+		            return this._alternateLoginHost;
+		        },
+		        set: function (value) {
+		            if (_.isNullOrEmpty(value)) {
+		                this._alternateLoginHost = this.applicationUrl;
+		            }else if (_.url.isAbsoluteUrl(value) && _.url.isHttps(value)) {
+		                this._alternateLoginHost = value;
+		            } else {
+		                throw _.format(Platform.getResourceString("AlternateLoginHost_Invalid"), value);
+		            }
+		        }
+		    }
+		});
+		var _loginUriPrefix = null;
+		Object.defineProperties(MobileServiceClient.prototype, {
+		    loginUriPrefix: {
+		        get: function () {
+		            return this._loginUriPrefix;
+		        },
+		        set: function (value) {
+		            if (_.isNullOrEmpty(value)) {
+		                this._loginUriPrefix = ".auth/login";
+		            } else {
+		                _.isString(value);
+		                this._loginUriPrefix = value;
+		            }
+		        }
+		    }
+		});
 		
-		function MobileServiceClient(applicationUrl, gatewayUrl, applicationKey) {
+		function MobileServiceClient(applicationUrl) {
 		    /// <summary>
 		    /// Initializes a new instance of the MobileServiceClient class.
 		    /// </summary>
 		    /// <param name="applicationUrl" type="string" mayBeNull="false">
 		    /// The URL to the Mobile Services application.
 		    /// </param>
-		    /// <param name="applicationKey" type="string" mayBeNull="false">
-		    /// The Mobile Service application's key.
-		    /// </param>
 		
 		    Validate.isString(applicationUrl, 'applicationUrl');
 		    Validate.notNullOrEmpty(applicationUrl, 'applicationUrl');
-		    Validate.isString(applicationKey, 'applicationKey');
 		
 		    this.applicationUrl = applicationUrl;
-		    this.applicationKey = applicationKey || null;
-		    this.gatewayUrl = gatewayUrl || null;
 		
 		    var sdkInfo = Platform.getSdkInfo();
 		    var osInfo = Platform.getOperatingSystemInfo();
@@ -711,6 +747,8 @@
 		        this.push = new Push(this, MobileServiceClient._applicationInstallationId);
 		    }
 		}
+		
+		
 		
 		// Export the MobileServiceClient class
 		exports.MobileServiceClient = MobileServiceClient;
@@ -767,7 +805,7 @@
 		    Validate.notNull(serviceFilter, 'serviceFilter');
 		
 		    // Clone the current instance
-		    var client = new MobileServiceClient(this.applicationUrl, this.gatewayUrl, this.applicationKey);
+		    var client = new MobileServiceClient(this.applicationUrl);
 		    client.currentUser = this.currentUser;
 		
 		    // Chain the service filter with any existing filters
@@ -829,7 +867,7 @@
 		        callback = ignoreFilters;
 		        ignoreFilters = false;
 		    }
-		    
+		
 		    if (_.isNull(callback) && (typeof content === 'function')) {
 		        callback = content;
 		        content = null;
@@ -855,9 +893,6 @@
 		        _.extend(options.headers, headers);
 		    }
 		    options.headers["X-ZUMO-INSTALLATION-ID"] = MobileServiceClient._applicationInstallationId;
-		    if (!_.isNullOrEmpty(this.applicationKey)) {
-		        options.headers["X-ZUMO-APPLICATION"] = this.applicationKey;
-		    }
 		    if (this.currentUser && !_.isNullOrEmpty(this.currentUser.mobileServiceAuthenticationToken)) {
 		        options.headers["X-ZUMO-AUTH"] = this.currentUser.mobileServiceAuthenticationToken;
 		    }
@@ -880,7 +915,7 @@
 		            options.data = content;
 		        }
 		
-		        if(!_.hasProperty(options.headers, ['Content-Type','content-type','CONTENT-TYPE','Content-type'])) {
+		        if (!_.hasProperty(options.headers, ['Content-Type', 'content-type', 'CONTENT-TYPE', 'Content-type'])) {
 		            options.headers['Content-Type'] = 'application/json';
 		        }
 		    } else {
@@ -934,7 +969,7 @@
 		         /// Optional callback accepting (error, user) parameters.
 		         /// </param>
 		         this._login.loginWithOptions(provider, options, callback);
-		});
+		     });
 		
 		MobileServiceClient.prototype.login = Platform.async(
 		    function (provider, token, useSingleSignOn, callback) {
@@ -973,7 +1008,7 @@
 		};
 		
 		MobileServiceClient.prototype.invokeApi = Platform.async(
-		    function (apiName, options, callback) {   
+		    function (apiName, options, callback) {
 		        /// <summary>
 		        /// Invokes the specified custom api and returns a response object.
 		        /// </summary>
@@ -1013,8 +1048,21 @@
 		            body = options.body;
 		            headers = options.headers;
 		        }
+		
+		        headers = headers || {};
+		
 		        if (_.isNull(method)) {
 		            method = "POST";
+		        }
+		
+		        // if not specified, default to return results in JSON format
+		        if (_.isNull(headers.accept)) {
+		            headers.accept = 'application/json';
+		        }
+		
+		        // Add version header on API requests
+		        if (_.isNull(headers[_zumoApiVersionHeaderName])) {
+		            headers[_zumoApiVersionHeaderName] = _zumoApiVersion;
 		        }
 		
 		        // Construct the URL
@@ -1056,7 +1104,7 @@
 		                    if (!contentType) {
 		                        try {
 		                            response.result = _.fromJson(response.responseText);
-		                        } catch(e) {
+		                        } catch (e) {
 		                            // Do nothing, since we don't know the content-type, failing may be ok
 		                        }
 		                    } else if (contentType.toLowerCase().indexOf('json') !== -1) {
@@ -1127,6 +1175,16 @@
 		/// </summary>
 		MobileServiceClient._zumoFeatures = _zumoFeatures;
 		
+		/// <summary>
+		/// The header / querystring to use to specify the API Version
+		/// </summary>
+		MobileServiceClient._zumoApiVersionHeaderName = _zumoApiVersionHeaderName;
+		
+		/// <summary>
+		/// The current Zumo API Version
+		/// </summary>
+		MobileServiceClient._zumoApiVersion = _zumoApiVersion;
+		
 	};
 
 	$__modules__.MobileServiceTable = function (exports) {
@@ -1134,9 +1192,6 @@
 		// Copyright (c) Microsoft Corporation. All rights reserved.
 		// ----------------------------------------------------------------------------
 		
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\base.js" />
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
-		/// <reference path="Generated\MobileServices.DevIntellisense.js" />
 		
 		var _ = require('Extensions');
 		var Validate = require('Validate');
@@ -1161,9 +1216,10 @@
 		};
 		
 		var MobileServiceSystemColumns = {
-		    CreatedAt: "__createdAt",
-		    UpdatedAt: "__updatedAt",
-		    Version: "__version"
+		    CreatedAt: "createdAt",
+		    UpdatedAt: "updatedAt",
+		    Version: "version",
+		    Deleted: "deleted"
 		};
 		
 		Platform.addToMobileServicesClientNamespace({
@@ -1201,8 +1257,6 @@
 		        /// </returns>
 		        return client;
 		    };
-		
-		    this.systemProperties = 0;
 		}
 		
 		// Export the MobileServiceTable class
@@ -1293,7 +1347,6 @@
 		    addQueryParametersFeaturesIfApplicable(features, parameters);
 		
 		    // Add any user-defined query string parameters
-		    parameters = addSystemProperties(parameters, this.systemProperties, queryString);
 		    if (!_.isNull(parameters)) {
 		        var userDefinedQueryString = _.url.getQueryString(parameters);
 		        if (!_.isNullOrEmpty(queryString)) {
@@ -1313,13 +1366,16 @@
 		        }
 		    }
 		
+		    var headers = { };
+		    headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
+		
 		    // Make the request
 		    this.getMobileServiceClient()._request(
 		        'GET',
 		        urlFragment,
 		        null,
 		        false,
-		        null,
+		        headers,
 		        features,
 		        function (error, response) {
 		            var values = null;
@@ -1425,11 +1481,13 @@
 		
 		        // Construct the URL
 		        var urlFragment = _.url.combinePathSegments(tableRouteSeperatorName, this.getTableName());
-		        parameters = addSystemProperties(parameters, this.systemProperties);
 		        if (!_.isNull(parameters)) {
 		            var queryString = _.url.getQueryString(parameters);
 		            urlFragment = _.url.combinePathAndQuery(urlFragment, queryString);
 		        }
+		
+		        var headers = { };
+		        headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
 		
 		        // Make the request
 		        this.getMobileServiceClient()._request(
@@ -1437,7 +1495,7 @@
 		            urlFragment,
 		            instance,
 		            false,
-		            null,
+		            headers,
 		            features,
 		            function (error, response) {
 		                if (!_.isNull(error)) {
@@ -1483,20 +1541,17 @@
 		        }
 		        Validate.notNull(callback, 'callback');
 		
-		        if (_.isString(instance[idPropertyName])) {
-		            version = instance.__version;
-		            serverInstance = removeSystemProperties(instance);
-		        } else {
-		            serverInstance = instance;
-		        }
+		        version = instance[MobileServiceSystemColumns.Version];
+		        serverInstance = removeSystemProperties(instance);
 		
 		        if (!_.isNullOrEmpty(version)) {
 		            headers['If-Match'] = getEtagFromVersion(version);
 		            features.push(WindowsAzure.MobileServiceClient._zumoFeatures.OptimisticConcurrency);
 		        }
 		
+		        headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
+		
 		        features = addQueryParametersFeaturesIfApplicable(features, parameters);
-		        parameters = addSystemProperties(parameters, this.systemProperties);
 		
 		        // Construct the URL
 		        var urlFragment =  _.url.combinePathSegments(
@@ -1587,13 +1642,16 @@
 		        var features = [WindowsAzure.MobileServiceClient._zumoFeatures.TableRefreshCall];
 		        features = addQueryParametersFeaturesIfApplicable(features, parameters);
 		
+		        var headers = { };
+		        headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
+		
 		        // Make the request
 		        this.getMobileServiceClient()._request(
 		            'GET',
 		            urlFragment,
 		            instance,
 		            false,
-		            null,
+		            headers,
 		            features,
 		            function (error, response) {
 		                if (!_.isNull(error)) {
@@ -1653,11 +1711,13 @@
 		
 		        var features = addQueryParametersFeaturesIfApplicable([], parameters);
 		
-		        parameters = addSystemProperties(parameters, this.systemProperties);
 		        if (!_.isNull(parameters)) {
 		            var queryString = _.url.getQueryString(parameters);
 		            urlFragment = _.url.combinePathAndQuery(urlFragment, queryString);
 		        }
+		
+		        var headers = { };
+		        headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
 		
 		        // Make the request
 		        this.getMobileServiceClient()._request(
@@ -1665,7 +1725,7 @@
 		            urlFragment,
 		            null,
 		            false,
-		            null,
+		            headers,
 		            features,
 		            function (error, response) {
 		                if (!_.isNull(error)) {
@@ -1706,15 +1766,15 @@
 		        var headers = {};
 		        var features = [];
 		        if (_.isString(instance[idPropertyName])) {
-		            if (!_.isNullOrEmpty(instance.__version)) {
-		                headers['If-Match'] = getEtagFromVersion(instance.__version);
+		            if (!_.isNullOrEmpty(instance[MobileServiceSystemColumns.Version])) {
+		                headers['If-Match'] = getEtagFromVersion(instance[MobileServiceSystemColumns.Version]);
 		                features.push(WindowsAzure.MobileServiceClient._zumoFeatures.OptimisticConcurrency);
 		            }
 		        }
+		        headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
 		
 		        features = addQueryParametersFeaturesIfApplicable(features, parameters);
 		
-		        parameters = addSystemProperties(parameters, this.systemProperties);
 		        if (!_.isNull(parameters)) {
 		            Validate.isValidParametersObject(parameters);
 		        }
@@ -1784,44 +1844,16 @@
 		// Table system properties
 		function removeSystemProperties(instance) {
 		    var copy = {};
-		    for(var property in instance) {
-		        if (property.substr(0, 2) !== '__') {
+		    for (var property in instance) {
+		        if ((property != MobileServiceSystemColumns.Version) &&
+		            (property != MobileServiceSystemColumns.UpdatedAt) &&
+		            (property != MobileServiceSystemColumns.CreatedAt) &&
+		            (property != MobileServiceSystemColumns.Deleted))
+		        {
 		            copy[property] = instance[property];
 		        }
 		    }
 		    return copy;
-		}
-		
-		function addSystemProperties(parameters, properties, querystring) {
-		    if (properties === MobileServiceSystemProperties.None || (typeof querystring === 'string' && querystring.toLowerCase().indexOf('__systemproperties') >= 0)) {
-		        return parameters;
-		    }
-		
-		    // Initialize an object if none passed in
-		    parameters = parameters || {};
-		
-		    // Don't override system properties if already set
-		    if(!_.isNull(parameters.__systemProperties)) {
-		        return parameters;
-		    }
-		
-		    if (properties === MobileServiceSystemProperties.All) {
-		        parameters.__systemProperties = '*';
-		    } else {
-		        var options = [];
-		        if (MobileServiceSystemProperties.CreatedAt & properties) {
-		            options.push(MobileServiceSystemColumns.CreatedAt);
-		        }
-		        if (MobileServiceSystemProperties.UpdatedAt & properties) {
-		            options.push(MobileServiceSystemColumns.UpdatedAt);
-		        }
-		        if (MobileServiceSystemProperties.Version & properties) {
-		            options.push(MobileServiceSystemColumns.Version);
-		        }
-		        parameters.__systemProperties = options.join(',');
-		    }
-		
-		    return parameters;
 		}
 		
 		// Add double quotes and unescape any internal quotes
@@ -1830,7 +1862,7 @@
 		    if (response.getResponseHeader) {
 		        var eTag = response.getResponseHeader('ETag');
 		        if (!_.isNullOrEmpty(eTag)) {
-		            result.__version = getVersionFromEtag(eTag);
+		            result[MobileServiceSystemColumns.Version] = getVersionFromEtag(eTag);
 		        }
 		    }
 		    return result;
@@ -1888,15 +1920,12 @@
 		// Copyright (c) Microsoft Corporation. All rights reserved.
 		// ----------------------------------------------------------------------------
 		
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\base.js" />
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
-		/// <reference path="Generated\MobileServices.DevIntellisense.js" />
 		
 		var _ = require('Extensions');
 		var Validate = require('Validate');
 		var Platform = require('Platform');
 		
-		var loginUrl = "login";
+		var loginUrl = ".auth/login";
 		var loginDone = "done";
 		
 		function MobileServiceLogin(client, ignoreFilters) {
@@ -1990,7 +2019,7 @@
 		        } else {
 		            Validate.notNull(null, 'callback');
 		        }
-		    }    
+		    }
 		
 		    // loginWithOptions('a.b.c')
 		    if (!options && this._isAuthToken(provider)) {
@@ -2082,7 +2111,7 @@
 		    return value && _.isString(value) && value.split('.').length === 3;
 		};
 		
-		MobileServiceLogin.prototype.loginWithMobileServiceToken = function(authenticationToken, callback) {
+		MobileServiceLogin.prototype.loginWithMobileServiceToken = function (authenticationToken, callback) {
 		    /// <summary>
 		    /// Log a user into a Mobile Services application given an Mobile Service authentication token.
 		    /// </summary>
@@ -2104,12 +2133,12 @@
 		        loginUrl,
 		        { authenticationToken: authenticationToken },
 		        self.ignoreFilters,
-		        function(error, response) { 
+		        function (error, response) {
 		            onLoginResponse(error, response, client, callback);
 		        });
 		};
 		
-		MobileServiceLogin.prototype.loginWithProvider = function(provider, token, useSingleSignOn, parameters, callback) {
+		MobileServiceLogin.prototype.loginWithProvider = function (provider, token, useSingleSignOn, parameters, callback) {
 		    /// <summary>
 		    /// Log a user into a Mobile Services application given a provider name and optional token object.
 		    /// </summary>
@@ -2148,7 +2177,7 @@
 		    }
 		
 		    provider = provider.toLowerCase();
-		    
+		
 		    // Either login with the token or the platform specific login control.
 		    if (!_.isNull(token)) {
 		        loginWithProviderAndToken(this, provider, token, parameters, callback);
@@ -2307,8 +2336,8 @@
 		
 		    var client = login.getMobileServiceClient();
 		    var startUri = _.url.combinePathSegments(
-		        client.gatewayUrl || client.applicationUrl,
-		        loginUrl,
+		        client.alternateLoginHost || client.applicationUrl,
+		        client.loginUriPrefix || loginUrl,
 		        provider);
 		    var endUri = null;
 		
@@ -2320,11 +2349,11 @@
 		    // If not single sign-on, then we need to construct a non-null end uri.
 		    if (!useSingleSignOn) {
 		        endUri = _.url.combinePathSegments(
-		            client.gatewayUrl || client.applicationUrl,
-		            loginUrl,
+		            client.alternateLoginHost || client.applicationUrl,
+		            client.loginUriPrefix || loginUrl,
 		            loginDone);
 		    }
-		    
+		
 		    login._loginState = { inProcess: true, cancelCallback: null }; // cancelCallback gets set below
 		
 		    // Call the platform to launch the login control, capturing any
@@ -2336,7 +2365,7 @@
 		            login._loginState = { inProcess: false, cancelCallback: null };
 		            onLoginComplete(error, mobileServiceToken, client, callback);
 		        });
-		    
+		
 		    if (login._loginState.inProcess && platformResult && platformResult.cancelCallback) {
 		        login._loginState.cancelCallback = platformResult.cancelCallback;
 		    }
@@ -2359,8 +2388,26 @@
 		    this.installationId = installationId;
 		}
 		
+		/// <summary>
+		/// Register a push channel with the Mobile Apps backend to start receiving notifications.
+		/// </summary>
+		/// <param name="platform" type="string">
+		/// The device platform being used - wns, gcm or apns.
+		/// </param>
+		/// <param name="pushChannel" type="string">
+		/// The push channel identifier or URI.
+		/// </param>
+		/// <param name="templates" type="string">
+		/// An object containing template definitions. Template objects should contain body, headers and tags properties.
+		/// </param>
+		/// <param name="secondaryTiles" type="string">
+		/// An object containing template definitions to be used with secondary tiles when using WNS.
+		/// </param>
 		Push.prototype.register = Platform.async(
-		    function (platform, channelUri, templates, secondaryTiles, callback) {
+		    function (platform, pushChannel, templates, secondaryTiles, callback) {
+		        Validate.isString(platform, 'platform');
+		        Validate.notNullOrEmpty(platform, 'platform');
+		
 		        // in order to support the older callback style completion, we need to check optional parameters
 		        if (_.isNull(callback) && (typeof templates === 'function')) {
 		            callback = templates;
@@ -2374,34 +2421,58 @@
 		
 		        var requestContent = {
 		            installationId: this.installationId,
-		            pushChannel: channelUri,
+		            pushChannel: pushChannel,
 		            platform: platform,
-		            templates: templates,
-		            secondaryTiles: secondaryTiles
+		            templates: stringifyTemplateBodies(templates),
+		            secondaryTiles: stringifyTemplateBodies(secondaryTiles)
 		        };
 		
-		        executeRequest(this.client, 'PUT', channelUri, requestContent, this.installationId, callback);
+		        executeRequest(this.client, 'PUT', pushChannel, requestContent, this.installationId, callback);
 		    }
 		);
 		
+		/// <summary>
+		/// Unregister a push channel with the Mobile Apps backend to stop receiving notifications.
+		/// </summary>
+		/// <param name="pushChannel" type="string">
+		/// The push channel identifier or URI.
+		/// </param>
 		Push.prototype.unregister = Platform.async(
-		    function (channelUri, callback) {
-		        executeRequest(this.client, 'DELETE', channelUri, null, this.installationId, callback);
+		    function (pushChannel, callback) {
+		        executeRequest(this.client, 'DELETE', pushChannel, null, this.installationId, callback);
 		    }
 		);
 		
-		function executeRequest(client, method, channelUri, content, installationId, callback) {
-		    Validate.isString(channelUri, 'channelUri');
-		    Validate.notNullOrEmpty(channelUri, 'channelUri');
+		function executeRequest(client, method, pushChannel, content, installationId, callback) {
+		    Validate.isString(pushChannel, 'pushChannel');
+		    Validate.notNullOrEmpty(pushChannel, 'pushChannel');
+		
+		    var headers = { 'If-Modified-Since': 'Mon, 27 Mar 1972 00:00:00 GMT' };
+		    headers[WindowsAzure.MobileServiceClient._zumoApiVersionHeaderName] = WindowsAzure.MobileServiceClient._zumoApiVersion;
 		
 		    client._request(
 		        method,
 		        'push/installations/' + encodeURIComponent(installationId),
 		        content,
 		        null,
-		        { 'If-Modified-Since': 'Mon, 27 Mar 1972 00:00:00 GMT' },
+		        headers,
 		        callback
 		    );
+		}
+		
+		function stringifyTemplateBodies(templates) {
+		    var result = {};
+		    for (var templateName in templates) {
+		        if (templates.hasOwnProperty(templateName)) {
+		            // clone the template so we are not modifying the original
+		            var template = _.extend({}, templates[templateName]);
+		            if (typeof template.body !== 'string') {
+		                template.body = JSON.stringify(template.body);
+		            }
+		            result[templateName] = template;
+		        }
+		    }
+		    return result;
 		}
 	};
 
@@ -2410,9 +2481,6 @@
 		// Copyright (c) Microsoft Corporation. All rights reserved.
 		// ----------------------------------------------------------------------------
 		
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\base.js" />
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
-		/// <reference path="..\Generated\Zumo.DevIntellisense.js" />
 		
 		var _ = require('Extensions');
 		var Platform = require('Platform');
@@ -10057,9 +10125,6 @@
 		// Copyright (c) Microsoft Corporation. All rights reserved.
 		// ----------------------------------------------------------------------------
 		
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\base.js" />
-		/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
-		/// <reference path="..\Generated\MobileServices.DevIntellisense.js" />
 		
 		// Declare JSHint globals
 		/*global WinJS:false, Windows:false, $__fileVersion__:false, $__version__:false */
