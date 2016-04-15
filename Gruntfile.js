@@ -137,10 +137,14 @@ module.exports = function(grunt) {
                 cwd: 'node_modules/qunitjs/qunit'
             },
             cordovaTest: {
-                src: '*',
-                dest: 'sdk/test/app/cordova/www/external/qunit/',
-                expand: true,
-                cwd: 'node_modules/qunitjs/qunit'
+                files: [
+                    // Copy qunit css and js files to the Cordova unit test app directory
+                    {src: ['*'], dest: 'sdk/test/app/cordova/www/external/qunit/', cwd: 'node_modules/qunitjs/qunit', expand: true},
+
+                    // Copy the test bundle to the Cordova unit test app's android directory.
+                    // This is needed to host the Cordova bits so that the Cordova app can refresh on the fly.
+                    {src: ['sdk/test/app/cordova/www/scripts/generated/tests.js'], dest: 'sdk/test/app/cordova/platforms/android/assets/www/'},
+                ]
             }
         },
         watch: {
