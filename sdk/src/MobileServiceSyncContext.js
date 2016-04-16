@@ -6,9 +6,9 @@
 /// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
 /// <reference path="Generated\MobileServices.DevIntellisense.js" />
 
-var Validate = require('./Utilities/Validate');
-var Platform = require('Platforms/Platform');
-var _ = require('./Utilities/Extensions');
+var Validate = require('./Utilities/Validate'),
+    Platform = require('Platforms/Platform'),
+    _ = require('./Utilities/Extensions');
 
 function MobileServiceSyncContext(client) {
     /// <summary>
@@ -140,6 +140,24 @@ function MobileServiceSyncContext(client) {
         Validate.notNull(instance.id);
 
         return _store.del(tableName, instance);
+    };
+
+    this.read = function (query) {
+        /// <summary>
+        /// Read a local table
+        /// </summary>
+        /// <param name="query" type="Object">
+        /// A QueryJS object representing the query to be performed while reading the table.
+        /// </param>
+        /// <returns type="Promise">
+        /// A promise that is resolved with the read results when the operation is completed successfully.
+        /// If the operation fails, the promise is rejected
+        /// </returns>
+
+        Validate.notNull(query, 'query');
+        Validate.isObject(query, 'query');
+
+        return _store.read(query);
     };
 }
 
