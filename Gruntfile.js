@@ -112,6 +112,17 @@ module.exports = function(grunt) {
                     '<%= files.cordova %>',
                     './sdk/test/web/js/TestFrameworkAdapter.js',
                     './sdk/test/web/js/TestClientHelper.js',
+                    '<%= files.testcore %>'
+                ],
+                dest: './sdk/test/cordova/www/js/Generated/Tests.js',
+                options: {
+                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
+                }
+            },
+                src: [
+                    '<%= files.cordova %>',
+                    './sdk/test/web/js/TestFrameworkAdapter.js',
+                    './sdk/test/web/js/TestClientHelper.js',
                     './sdk/test/tests/target/cordova/**/*.js',
                     '<%= files.testcore %>'
                 ],
@@ -148,6 +159,12 @@ module.exports = function(grunt) {
                     // Copy the test bundle to the Cordova unit test app's android directory.
                     // This is needed to host the Cordova bits so that the Cordova app can refresh on the fly.
                     {src: ['sdk/test/app/cordova/www/scripts/generated/tests.js'], dest: 'sdk/test/app/cordova/platforms/android/assets/www/'},
+                ]
+            cordovaTest: {
+                files: [
+                  {src: ['sdk/src/Generated/MobileServices.Web.Internals.js'], dest: 'sdk/test/cordova/www/js/Generated/MobileServices.Web.Internals.js'},
+                  {src: ['sdk/test/web/css/styles.css'], dest: 'sdk/test/cordova/www/css/Generated/styles.css'},
+                  {src: ['**'], dest: 'sdk/test/cordova/www/js/External/qunit/', cwd: 'node_modules/qunitjs/qunit', expand: true}
                 ]
             }
         },
