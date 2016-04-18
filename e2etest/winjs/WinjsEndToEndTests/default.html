@@ -1,0 +1,114 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Azure Mobile Apps WinJS End To End Tests</title>
+
+    <!-- WinJS references -->
+    <link href="//Microsoft.WinJS.2.0/css/ui-dark.css" rel="stylesheet" />
+    <script src="//Microsoft.WinJS.2.0/js/base.js"></script>
+    <script src="//Microsoft.WinJS.2.0/js/ui.js"></script>
+
+    <!-- ZumoE2ETestAppJs references -->
+    <link href="generated/shared/css/default.css" rel="stylesheet" />
+    <script src=""></script>
+    <script src="generated/dist/MobileServices.js"></script>
+    <script src="generated/shared/thirdparty/jquery-2.1.1.js"></script>
+    <script src="generated/shared/thirdparty/wl.js"></script>
+
+    <!-- Zumo tests; the order of the references is important -->
+
+    <script src="generated/shared/testframework/testFramework.js"></script>
+    <script src="generated/shared/tests/roundTripTests.js"></script>
+    <script src="generated/shared/tests/queryTestData.js"></script>
+    <script src="generated/shared/tests/mobileServiceTable.Functional.js"></script>
+    <script src="generated/shared/tests/queryTests.js"></script>
+    <script src="generated/shared/tests/updateDeleteTests.js"></script>
+    <script src="generated/shared/tests/loginTests.js"></script>
+    <script src="generated/shared/tests/miscTests.js"></script>
+    <script src="generated/shared/tests/platform/winjs/pushTests.js"></script>
+    <script src="generated/shared/tests/apiTests.js"></script>
+    <script src="generated/shared/tests/allTests.js"></script>
+</head>
+<body>
+    <table id='mainTable'>
+        <tr style="height: 100px;">
+            <th colspan='2' class='borderedCell mainTitle'>Zumo E2E Test App - JS</th>
+        </tr>
+        <tr style="height: 150px;">
+            <td class='borderedCell' colspan='2'>
+                <table style='width: 100%'>
+                    <tr>
+                        <th id='appUrlLabelCell'>App URL:</th>
+                        <th id='appUrlTextCell'>
+                            <input id='txtAppUrl' />
+                        </th>
+                        <th id='saveAppInfoCell'>
+                            <button id='btnSaveAppInfo'>Save App Info</button>
+                        </th>
+                        <td>
+                            <button id="btnRunAllTests">Run All Tests</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th/>
+                        <th/>
+                        <th id='loadAppInfoCell'>
+                            <button id='btnLoadAppInfo'>Load App Info</button>
+                        </th>
+                        <td>
+                            <button id="btnRunAllUnattendedTests">Run All Tests (unattended)</button>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td id='testGroupsTableCell' class='borderedCell' style="vertical-align: text-top;">
+                <table id='tblTestsGroup'>
+                    <thead>
+                        <tr>
+                            <th class='testsTitle'>Test Groups</th>
+                        </tr>
+                    </thead>
+                    <tbody id='tblTestsGroupBody'></tbody>
+                </table>
+            </td>
+            <td id='testsTableCell' class='borderedCell' style="vertical-align: text-top;">
+                <table id='tblTests' style="width: 100%; height: 100%;">
+                    <thead id="tblTestsHead">
+                        <tr>
+                            <th id='testsTitle' class='testsTitle'>Tests for group: XXX</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <button id='btnRunTests' style="margin: 10px;">Run Tests</button>
+                                <button id='btnResetTests' style="margin: 10px;">Reset</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>                                
+                            </td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="height: 100%;">
+                                <div id='table-scroll' style="overflow: auto;">
+                                    <table>
+                                        <tbody id="tblTestsBody" style="overflow: auto;"></tbody>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <script src="generated/shared/platform/winjs/platformSpecificFunctions.js"></script>
+    <script type="text/javascript" src="generated/shared/testframework/testFrameworkConnections.js"></script>
+    <script src="generated/shared/testframework/storageFramework.js"></script>    
+</body>
+</html>

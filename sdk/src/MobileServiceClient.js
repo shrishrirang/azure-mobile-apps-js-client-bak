@@ -2,18 +2,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\base.js" />
-/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
-/// <reference path="Generated\MobileServices.DevIntellisense.js" />
-
 var _ = require('./Utilities/Extensions'),
     constants = require('./constants'),
     Validate = require('./Utilities/Validate'),
     Platform = require('Platforms/Platform'),
     MobileServiceSyncContext = require('./MobileServiceSyncContext').MobileServiceSyncContext,
     MobileServiceSyncTable = require('./MobileServiceSyncTable').MobileServiceSyncTable,
-    MobileServiceTable = require('./MobileServiceTable').MobileServiceTable,
-    MobileServiceLogin = require('./MobileServiceLogin').MobileServiceLogin;
+    MobileServiceTable = require('./MobileServiceTable'),
+    MobileServiceLogin = require('./MobileServiceLogin');
 
 var Push;
 try {
@@ -119,12 +115,6 @@ function MobileServiceClient(applicationUrl) {
     }
     
 }
-
-// Define the module exports
-exports.MobileServiceClient = MobileServiceClient;
-
-// Define the JS bundle exports 
-exports.exports = MobileServiceClient;
 
 MobileServiceClient.prototype.withFilter = function (serviceFilter) {
     /// <summary>
@@ -542,3 +532,6 @@ MobileServiceClient._applicationInstallationId = getApplicationInstallationId();
 /// Get or set the static _userAgent by calling into the Platform.
 /// </summary>
 MobileServiceClient._userAgent = Platform.getUserAgent();
+
+// Define the module exports
+module.exports = MobileServiceClient;
