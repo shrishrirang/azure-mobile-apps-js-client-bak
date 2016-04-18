@@ -107,9 +107,6 @@ exports.deserialize = function (value, columnDefinitions) {
 // Serializes a property of an object for writing to SQLite
 // Note: The value can be serialized without specifying the column type, but the function needs column type
 // to enforce type safety. This way we don't need to wait for the value to be deserialized to know that the value is of an incorrect type.
-// Serializes a property of an object for writing to SQLite
-// Note: The value can be serialized without specifying the column type, but the function needs column type
-// to enforce type safety. This way we don't need to wait for the value to be deserialized to know that the value is of an incorrect type.
 function serializeMember(value, columnType) {
 
     if (_.isNull(value)) {

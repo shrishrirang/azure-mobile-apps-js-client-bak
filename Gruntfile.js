@@ -115,7 +115,7 @@ module.exports = function(grunt) {
                 ],
                 dest: './sdk/test/app/cordova/www/scripts/generated/tests.js',
                 options: {
-                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
+                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/cordova', expose: 'Platforms' } ] )
                 }
             },
         },

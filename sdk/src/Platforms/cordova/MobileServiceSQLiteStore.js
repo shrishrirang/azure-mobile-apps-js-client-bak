@@ -9,7 +9,7 @@ var Platform = require('Platforms/Platform'),
     SQLiteTypes = require('./SQLiteTypes'),
     SQLiteSerializer = require('./SQLiteSerializer'),
     Query = require('query.js').Query,
-    formatSql = require('azure-odata-sql');
+    formatSql = require('azure-odata-sql').format;
 
 var idPropertyName = "id";
 
