@@ -109,26 +109,13 @@ module.exports = function(grunt) {
             },
             cordovaTest: {
                 src: [
+                    '<%= files.testcore %>',
                     '<%= files.cordova %>',
-                    './sdk/test/web/js/TestFrameworkAdapter.js',
-                    './sdk/test/web/js/TestClientHelper.js',
-                    '<%= files.testcore %>'
-                ],
-                dest: './sdk/test/cordova/www/js/Generated/Tests.js',
-                options: {
-                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
-                }
-            },
-                src: [
-                    '<%= files.cordova %>',
-                    './sdk/test/web/js/TestFrameworkAdapter.js',
-                    './sdk/test/web/js/TestClientHelper.js',
-                    './sdk/test/tests/target/cordova/**/*.js',
-                    '<%= files.testcore %>'
+                    './sdk/test/tests/target/cordova/**/*.js'
                 ],
                 dest: './sdk/test/app/cordova/www/scripts/generated/tests.js',
                 options: {
-                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/cordova', expose: 'Platforms' } ] )
+                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
                 }
             },
         },
