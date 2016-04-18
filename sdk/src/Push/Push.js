@@ -73,7 +73,7 @@ function executeRequest(client, method, pushChannel, content, installationId, ca
     Validate.notNullOrEmpty(pushChannel, 'pushChannel');
 
     var headers = { 'If-Modified-Since': 'Mon, 27 Mar 1972 00:00:00 GMT' };
-    headers[constants.features.apiVersionHeaderName] = constants.features.apiVersion;
+    headers[constants.apiVersionHeaderName] = constants.apiVersion;
 
     client._request(
         method,

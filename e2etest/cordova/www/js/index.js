@@ -34,16 +34,18 @@ var app = {
     // function, we must explicitly call 'app.receivedEvent(...);'
     onDeviceReady: function() {
         app.receivedEvent('deviceready');
+
+        // If the app configuration has a Mobile App URL specified, point the client to it.
+        testPlatform
+            .getAppConfig()
+            .then(function (config) {
+                if (config.appUrl) {
+                    document.getElementById('txtAppUrl').value = config.appUrl;
+                }
+            });
     },
     // Update DOM on a Received Event
     receivedEvent: function(id) {
-        var parentElement = document.getElementById(id);
-        var listeningElement = parentElement.querySelector('.listening');
-        var receivedElement = parentElement.querySelector('.received');
-
-        listeningElement.setAttribute('style', 'display:none;');
-        receivedElement.setAttribute('style', 'display:block;');
-
         console.log('Received Event: ' + id);
     },
     pushNotificationQueue: [],

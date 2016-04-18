@@ -2,10 +2,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\base.js" />
-/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
-/// <reference path="Generated\MobileServices.DevIntellisense.js" />
-
 var _ = require('./Utilities/Extensions');
 var Validate = require('./Utilities/Validate');
 var Platform = require('Platforms/Platform');
@@ -63,12 +59,6 @@ function MobileServiceLogin(client, ignoreFilters) {
         return this._loginState.inProcess;
     };
 }
-
-// Define the module exports
-exports.MobileServiceLogin = MobileServiceLogin;
-
-// Define the JS bundle exports
-exports.exports = MobileServiceLogin; 
 
 MobileServiceLogin.prototype.loginWithOptions = function (provider, options, callback) {
     /// <summary>
@@ -465,3 +455,6 @@ function loginWithLoginControl(login, provider, useSingleSignOn, parameters, cal
         login._loginState.cancelCallback = platformResult.cancelCallback;
     }
 }
+
+// Define the module exports
+module.exports = MobileServiceLogin;

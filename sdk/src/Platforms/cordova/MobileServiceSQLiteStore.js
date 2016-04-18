@@ -235,7 +235,5 @@ MobileServiceSQLiteStore.ColumnType = {
     BLOB: "BLOB"
 };
 
-// Export
-Platform.addToMobileServicesClientNamespace({ MobileServiceSQLiteStore: MobileServiceSQLiteStore });
-
-exports.MobileServiceSQLiteStore = MobileServiceSQLiteStore;
+// Define the module exports
+module.exports = MobileServiceSQLiteStore;

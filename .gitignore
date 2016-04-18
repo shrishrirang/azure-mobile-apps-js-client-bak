@@ -25,6 +25,7 @@ bld/
 dist/
 gen/
 [Gg]enerated/
+[Ee]xternal/
 
 # VS files
 *.user

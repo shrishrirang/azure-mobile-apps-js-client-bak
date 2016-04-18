@@ -2,10 +2,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\base.js" />
-/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
-/// <reference path="Generated\MobileServices.DevIntellisense.js" />
-
 var _ = require('./Utilities/Extensions');
 var Validate = require('./Utilities/Validate');
 var Platform = require('Platforms/Platform');
@@ -21,7 +17,7 @@ var tableRouteSeperatorName = "tables";
 var idNames = ["ID", "Id", "id", "iD"];
 var nextLinkRegex = /^(.*?);\s*rel\s*=\s*(\w+)\s*$/;
 
-var MobileServiceSystemProperties = {
+var SystemProperties = {
     None: 0,
     CreatedAt: 1,
     UpdatedAt: 2,
@@ -66,13 +62,7 @@ function MobileServiceTable(tableName, client) {
     };
 }
 
-// Define the module exports
-exports.MobileServiceTable = MobileServiceTable;
-
-// Define the JS bundle exports
-exports.exports = {
-    SystemProperties: MobileServiceSystemProperties
-};
+MobileServiceTable.SystemProperties = SystemProperties;
 
 // We have an internal _read method using callbacks since it's used by both
 // table.read(query) and query.read().
@@ -724,3 +714,6 @@ function addQueryParametersFeaturesIfApplicable(features, userQueryParameters) {
 
     return features;
 }
+
+// Define the module exports
+module.exports = MobileServiceTable;
