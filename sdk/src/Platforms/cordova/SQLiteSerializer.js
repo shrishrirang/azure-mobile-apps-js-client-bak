@@ -2,10 +2,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\base.js" />
-/// <reference path="C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.WinJS.1.0\1.0\DesignTime\CommonConfiguration\Neutral\Microsoft.WinJS.1.0\js\ui.js" />
-/// <reference path="..\..\Generated\MobileServices.DevIntellisense.js" />
-
 var Platform = require('Platforms/Platform'),
     Validate = require('../../Utilities/Validate'),
     _ = require('../../Utilities/Extensions'),
@@ -145,7 +141,7 @@ function serializeMember(value, columnType) {
                 break;
             case ColumnType.Date:
                 if (_.isDate(value)) {
-                    serializedValue = value;
+                    serializedValue = value; // should this be numeric? text? or date as is.. 
                 }
                 break;
             case ColumnType.Real:
@@ -197,7 +193,7 @@ function deserializeMember(value, targetType) {
                 deserializedValue = convertToBoolean(value);
                 break;
             case ColumnType.Date:
-                deserializedValue = convertToDate(value);
+                deserializedValue = convertToDate(value); // what happens if we serialize, then change machine timezone and then deserialize?
                 break;
             case ColumnType.Real:
             case ColumnType.Float:
