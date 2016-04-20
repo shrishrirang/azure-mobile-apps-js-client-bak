@@ -140,9 +140,7 @@ function serializeMember(value, columnType) {
                 }
                 break;
             case ColumnType.Date:
-                if (_.isDate(value)) {
-                    serializedValue = value; // should this be numeric? text? or date as is.. 
-                }
+                serializedValue = value.getTime();
                 break;
             case ColumnType.Real:
             case ColumnType.Float:
@@ -270,13 +268,11 @@ function convertToDate(value) {
         return value;
     }
 
-    if (_.isString(value)) {
-        var milliseconds = Date.parse(value);
-
-        if (_.isInteger(milliseconds)) {
-            return new Date(milliseconds);
-        }
-    }
+    var a = _.isInteger(value);
+    if (_.isInteger(value)) {
+        var b = _.isInteger(value);
+        return new Date(value);
+    } 
 
     throw new Error(_.format(Platform.getResourceString('SQLiteSerializer_UnsupportedTypeConversion'), value, typeof value, 'Date'));
 }
