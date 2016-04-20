@@ -1,4 +1,4 @@
-# Microsoft Azure Mobile Apps: Javascript Client SDK
+ # Microsoft Azure Mobile Apps: Javascript Client SDK
 
 With Microsoft Azure Mobile Apps you can add a scalable backend to your connected client applications in minutes. To learn more, visit our [Developer Center](http://azure.microsoft.com/en-us/develop/mobile).
 
