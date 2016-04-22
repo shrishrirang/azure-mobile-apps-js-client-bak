@@ -2,6 +2,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
+/***
+ * @file Defines converters for various data types.
+ */
+
 var Validate = require('../../Utilities/Validate'),
     _ = require('../../Utilities/Extensions'),
     verror = require('verror');
@@ -133,4 +137,3 @@ exports.convertToArray = function (value) {
 
     throw new verror.VError(error, _.format(Platform.getResourceString('SQLiteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, 'Array'));    
 }
-

@@ -48,9 +48,9 @@ function getColumnAffinity (columnType) {
 };
 
 /***
- * Checks if the value can be stored in the specified column
+ * Checks if the value can be stored in a SQLite column of the specified type
  */
-function isValueCompatibleWithColumnType(value, columnType) {
+function isJSValueCompatibleWithColumnType(value, columnType) {
     if (_.isNull(value)) {
         return true;
     }
@@ -62,7 +62,7 @@ function isValueCompatibleWithColumnType(value, columnType) {
             return _.isArray(value);
         case ColumnType.String:
         case ColumnType.Text:
-            return true; //_.isString(value) || _.isObject(value) || _.isString(value) || _.isNumber(value) || _.isBool(value); // FIXME: only string should be allowed
+            return true; // For now, allow any value to be stored in a string column
         case ColumnType.Boolean:
         case ColumnType.Bool:
             return _.isBool(value) || _.isInteger(value);
@@ -71,6 +71,39 @@ function isValueCompatibleWithColumnType(value, columnType) {
             return _.isInteger(value) || _.isBool(value);
         case ColumnType.Date:
             return _.isDate(value);
+        case ColumnType.Real:
+        case ColumnType.Float:
+            return _.isNumber(value);
+        default:
+            return false;
+    }
+}
+
+/***
+ * Checks if the value is its SQLite representation for the specified column type.
+ * A value can be incompatible if the value was stored in the table using a column type different from columnType.
+ */
+function isSqliteValueCompatibleWithColumnType(value, columnType) {
+    if (_.isNull(value)) {
+        return true;
+    }
+    
+    switch (columnType) {
+        case ColumnType.Object:
+            return _.isString(value);
+        case ColumnType.Array:
+            return _.isString(value);
+        case ColumnType.String:
+        case ColumnType.Text:
+            return _.isString(value);
+        case ColumnType.Boolean:
+        case ColumnType.Bool:
+            return _.isInteger(value);
+        case ColumnType.Integer:
+        case ColumnType.Int:
+            return _.isInteger(value);
+        case ColumnType.Date:
+            return _.isInteger(value);
         case ColumnType.Real:
         case ColumnType.Float:
             return _.isNumber(value);
@@ -158,11 +191,11 @@ function serializeMember(value, columnType) {
     }
 
     // Now check if the specified value can be stored in a column of type columnType
-    if (!isValueCompatibleWithColumnType(value, columnType)) {
+    if (!isJSValueCompatibleWithColumnType(value, columnType)) {
         throw new Error(_.format(Platform.getResourceString('SQLiteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, columnType));
     }
 
-    // If we are here, it means we are good for proceeding with serialization
+    // If we are here, it means we are good to proceed with serialization
     
     var affinity = getColumnAffinity(columnType),
         serializedValue;
@@ -185,53 +218,54 @@ function serializeMember(value, columnType) {
 }
 
 // Deserializes a property of an object read from SQLite
-function deserializeMember(value, targetType) {
-    var deserializedValue, error;
+function deserializeMember(value, columnType) {
 
-    try {
-        switch (targetType) {
-            case ColumnType.Object:
-                deserializedValue = typeConverter.convertToObject(value);
-                break;
-            case ColumnType.Array:
-                deserializedValue = typeConverter.convertToArray(value);
-                break;
-            case ColumnType.String:
-            case ColumnType.Text:
-                deserializedValue = typeConverter.convertToText(value);
-                break;
-            case ColumnType.Integer:
-            case ColumnType.Int:
-                if (!_.isDate(value)) { // FIXME: change this to be like serializer logic
-                    deserializedValue = typeConverter.convertToInteger(value);
-                } else {
-                    throw new Error(_.format(Platform.getResourceString('SQLiteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, targetType));
-                }
-                break;
-            case ColumnType.Boolean:
-            case ColumnType.Bool:
-                deserializedValue = typeConverter.convertToBoolean(value);
-                break;
-            case ColumnType.Date:
-                deserializedValue = typeConverter.convertToDate(value); // what happens if we serialize, then change machine timezone and then deserialize?
-                break;
-            case ColumnType.Real:
-            case ColumnType.Float:
-                deserializedValue = typeConverter.convertToReal(value);
-                break;
-            case undefined: // We want to be able to deserialize objects with missing columns in table definition
-                deserializedValue = value;
-                break;
-            default:
-                error = new Error(_.format(Platform.getResourceString("SQLiteSerializer_UnsupportedColumnType"), targetType));
-                break;
-        }
-    } catch (ex) {
-        error = new Error(_.format(Platform.getResourceString('SQLiteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, targetType));
+    // Start by checking if the specified column type is valid OR undefined.
+    // In case of an undefined column type, the deserialized value will be same as the value in the SQLite table.
+    if (columnType !== undefined && !isColumnTypeValid(columnType)) {
+        throw new Error(_.format(Platform.getResourceString("SQLiteSerializer_UnsupportedColumnType"), columnType));
     }
 
-    if (!_.isNull(error)) {
-        throw error;
+    // Now check if the specified value can be stored in a column of type columnType
+    if (columnType !== undefined && !isSqliteValueCompatibleWithColumnType(value, columnType)) {
+        throw new Error(_.format(Platform.getResourceString('SQLiteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, columnType));
+    }
+
+    // If we are here, it means we are good to proceed with deserialization
+    
+    var deserializedValue, error;
+
+    switch (columnType) {
+        case ColumnType.Object:
+            deserializedValue = typeConverter.convertToObject(value);
+            break;
+        case ColumnType.Array:
+            deserializedValue = typeConverter.convertToArray(value);
+            break;
+        case ColumnType.String:
+        case ColumnType.Text:
+            deserializedValue = typeConverter.convertToText(value);
+            break;
+        case ColumnType.Integer:
+        case ColumnType.Int:
+            deserializedValue = typeConverter.convertToInteger(value);
+            break;
+        case ColumnType.Boolean:
+        case ColumnType.Bool:
+            deserializedValue = typeConverter.convertToBoolean(value);
+            break;
+        case ColumnType.Date:
+            deserializedValue = typeConverter.convertToDate(value);
+            break;
+        case ColumnType.Real:
+        case ColumnType.Float:
+            deserializedValue = typeConverter.convertToReal(value);
+            break;
+        case undefined: // We want to be able to deserialize objects with missing columns in table definition
+            deserializedValue = value;
+            break;
+        default:
+            throw new Error(_.format(Platform.getResourceString("SQLiteSerializer_UnsupportedColumnType"), columnType));
     }
 
     return deserializedValue;
