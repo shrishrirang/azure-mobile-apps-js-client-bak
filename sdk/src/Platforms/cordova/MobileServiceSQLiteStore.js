@@ -484,7 +484,7 @@ function createTable(transaction, tableDefinition) {
     for (var columnName in columnDefinitions) {
         var columnType = columnDefinitions[columnName];
 
-        var columnDefinitionClause = _.format("[{0}] {1}", columnName, SQLiteSerializer.getColumnAffinity(columnType));
+        var columnDefinitionClause = _.format("[{0}] {1}", columnName, SQLiteSerializer.getSqliteType(columnType));
 
         // TODO(shrirs): Handle cases where id property may be missing
         if (columnName === idPropertyName) {

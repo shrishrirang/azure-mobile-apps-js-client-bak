@@ -14,41 +14,40 @@ var Platform = require('Platforms/Platform'),
     typeConverter = require('./typeConverter');
 
 /***
- * Gets the appropriate column affinity for storing values of the specified type in a SQLite table column
- * @param columnType - The type of values that will be stored in the SQLite table columnAffinity
- * @return The appropriate column affinity
+ * Gets the SQLite type that matches the specified column type.
+ * @param columnType - The type of values that will be stored in the SQLite table
  * @throw Will throw an error if columnType is not supported 
  */
-function getColumnAffinity (columnType) {
-    var columnAffinity;
+function getSqliteType (columnType) {
+    var sqliteType;
 
     switch (columnType) {
         case ColumnType.Object:
         case ColumnType.Array:
         case ColumnType.String:
         case ColumnType.Text:
-            columnAffinity = "TEXT";
+            sqliteType = "TEXT";
             break;
         case ColumnType.Integer:
         case ColumnType.Int:
         case ColumnType.Boolean:
         case ColumnType.Bool:
         case ColumnType.Date:
-            columnAffinity = "INTEGER";
+            sqliteType = "INTEGER";
             break;
         case ColumnType.Real:
         case ColumnType.Float:
-            columnAffinity = "REAL";
+            sqliteType = "REAL";
             break;
         default:
             throw new Error(_.format(Platform.getResourceString("SQLiteSerializer_UnsupportedColumnType"), columnType));
     }
 
-    return columnAffinity;
+    return sqliteType;
 };
 
 /***
- * Checks if the value can be stored in a SQLite column of the specified type
+ * Checks if the value can be stored in a table column of the specified type.
  */
 function isJSValueCompatibleWithColumnType(value, columnType) {
     if (_.isNull(value)) {
@@ -62,13 +61,12 @@ function isJSValueCompatibleWithColumnType(value, columnType) {
             return _.isArray(value);
         case ColumnType.String:
         case ColumnType.Text:
-            return true; // For now, allow any value to be stored in a string column
+            return true; // Allow any value to be stored in a string column
         case ColumnType.Boolean:
         case ColumnType.Bool:
-            return _.isBool(value) || _.isInteger(value);
         case ColumnType.Integer:
         case ColumnType.Int:
-            return _.isInteger(value) || _.isBool(value);
+            return _.isBool(value) || _.isInteger(value);
         case ColumnType.Date:
             return _.isDate(value);
         case ColumnType.Real:
@@ -80,8 +78,8 @@ function isJSValueCompatibleWithColumnType(value, columnType) {
 }
 
 /***
- * Checks if the value is its SQLite representation for the specified column type.
- * A value can be incompatible if the value was stored in the table using a column type different from columnType.
+ * Checks if the SQLite value matches the specified column type.
+ * A value can be incompatible if it was stored in the table using a column type different from columnType.
  */
 function isSqliteValueCompatibleWithColumnType(value, columnType) {
     if (_.isNull(value)) {
@@ -113,7 +111,7 @@ function isSqliteValueCompatibleWithColumnType(value, columnType) {
 }
 
 /***
- * Checks if type is a supported type of column
+ * Checks if type is a supported column type
  */
 function isColumnTypeValid(type) {
     for (var key in ColumnType) {
@@ -197,10 +195,10 @@ function serializeMember(value, columnType) {
 
     // If we are here, it means we are good to proceed with serialization
     
-    var affinity = getColumnAffinity(columnType),
+    var sqliteType = getSqliteType(columnType),
         serializedValue;
     
-    switch (affinity) {
+    switch (sqliteType) {
         case "TEXT":
             serializedValue = typeConverter.convertToText(value);
             break;
@@ -273,4 +271,4 @@ function deserializeMember(value, columnType) {
 
 exports.serialize = serialize;
 exports.deserialize = deserialize;
-exports.getColumnAffinity = getColumnAffinity;
+exports.getSqliteType = getSqliteType;

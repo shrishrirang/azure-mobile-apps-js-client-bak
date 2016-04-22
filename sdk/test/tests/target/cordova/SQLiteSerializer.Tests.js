@@ -30,26 +30,26 @@ $testGroup('SQLiteSerializer tests').tests(
 
     $test('Verify column affinity computation')
     .check(function () {
-        $assert.areEqual(SQLiteSerializer.getColumnAffinity(ColumnType.Object), 'TEXT');
-        $assert.areEqual(SQLiteSerializer.getColumnAffinity(ColumnType.Array), 'TEXT');
-        $assert.areEqual(SQLiteSerializer.getColumnAffinity(ColumnType.String), 'TEXT');
-        $assert.areEqual(SQLiteSerializer.getColumnAffinity(ColumnType.Text), 'TEXT');
+        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Object), 'TEXT');
+        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Array), 'TEXT');
+        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.String), 'TEXT');
+        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Text), 'TEXT');
 
-        $assert.areEqual(SQLiteSerializer.getColumnAffinity(ColumnType.Integer), 'INTEGER');
-        $assert.areEqual(SQLiteSerializer.getColumnAffinity(ColumnType.Int), 'INTEGER');
-        $assert.areEqual(SQLiteSerializer.getColumnAffinity(ColumnType.Boolean), 'INTEGER');
-        $assert.areEqual(SQLiteSerializer.getColumnAffinity(ColumnType.Bool), 'INTEGER');
+        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Integer), 'INTEGER');
+        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Int), 'INTEGER');
+        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Boolean), 'INTEGER');
+        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Bool), 'INTEGER');
 
-        $assert.areEqual(SQLiteSerializer.getColumnAffinity(ColumnType.Real), 'REAL');
-        $assert.areEqual(SQLiteSerializer.getColumnAffinity(ColumnType.Float), 'REAL');
+        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Real), 'REAL');
+        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Float), 'REAL');
 
-        $assert.areEqual(SQLiteSerializer.getColumnAffinity(ColumnType.Date), 'INTEGER');
+        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Date), 'INTEGER');
 
-        $assertThrows(function () { SQLiteSerializer.getColumnAffinity('notsupported'); });
-        $assertThrows(function () { SQLiteSerializer.getColumnAffinity(5); });
-        $assertThrows(function () { SQLiteSerializer.getColumnAffinity([]); });
-        $assertThrows(function () { SQLiteSerializer.getColumnAffinity(null); });
-        $assertThrows(function () { SQLiteSerializer.getColumnAffinity(undefined); });
+        $assertThrows(function () { SQLiteSerializer.getSqliteType('notsupported'); });
+        $assertThrows(function () { SQLiteSerializer.getSqliteType(5); });
+        $assertThrows(function () { SQLiteSerializer.getSqliteType([]); });
+        $assertThrows(function () { SQLiteSerializer.getSqliteType(null); });
+        $assertThrows(function () { SQLiteSerializer.getSqliteType(undefined); });
     }),
 
     $test('roundtripping: single property')
