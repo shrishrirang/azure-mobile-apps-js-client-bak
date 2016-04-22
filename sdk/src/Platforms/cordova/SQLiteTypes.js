@@ -15,3 +15,5 @@ exports.ColumnType = {
     Bool: "bool",
     Date: "date"
 };
+
+//FIXME: Numeric data type

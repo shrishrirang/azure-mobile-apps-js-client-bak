@@ -43,7 +43,7 @@ $testGroup('SQLiteSerializer tests').tests(
         $assert.areEqual(SQLiteSerializer.getColumnAffinity(ColumnType.Real), 'REAL');
         $assert.areEqual(SQLiteSerializer.getColumnAffinity(ColumnType.Float), 'REAL');
 
-        $assert.areEqual(SQLiteSerializer.getColumnAffinity(ColumnType.Date), 'NUMERIC');
+        $assert.areEqual(SQLiteSerializer.getColumnAffinity(ColumnType.Date), 'INTEGER');
 
         $assertThrows(function () { SQLiteSerializer.getColumnAffinity('notsupported'); });
         $assertThrows(function () { SQLiteSerializer.getColumnAffinity(5); });
