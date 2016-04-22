@@ -3,7 +3,8 @@
 // ----------------------------------------------------------------------------
 
 var Validate = require('../../Utilities/Validate'),
-    _ = require('../../Utilities/Extensions');
+    _ = require('../../Utilities/Extensions'),
+    verror = require('verror');
 
 exports.convertToText = function (value) {
     
@@ -62,9 +63,7 @@ exports.convertToDate = function (value) {
         return value;
     }
 
-    var a = _.isInteger(value);
     if (_.isInteger(value)) {
-        var b = _.isInteger(value);
         return new Date(value);
     } 
 
@@ -92,13 +91,21 @@ exports.convertToObject = function (value) {
         return value;
     }
 
-    Validate.isString(value);
-    var result = JSON.parse(value);
+    var error;
+    try {
+        if (_.isString(value)) {
+            var result = JSON.parse(value);
+            
+            // Make sure the deserialized value is indeed an object, and not some other type
+            if (_.isObject(result)) {
+                return result;
+            } 
+        }
+    } catch(err) {
+        error = err; 
+    }
 
-    // Make sure the deserialized value is indeed an object
-    Validate.isObject(result);
-
-    return result;
+    throw new verror.VError(error, _.format(Platform.getResourceString('SQLiteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, 'Object'));    
 }
 
 exports.convertToArray = function (value) {
@@ -110,17 +117,20 @@ exports.convertToArray = function (value) {
         return value;
     }
 
-    var result;
+    var error;
     try {
-        result = JSON.parse(value);
-
-        // Make sure the deserialized value is indeed an array
-        Validate.isArray(result);
-    } catch (ex) {
-        // throw a meaningful exception
-        throw new Error(_.format(Platform.getResourceString('SQLiteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, 'Array'));
+        if (_.isString(value)) {
+            var result = JSON.parse(value);
+            
+            // Make sure the deserialized value is indeed an object, and not some other type
+            if (_.isArray(result)) {
+                return result;
+            } 
+        }
+    } catch(err) {
+        error = err; 
     }
 
-    return result;
+    throw new verror.VError(error, _.format(Platform.getResourceString('SQLiteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, 'Array'));    
 }
 
