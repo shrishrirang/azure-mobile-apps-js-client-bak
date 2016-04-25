@@ -257,7 +257,9 @@ var MobileServiceSQLiteStore = function (dbName) {
                     instance = result.rows.item(0);
                 }
 
-                instance = SQLiteSerializer.deserialize(instance, columnDefinitions);
+                if (instance) {
+                    instance = SQLiteSerializer.deserialize(instance, columnDefinitions);
+                }
                 callback(null, instance);
             } catch (err) {
                 callback(err);

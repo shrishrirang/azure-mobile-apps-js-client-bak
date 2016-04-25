@@ -2,6 +2,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
+/**
+ * Valid column types to be used for defining table schema.
+ * These types will be mapped to an equivalent SQLite type - TEXT / INT / REAL.
+ */
 exports.ColumnType = {
     Object: "object",
     Array: "array",
@@ -16,4 +20,4 @@ exports.ColumnType = {
     Date: "date"
 };
 
-//FIXME: Numeric data type
+//TODO: Numeric / Number data type

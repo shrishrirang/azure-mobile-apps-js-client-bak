@@ -2,8 +2,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-//FIXME: casing of all new files - camel or pascal?
 //FIXME: comment style should be changed from winjs to jsdoc / javascript
+
+/**
+ * @file Defines functions for serializing a JS object into an object that can be used for storing in a SQLite table and
+ *       for deserializing a row / object read from a SQLite table into a JS object. The target type of a serialization or
+ *       a deserialization operation is determined by the specified column definition.
+ */
 
 var Platform = require('Platforms/Platform'),
     Validate = require('../../Utilities/Validate'),
@@ -14,7 +19,7 @@ var Platform = require('Platforms/Platform'),
     typeConverter = require('./typeConverter');
 
 /**
- * Gets the SQLite type that matches the specified column type.
+ * Gets the SQLite type that matches the specified ColumnType.
  * @param columnType - The type of values that will be stored in the SQLite table
  * @throw Will throw an error if columnType is not supported 
  */
@@ -81,9 +86,11 @@ function isJSValueCompatibleWithColumnType(value, columnType) {
 }
 
 /**
- * Checks if the SQLite value matches the specified column type.
+ * Checks if the SQLite value matches the specified ColumnType.
  * A value read from a SQLite table can be incompatible with the specified column type, if it was stored
  * in the table using a column type different from columnType.
+ * Example: If a non-integer numeric value is stored in a column of type ColumnType.Float and 
+ * then deserialized into a column of type ColumnType.Integer, that will be an error. 
  */
 function isSqliteValueCompatibleWithColumnType(value, columnType) {
     
@@ -129,7 +136,7 @@ function isColumnTypeValid(type) {
 }
 
 /**
- * Serializes an object for writing to a SQLite table
+ * Serializes an object into an object that can be stored in a SQLite table, as defined by columnDefinitions.
  */
 function serialize (value, columnDefinitions) {
 
@@ -144,20 +151,19 @@ function serialize (value, columnDefinitions) {
 
         for (var property in value) {
             var columnType = columnDefinitions[property];
-            Validate.notNull(columnType);
-
+            Validate.notNull(columnType); // Make sure the column type is defined. 
             serializedValue[property] = serializeMember(value[property], columnType);
         }
         
     } catch (error) {
-        throw new verror.VError(error, _.format(Platform.getResourceString("SQLiteSerializer_SerializationFailed"), JSON.stringify(value)));
+        throw new verror.VError(error, _.format(Platform.getResourceString("SQLiteSerializer_SerializationFailed"), JSON.stringify(value), JSON.stringify(columnDefinitions)));
     }
 
     return serializedValue;
 };
 
 /**
- * Deserializes a value read from a SQLite table
+ * Deserializes a row read from a SQLite table into a Javascript object, as defined by columnDefinitions.
  */
 function deserialize (value, columnDefinitions) {
 
@@ -170,22 +176,19 @@ function deserialize (value, columnDefinitions) {
         Validate.notNull(value);
         Validate.isObject(value);
 
-        var columnType;
         for (var property in value) {
-            columnType = columnDefinitions[property];
-
-            deserializedValue[property] = deserializeMember(value[property], columnType);
+            deserializedValue[property] = deserializeMember(value[property], columnDefinitions[property]);
         }
         
     } catch (error) {
-        throw new verror.VError(error, _.format(Platform.getResourceString("SQLiteSerializer_SerializationFailed"), JSON.stringify(value)));
+        throw new verror.VError(error, _.format(Platform.getResourceString("SQLiteSerializer_DeserializationFailed"), JSON.stringify(value), JSON.stringify(columnDefinitions)));
     }
 
     return deserializedValue;
 };
 
 /**
- * Serializes a property of an object for writing to a SQLite table
+ * Serializes a property of an object into a value which can be stored in a SQLite column of type columnType. 
  */
 function serializeMember(value, columnType) {
     
@@ -221,17 +224,22 @@ function serializeMember(value, columnType) {
     return serializedValue;
 }
 
-// Deserializes a property of an object read from SQLite
+// Deserializes a property of an object read from SQLite into a value of type columnType
 function deserializeMember(value, columnType) {
+    
+    // Handle this special case first.
+    // Simply return 'value' if a corresponding columnType is not defined.   
+    if (!columnType) {
+        return value;
+    }
 
-    // Start by checking if the specified column type is valid OR undefined.
-    // In case of an undefined column type, the deserialized value will be same as the value in the SQLite table.
-    if (columnType !== undefined && !isColumnTypeValid(columnType)) {
+    // Start by checking if the specified column type is valid.
+    if (!isColumnTypeValid(columnType)) {
         throw new Error(_.format(Platform.getResourceString("SQLiteSerializer_UnsupportedColumnType"), columnType));
     }
 
-    // Now check if the specified value can be stored in a column of type columnType
-    if (columnType !== undefined && !isSqliteValueCompatibleWithColumnType(value, columnType)) {
+    // Now check if the specified value can be stored in a column of type columnType.
+    if (!isSqliteValueCompatibleWithColumnType(value, columnType)) {
         throw new Error(_.format(Platform.getResourceString('SQLiteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, columnType));
     }
 
@@ -264,9 +272,6 @@ function deserializeMember(value, columnType) {
         case ColumnType.Real:
         case ColumnType.Float:
             deserializedValue = typeConverter.convertToReal(value);
-            break;
-        case undefined: // We want to be able to deserialize objects with missing columns in table definition
-            deserializedValue = value;
             break;
         default:
             throw new Error(_.format(Platform.getResourceString("SQLiteSerializer_UnsupportedColumnType"), columnType));
