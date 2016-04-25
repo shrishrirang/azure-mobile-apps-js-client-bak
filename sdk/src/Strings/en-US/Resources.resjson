@@ -22,6 +22,7 @@
     "Push_TagNoCommas"                                      : "Tags must not contain ','.",
     "AlternateLoginHost_Invalid"                            : "{0} is not valid. Expected Absolute Url with https scheme",
     "SQLiteSerializer_SerializationFailed"                  : "Failed to serialize value {0}",
+    "SQLiteSerializer_DeserializationFailed"                : "Failed to deserialize value {0}",
     "SQLiteSerializer_UnsupportedColumnType"                : "Column type '{0}' is not supported",
     "SQLiteSerializer_UnsupportedTypeConversion"            : "Converting value {0} of type {1} to type {2} is not supported"
 }

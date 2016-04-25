@@ -13,7 +13,7 @@ var Platform = require('Platforms/Platform'),
     verror = require('verror'),
     typeConverter = require('./typeConverter');
 
-/***
+/**
  * Gets the SQLite type that matches the specified column type.
  * @param columnType - The type of values that will be stored in the SQLite table
  * @throw Will throw an error if columnType is not supported 
@@ -46,10 +46,13 @@ function getSqliteType (columnType) {
     return sqliteType;
 };
 
-/***
+/**
  * Checks if the value can be stored in a table column of the specified type.
+ * Example: Float values can be stored in column of type ColumnType.Float but not ColumnType.Integer. 
  */
 function isJSValueCompatibleWithColumnType(value, columnType) {
+    
+    // Allow NULL values to be stored in columns of any type
     if (_.isNull(value)) {
         return true;
     }
@@ -77,11 +80,14 @@ function isJSValueCompatibleWithColumnType(value, columnType) {
     }
 }
 
-/***
+/**
  * Checks if the SQLite value matches the specified column type.
- * A value can be incompatible if it was stored in the table using a column type different from columnType.
+ * A value read from a SQLite table can be incompatible with the specified column type, if it was stored
+ * in the table using a column type different from columnType.
  */
 function isSqliteValueCompatibleWithColumnType(value, columnType) {
+    
+    // Null is a valid value for any column type
     if (_.isNull(value)) {
         return true;
     }
@@ -110,8 +116,8 @@ function isSqliteValueCompatibleWithColumnType(value, columnType) {
     }
 }
 
-/***
- * Checks if type is a supported column type
+/**
+ * Checks if type is a supported ColumnType
  */
 function isColumnTypeValid(type) {
     for (var key in ColumnType) {
@@ -122,21 +128,18 @@ function isColumnTypeValid(type) {
     return false;
 }
 
-/***
- * Serializes an object from writing to a SQLite table
+/**
+ * Serializes an object for writing to a SQLite table
  */
 function serialize (value, columnDefinitions) {
 
     var serializedValue = {};
 
     try {
-    
-        if (_.isNull(value)) {
-            return null;
-        }
-
         Validate.notNull(columnDefinitions, 'columnDefinitions');
         Validate.isObject(columnDefinitions);
+        
+        Validate.notNull(value);
         Validate.isObject(value);
 
         for (var property in value) {
@@ -153,32 +156,35 @@ function serialize (value, columnDefinitions) {
     return serializedValue;
 };
 
-/***
+/**
  * Deserializes a value read from a SQLite table
  */
 function deserialize (value, columnDefinitions) {
 
-    if (_.isNull(value)) {
-        return null;
-    }
-
-    Validate.notNull(columnDefinitions, 'columnDefinitions');
-    Validate.isObject(columnDefinitions);
-    Validate.isObject(value);
-
     var deserializedValue = {};
+    
+    try {
+        Validate.notNull(columnDefinitions, 'columnDefinitions');
+        Validate.isObject(columnDefinitions);
 
-    var columnType;
-    for (var property in value) {
-        columnType = columnDefinitions[property];
+        Validate.notNull(value);
+        Validate.isObject(value);
 
-        deserializedValue[property] = deserializeMember(value[property], columnType);
+        var columnType;
+        for (var property in value) {
+            columnType = columnDefinitions[property];
+
+            deserializedValue[property] = deserializeMember(value[property], columnType);
+        }
+        
+    } catch (error) {
+        throw new verror.VError(error, _.format(Platform.getResourceString("SQLiteSerializer_SerializationFailed"), JSON.stringify(value)));
     }
 
     return deserializedValue;
 };
 
-/***
+/**
  * Serializes a property of an object for writing to a SQLite table
  */
 function serializeMember(value, columnType) {
