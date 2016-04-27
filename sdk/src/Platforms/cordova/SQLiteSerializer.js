@@ -48,7 +48,7 @@ function getSqliteType (columnType) {
     }
 
     return sqliteType;
-};
+}
 
 /**
  * Checks if the value can be stored in a table column of the specified type.
@@ -159,7 +159,7 @@ function serialize (value, columnDefinitions) {
     }
 
     return serializedValue;
-};
+}
 
 /**
  * Deserializes a row read from a SQLite table into a Javascript object, as defined by columnDefinitions.
@@ -184,7 +184,7 @@ function deserialize (value, columnDefinitions) {
     }
 
     return deserializedValue;
-};
+}
 
 /**
  * Serializes a property of an object into a value which can be stored in a SQLite column of type columnType. 

@@ -18,7 +18,7 @@ var MobileServiceSqliteStore = function (dbName) {
     /// Initializes a new instance of the MobileServiceSqliteStore class.
     /// </summary>
     
-    "use strict"
+    "use strict";
     
     if ( !(this instanceof MobileServiceSqliteStore) ) {
         return new MobileServiceSqliteStore(dbName);

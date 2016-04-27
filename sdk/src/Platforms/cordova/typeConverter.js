@@ -20,7 +20,7 @@ exports.convertToText = function (value) {
     }
 
     return JSON.stringify(value);
-}
+};
 
 exports.convertToInteger = function (value) {
 
@@ -40,7 +40,7 @@ exports.convertToInteger = function (value) {
     }
 
     throw new Error(_.format(Platform.getResourceString('sqliteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, 'integer'));
-}
+};
 
 exports.convertToBoolean = function (value) {
 
@@ -56,7 +56,7 @@ exports.convertToBoolean = function (value) {
     }
         
     throw new Error(_.format(Platform.getResourceString('sqliteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, 'Boolean'));
-}
+};
 
 exports.convertToDate = function (value) {
 
@@ -72,7 +72,7 @@ exports.convertToDate = function (value) {
     } 
 
     throw new Error(_.format(Platform.getResourceString('sqliteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, 'Date'));
-}
+};
 
 exports.convertToReal = function (value) {
 
@@ -84,7 +84,7 @@ exports.convertToReal = function (value) {
     }
 
     throw new Error(_.format(Platform.getResourceString('sqliteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, 'Real'));
-}
+};
 
 exports.convertToObject = function (value) {
 
@@ -110,7 +110,7 @@ exports.convertToObject = function (value) {
     }
 
     throw new verror.VError(error, _.format(Platform.getResourceString('sqliteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, 'Object'));    
-}
+};
 
 exports.convertToArray = function (value) {
 
@@ -136,4 +136,4 @@ exports.convertToArray = function (value) {
     }
 
     throw new verror.VError(error, _.format(Platform.getResourceString('sqliteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, 'Array'));    
-}
+};
