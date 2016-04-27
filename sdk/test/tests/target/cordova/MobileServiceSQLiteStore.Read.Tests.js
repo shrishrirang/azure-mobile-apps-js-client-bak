@@ -12,7 +12,7 @@ var Platform = require('Platforms/Platform'),
     testTableName = 'sometable',
     testDbFile = 'somedbfile.db';
 
-$testGroup('SQLiteStore read tests')
+$testGroup('SQLiteStore - read tests')
 
     // Clear the test table before running each test.
     .beforeEachAsync(Platform.async( function(callback) {
@@ -26,7 +26,7 @@ $testGroup('SQLiteStore read tests')
         });
     })).tests(
 
-    $test('SQLite store read: table not defined')
+    $test('table not defined')
     .checkAsync(function () {
         return createStore().read(new Query(testTableName)).then(function (result) {
             $assert.fail('failure expected');
@@ -34,7 +34,7 @@ $testGroup('SQLiteStore read tests')
         });
     }),
 
-    $test('SQLite store read: Read entire table')
+    $test('Read entire table')
     .checkAsync(function () {
         var store = createStore(),
             rows = [{ id: 1, int: 101, str: 'text1' }, { id: 2, int: 102, str: 'text2' }];
@@ -57,7 +57,7 @@ $testGroup('SQLiteStore read tests')
         });
     }),
 
-    $test('SQLite store read: simple select')
+    $test('simple select')
     .checkAsync(function () {
         var store = createStore(),
             rows = [{ id: 1, int: 101, str: 'text1' }];
@@ -85,7 +85,7 @@ $testGroup('SQLiteStore read tests')
         });
     }),
 
-    $test('SQLite store read: select invalid columns')
+    $test('select invalid columns')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 1, int: 101, str: 'text1' };
@@ -108,7 +108,7 @@ $testGroup('SQLiteStore read tests')
         });
     }),
 
-    $test('SQLite store read: select same columns more than once')
+    $test('select same columns more than once')
     .checkAsync(function () {
         var store = createStore(),
             row1 = { id: 1, int: 101, str: 'text1' },
@@ -140,7 +140,7 @@ $testGroup('SQLiteStore read tests')
         });
     }),
 
-    $test('SQLite store read: query a non-existent table')
+    $test('query a non-existent table')
     .checkAsync(function () {
         var store = createStore();
 
@@ -150,7 +150,7 @@ $testGroup('SQLiteStore read tests')
         });
     }),
 
-    $test('SQLite store read: query an invalid table name')
+    $test('query an invalid table name')
     .checkAsync(function () {
         var store = createStore();
 
@@ -160,7 +160,7 @@ $testGroup('SQLiteStore read tests')
         });
     }),
 
-    $test('SQLite store read: read performed without any arguments')
+    $test('read performed without any arguments')
     .checkAsync(function () {
         var store = createStore();
 
@@ -178,7 +178,7 @@ $testGroup('SQLiteStore read tests')
         });
     }),
 
-    $test('SQLite store read: read invoked with extra parameters')
+    $test('read invoked with extra parameters')
     .description('Check that promise returned by read is either resolved or rejected even when invoked with extra parameters')
     .checkAsync(function () {
         var store = createStore();
@@ -199,7 +199,7 @@ $testGroup('SQLiteStore read tests')
         });
     }),
 
-    $test('SQLite store read: verify deserialization error is handled properly')
+    $test('verify deserialization error is handled properly')
     .checkAsync(function () {
         var store = createStore();
 

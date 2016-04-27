@@ -12,7 +12,7 @@ var Platform = require('Platforms/Platform'),
     testTableName = 'sometable';
     testDbFile = 'somedbfile.db';
 
-$testGroup('SQLiteStore delete tests')
+$testGroup('SQLiteStore - delete tests')
 
     // Clear the test table before running each test.
     .beforeEachAsync(Platform.async( function(callback) {
@@ -26,7 +26,7 @@ $testGroup('SQLiteStore delete tests')
         });
     })).tests(
     
-    $test('SQLite store delete: table is not defined')
+    $test('table is not defined')
     .checkAsync(function () {
         return createStore().del(testTableName, 'one').then(function (result) {
             $assert.fail('failure expected');
@@ -34,7 +34,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: id of type string')
+    $test('id of type string')
     .checkAsync(function () {
         var store = createStore(),
             row1 = { id: 'id1', prop1: 100, prop2: 200 },
@@ -72,7 +72,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: id of type int')
+    $test('id of type int')
     .checkAsync(function () {
         var store = createStore(),
             row1 = { id: 101, prop1: 100, prop2: 200 },
@@ -110,7 +110,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: id of type real')
+    $test('id of type real')
     .checkAsync(function () {
         var store = createStore(),
             row1 = { id: 1.5, prop1: 100, prop2: 200 },
@@ -148,7 +148,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: verify id case sensitivity')
+    $test('verify id case sensitivity')
     .checkAsync(function () {
         var store = createStore(),
             row1 = { id: 'abc', description: 'something' },
@@ -180,7 +180,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: record not found')
+    $test('record not found')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 'id1', description: 'something' };
@@ -214,7 +214,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: list of records - few exist, few do not')
+    $test('list of records - few exist, few do not')
     .checkAsync(function () {
         var store = createStore(),
             row1 = { id: 'abc', description: 'something' },
@@ -243,7 +243,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: empty array')
+    $test('empty array')
     .checkAsync(function () {
         var store = createStore();
 
@@ -261,7 +261,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: null id')
+    $test('null id')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 'id1', description: 'something' };
@@ -295,7 +295,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: id specified as undefined')
+    $test('id specified as undefined')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 'id1', description: 'something' };
@@ -329,7 +329,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: id not specified')
+    $test('id not specified')
     .checkAsync(function () {
         var store = createStore();
 
@@ -350,7 +350,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: a single invalid id')
+    $test('a single invalid id')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 'someid', prop1: 100, prop2: 200 },
@@ -381,7 +381,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: array of ids containing an invalid id')
+    $test('array of ids containing an invalid id')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 'validid', prop1: 100, prop2: 200 },
@@ -412,7 +412,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: null table name')
+    $test('null table name')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 'validid', prop1: 100, prop2: 200 };
@@ -434,7 +434,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: undefined table name')
+    $test('undefined table name')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 'validid', prop1: 100, prop2: 200 };
@@ -456,7 +456,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: empty table name')
+    $test('empty table name')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 'validid', prop1: 100, prop2: 200 };
@@ -478,7 +478,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: invalid table name')
+    $test('invalid table name')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 'validid', prop1: 100, prop2: 200 };
@@ -500,7 +500,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: invoked without any argument')
+    $test('invoked without any argument')
     .checkAsync(function () {
         var store = createStore();
 
@@ -518,7 +518,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: invoked with extra arguments')
+    $test('invoked with extra arguments')
     .description('Check that promise returned by upsert is either resolved or rejected even when invoked with extra parameters')
     .checkAsync(function () {
         var store = createStore(),
@@ -554,7 +554,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: argument is a basic query')
+    $test('argument is a basic query')
     .checkAsync(function () {
         var store = createStore(),
             row1 = { id: 'someid1', prop1: 'abc', prop2: 200 },
@@ -581,7 +581,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: argument is a query whose result contains id column')
+    $test('argument is a query whose result contains id column')
     .checkAsync(function () {
         var store = createStore(),
             row1 = { id: 'someid1', prop1: 'abc', prop2: 200 },
@@ -611,7 +611,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: argument is a query whose result does not contain id column')
+    $test('argument is a query whose result does not contain id column')
     .checkAsync(function () {
         var store = createStore(),
             row1 = { id: 'someid1', prop1: 'abc', prop2: 200 },
@@ -642,7 +642,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: argument is a complex MobileServiceQuery')
+    $test('argument is a complex MobileServiceQuery')
     .checkAsync(function () {
         var store = createStore(),
             row1 = { id: 'someid1', prop1: 'a', prop2: 100 },
@@ -676,7 +676,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: argument is a query matching no records')
+    $test('argument is a query matching no records')
     .checkAsync(function () {
         var store = createStore(),
             row1 = { id: 'someid1', prop1: 'a', prop2: 100 },
@@ -705,7 +705,7 @@ $testGroup('SQLiteStore delete tests')
         });
     }),
 
-    $test('SQLite store delete: invoked with query and extra parameters')
+    $test('invoked with query and extra parameters')
     .description('Check that promise returned by upsert is either resolved or rejected even when invoked with extra parameters')
     .checkAsync(function () {
         var store = createStore(),

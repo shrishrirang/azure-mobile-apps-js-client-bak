@@ -12,7 +12,7 @@ var Platform = require('Platforms/Platform'),
     testTableName = 'sometable',
     testDbFile = 'somedbfile.db';
 
-$testGroup('SQLiteStore lookup tests')
+$testGroup('SQLiteStore - lookup tests')
 
     // Clear the test table before running each test.
     .beforeEachAsync(Platform.async( function(callback) {
@@ -26,7 +26,7 @@ $testGroup('SQLiteStore lookup tests')
         });
     })).tests(
 
-    $test('SQLite store lookup: table not defined')
+    $test('table not defined')
     .checkAsync(function () {
         return createStore().lookup(testTableName, 'one').then(function (result) {
             $assert.fail('failure expected');

@@ -12,7 +12,7 @@ var Platform = require('Platforms/Platform'),
     testTableName = 'sometable',
     testDbFile = 'somedbfile.db';
 
-$testGroup('Miscellaneous SQLiteStore tests')
+$testGroup('SQLiteStore - miscellaneous tests')
 
     // Clear the test table before running each test.
     .beforeEachAsync(Platform.async( function(callback) {
@@ -26,7 +26,7 @@ $testGroup('Miscellaneous SQLiteStore tests')
         });
     })).tests(
 
-    $test('SQLite store misc: Roundtrip non-null property values')
+    $test('Roundtrip non-null property values')
     .checkAsync(function () {
         var store = createStore(),
             row = {
@@ -81,7 +81,7 @@ $testGroup('Miscellaneous SQLiteStore tests')
         });
     }),
 
-    $test('SQLite store misc: Roundtrip null property values')
+    $test('Roundtrip null property values')
     .checkAsync(function () {
         var store = createStore(),
             row = {
@@ -126,7 +126,7 @@ $testGroup('Miscellaneous SQLiteStore tests')
         });
     }),
 
-    $test('SQLite store misc: Read table with columns missing from table definition')
+    $test('Read table with columns missing from table definition')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 101, flag: 51, object: { 'a': 21 } },
@@ -154,6 +154,19 @@ $testGroup('Miscellaneous SQLiteStore tests')
         }, function (err) {
             $assert.fail(err);
         });
+    }),
+
+    $test('Verify MobileServiceSQLiteStore initialization works as expected with the new operator')
+    .check(function () {
+        var store = new MobileServiceSQLiteStore('somedbname');
+        $assert.isNotNull(store._db);
+    }),
+    
+    $test('Verify MobileServiceSQLiteStore initialization works as expected without the new operator')
+    .check(function () {
+        var store = MobileServiceSQLiteStore('somedbname');
+        $assert.isNotNull(store, 'somedbname');
+        $assert.isNotNull(store._db);
     })
 );
 
