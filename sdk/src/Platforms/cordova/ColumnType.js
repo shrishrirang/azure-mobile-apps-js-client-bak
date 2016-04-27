@@ -4,7 +4,7 @@
 
 /**
  * Valid column types to be used for defining table schema.
- * These types will be mapped to an equivalent SQLite type - TEXT / INT / REAL.
+ * These types will be mapped to an equivalent SQLite type - TEXT / INT / REAL - while performing SQLite operations.
  */
 exports = {
     Object: "object",

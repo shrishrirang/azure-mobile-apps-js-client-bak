@@ -522,7 +522,7 @@ function addMissingColumns(transaction, tableDefinition, existingColumns) {
     }
 }
 
-// Valid SQL types
+// Valid Column types
 MobileServiceSqliteStore.ColumnType = ColumnType;
 
 // Define the module exports
