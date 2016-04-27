@@ -3,12 +3,12 @@
 // ----------------------------------------------------------------------------
 
 /**
- * @file MobileServiceSQLiteStore.upsert(..) unit tests
+ * @file MobileServiceSqliteStore.upsert(..) unit tests
  */
 
 var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
-    MobileServiceSQLiteStore = require('Platforms/MobileServiceSQLiteStore'),
+    MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore'),
     testTableName = 'sometable',
     testDbFile = 'somedbfile.db';
 
@@ -45,8 +45,8 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.String,
-                price: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.String,
+                price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.upsert(testTableName, row);
@@ -75,9 +75,9 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Text,
-                description: MobileServiceSQLiteStore.ColumnType.String,
-                price: MobileServiceSQLiteStore.ColumnType.Integer
+                id: MobileServiceSqliteStore.ColumnType.Text,
+                description: MobileServiceSqliteStore.ColumnType.String,
+                price: MobileServiceSqliteStore.ColumnType.Integer
             }
         }).then(function () {
             return store.upsert(testTableName, rows);
@@ -97,8 +97,8 @@ $testGroup('SQLiteStore - upsert tests')
             tableDefinition = {
                 name: testTableName,
                 columnDefinitions: {
-                    id: MobileServiceSQLiteStore.ColumnType.Integer,
-                    flag: MobileServiceSQLiteStore.ColumnType.Integer
+                    id: MobileServiceSqliteStore.ColumnType.Integer,
+                    flag: MobileServiceSqliteStore.ColumnType.Integer
                 }
             };
 
@@ -117,9 +117,9 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.String,
-                prop1: MobileServiceSQLiteStore.ColumnType.Real,
-                prop2: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.String,
+                prop1: MobileServiceSqliteStore.ColumnType.Real,
+                prop2: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.upsert(testTableName, { id: 'some id', prop1: 100, prop2: 200 });
@@ -148,8 +148,8 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Text,
-                description: MobileServiceSQLiteStore.ColumnType.String
+                id: MobileServiceSqliteStore.ColumnType.Text,
+                description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
             // record with an upper cased id
@@ -174,8 +174,8 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Text,
-                description: MobileServiceSQLiteStore.ColumnType.String
+                id: MobileServiceSqliteStore.ColumnType.Text,
+                description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
             return store.upsert(testTableName, [null, row]);
@@ -196,8 +196,8 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Text,
-                description: MobileServiceSQLiteStore.ColumnType.String
+                id: MobileServiceSqliteStore.ColumnType.Text,
+                description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
             return store.upsert(testTableName, [undefined, row]);
@@ -217,8 +217,8 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Text,
-                description: MobileServiceSQLiteStore.ColumnType.String
+                id: MobileServiceSqliteStore.ColumnType.Text,
+                description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
             return store.upsert('', [{ id: 'something', description: 'something' }]);
@@ -235,8 +235,8 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Text,
-                description: MobileServiceSQLiteStore.ColumnType.String
+                id: MobileServiceSqliteStore.ColumnType.Text,
+                description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
             return store.upsert(null, [{ id: 'something', description: 'something' }]);
@@ -253,8 +253,8 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Text,
-                description: MobileServiceSQLiteStore.ColumnType.String
+                id: MobileServiceSqliteStore.ColumnType.Text,
+                description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
             return store.upsert(undefined, [{ id: 'something', description: 'something' }]);
@@ -271,8 +271,8 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Text,
-                description: MobileServiceSQLiteStore.ColumnType.String
+                id: MobileServiceSqliteStore.ColumnType.Text,
+                description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
             return store.upsert('*', [{ id: 'something', description: 'something' }]);
@@ -289,8 +289,8 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Text,
-                description: MobileServiceSQLiteStore.ColumnType.String
+                id: MobileServiceSqliteStore.ColumnType.Text,
+                description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
             return store.upsert(testTableName, []);
@@ -307,8 +307,8 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Text,
-                description: MobileServiceSQLiteStore.ColumnType.String
+                id: MobileServiceSqliteStore.ColumnType.Text,
+                description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
             return store.upsert(testTableName, null);
@@ -328,8 +328,8 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Text,
-                description: MobileServiceSQLiteStore.ColumnType.String
+                id: MobileServiceSqliteStore.ColumnType.Text,
+                description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
             return store.upsert(testTableName, undefined);
@@ -349,8 +349,8 @@ $testGroup('SQLiteStore - upsert tests')
             tableDefinition = {
                 name: testTableName,
                 columnDefinitions: {
-                    id: MobileServiceSQLiteStore.ColumnType.Integer,
-                    flag: MobileServiceSQLiteStore.ColumnType.Integer
+                    id: MobileServiceSqliteStore.ColumnType.Integer,
+                    flag: MobileServiceSqliteStore.ColumnType.Integer
                 }
             };
 
@@ -369,8 +369,8 @@ $testGroup('SQLiteStore - upsert tests')
             tableDefinition = {
                 name: testTableName,
                 columnDefinitions: {
-                    id: MobileServiceSQLiteStore.ColumnType.Integer,
-                    flag: MobileServiceSQLiteStore.ColumnType.Integer
+                    id: MobileServiceSqliteStore.ColumnType.Integer,
+                    flag: MobileServiceSqliteStore.ColumnType.Integer
                 }
             };
 
@@ -389,9 +389,9 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.String,
-                prop1: MobileServiceSQLiteStore.ColumnType.Real,
-                prop2: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.String,
+                prop1: MobileServiceSqliteStore.ColumnType.Real,
+                prop2: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.upsert(testTableName, 1000);
@@ -408,9 +408,9 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.String,
-                prop1: MobileServiceSQLiteStore.ColumnType.Real,
-                prop2: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.String,
+                prop1: MobileServiceSqliteStore.ColumnType.Real,
+                prop2: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.upsert(testTableName, { prop1: 100, prop2: 200 });
@@ -428,9 +428,9 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.String,
-                prop1: MobileServiceSQLiteStore.ColumnType.Real,
-                prop2: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.String,
+                prop1: MobileServiceSqliteStore.ColumnType.Real,
+                prop2: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.upsert(testTableName, { id: null, prop1: 100, prop2: 200 });
@@ -448,9 +448,9 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.String,
-                prop1: MobileServiceSQLiteStore.ColumnType.Real,
-                prop2: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.String,
+                prop1: MobileServiceSqliteStore.ColumnType.Real,
+                prop2: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.upsert(testTableName, { id: undefined, prop1: 100, prop2: 200 });
@@ -468,9 +468,9 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.String,
-                prop1: MobileServiceSQLiteStore.ColumnType.Real,
-                prop2: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.String,
+                prop1: MobileServiceSqliteStore.ColumnType.Real,
+                prop2: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.upsert(testTableName, { prop1: 100, prop2: 200 });
@@ -488,9 +488,9 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.String,
-                prop1: MobileServiceSQLiteStore.ColumnType.Real,
-                prop2: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.String,
+                prop1: MobileServiceSqliteStore.ColumnType.Real,
+                prop2: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.upsert(testTableName, { id: 'someid', prop1: 100, prop2: 200 }, 'extra param');
@@ -507,8 +507,8 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Text,
-                description: MobileServiceSQLiteStore.ColumnType.String
+                id: MobileServiceSqliteStore.ColumnType.Text,
+                description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
             return store.upsert();
@@ -525,8 +525,8 @@ $testGroup('SQLiteStore - upsert tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.String,
-                prop: MobileServiceSQLiteStore.ColumnType.Integer
+                id: MobileServiceSqliteStore.ColumnType.String,
+                prop: MobileServiceSqliteStore.ColumnType.Integer
             }
         }).then(function () {
             return store.upsert(testTableName, {id: '1', prop: 1.5});
@@ -538,5 +538,5 @@ $testGroup('SQLiteStore - upsert tests')
 );
 
 function createStore() {
-    return MobileServiceSQLiteStore(testDbFile);
+    return MobileServiceSqliteStore(testDbFile);
 }

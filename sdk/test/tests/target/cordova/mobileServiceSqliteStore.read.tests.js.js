@@ -3,12 +3,12 @@
 // ----------------------------------------------------------------------------
 
 /**
- * @file MobileServiceSQLiteStore.read(..) unit tests
+ * @file MobileServiceSqliteStore.read(..) unit tests
  */
 
 var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
-    MobileServiceSQLiteStore = require('Platforms/MobileServiceSQLiteStore'),
+    MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore'),
     testTableName = 'sometable',
     testDbFile = 'somedbfile.db';
 
@@ -42,9 +42,9 @@ $testGroup('SQLiteStore - read tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Int,
-                int: MobileServiceSQLiteStore.ColumnType.Int,
-                str: MobileServiceSQLiteStore.ColumnType.Text
+                id: MobileServiceSqliteStore.ColumnType.Int,
+                int: MobileServiceSqliteStore.ColumnType.Int,
+                str: MobileServiceSqliteStore.ColumnType.Text
             }
         }).then(function () {
             return store.upsert(testTableName, rows);
@@ -65,9 +65,9 @@ $testGroup('SQLiteStore - read tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Int,
-                int: MobileServiceSQLiteStore.ColumnType.Int,
-                str: MobileServiceSQLiteStore.ColumnType.Text
+                id: MobileServiceSqliteStore.ColumnType.Int,
+                int: MobileServiceSqliteStore.ColumnType.Int,
+                str: MobileServiceSqliteStore.ColumnType.Text
             }
         }).then(function () {
             return store.upsert(testTableName, rows);
@@ -93,9 +93,9 @@ $testGroup('SQLiteStore - read tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Int,
-                int: MobileServiceSQLiteStore.ColumnType.Int,
-                str: MobileServiceSQLiteStore.ColumnType.Text
+                id: MobileServiceSqliteStore.ColumnType.Int,
+                int: MobileServiceSqliteStore.ColumnType.Int,
+                str: MobileServiceSqliteStore.ColumnType.Text
             }
         }).then(function () {
             return store.upsert(testTableName, row);
@@ -119,9 +119,9 @@ $testGroup('SQLiteStore - read tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Int,
-                int: MobileServiceSQLiteStore.ColumnType.Int,
-                str: MobileServiceSQLiteStore.ColumnType.Text
+                id: MobileServiceSqliteStore.ColumnType.Int,
+                int: MobileServiceSqliteStore.ColumnType.Int,
+                str: MobileServiceSqliteStore.ColumnType.Text
             }
         }).then(function () {
             return store.upsert(testTableName, rows);
@@ -167,8 +167,8 @@ $testGroup('SQLiteStore - read tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Text,
-                description: MobileServiceSQLiteStore.ColumnType.String
+                id: MobileServiceSqliteStore.ColumnType.Text,
+                description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
             return store.read();
@@ -186,9 +186,9 @@ $testGroup('SQLiteStore - read tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.String,
-                prop1: MobileServiceSQLiteStore.ColumnType.Real,
-                prop2: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.String,
+                prop1: MobileServiceSqliteStore.ColumnType.Real,
+                prop2: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.read(new Query(testTableName), 'extra param');
@@ -206,8 +206,8 @@ $testGroup('SQLiteStore - read tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.String,
-                prop: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.String,
+                prop: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.upsert(testTableName, {id: 'not-an-integer', prop: 1.5});
@@ -216,8 +216,8 @@ $testGroup('SQLiteStore - read tests')
             return store.defineTable({
                 name: testTableName,
                 columnDefinitions: {
-                    id: MobileServiceSQLiteStore.ColumnType.Integer,
-                    prop: MobileServiceSQLiteStore.ColumnType.Real
+                    id: MobileServiceSqliteStore.ColumnType.Integer,
+                    prop: MobileServiceSqliteStore.ColumnType.Real
                 }
             });
         }).then(function () {
@@ -230,6 +230,6 @@ $testGroup('SQLiteStore - read tests')
 );
 
 function createStore() {
-    return new MobileServiceSQLiteStore(testDbFile);
+    return new MobileServiceSqliteStore(testDbFile);
 }
 

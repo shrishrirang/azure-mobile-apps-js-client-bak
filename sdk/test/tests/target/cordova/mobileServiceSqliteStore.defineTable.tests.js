@@ -3,12 +3,12 @@
 // ----------------------------------------------------------------------------
 
 /**
- * @file MobileServiceSQLiteStore.defineTable(..) unit tests
+ * @file MobileServiceSqliteStore.defineTable(..) unit tests
  */
 
 var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
-    MobileServiceSQLiteStore = require('Platforms/MobileServiceSQLiteStore'),
+    MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore'),
     testTableName = 'sometable';
     testDbFile = 'somedbfile.db';
 
@@ -34,8 +34,8 @@ $testGroup('SQLiteStore - defineTable tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Integer,
-                price: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.Integer,
+                price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.upsert(testTableName, row);
@@ -56,7 +56,7 @@ $testGroup('SQLiteStore - defineTable tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Integer
+                id: MobileServiceSqliteStore.ColumnType.Integer
             }
         }).then(function () {
             return store.upsert(testTableName, row);
@@ -76,15 +76,15 @@ $testGroup('SQLiteStore - defineTable tests')
             tableDefinition = {
                 name: testTableName,
                 columnDefinitions: {
-                    id: MobileServiceSQLiteStore.ColumnType.Integer,
-                    price: MobileServiceSQLiteStore.ColumnType.Real
+                    id: MobileServiceSqliteStore.ColumnType.Integer,
+                    price: MobileServiceSqliteStore.ColumnType.Real
                 }
             };
 
         return store.defineTable(tableDefinition).then(function () {
             return store.upsert(testTableName, row);
         }).then(function () {
-            tableDefinition.columnDefinitions.newColumn = MobileServiceSQLiteStore.ColumnType.Integer;
+            tableDefinition.columnDefinitions.newColumn = MobileServiceSqliteStore.ColumnType.Integer;
             return store.defineTable(tableDefinition);
         }).then(function () {
             return store.lookup(testTableName, row.id);
@@ -104,8 +104,8 @@ $testGroup('SQLiteStore - defineTable tests')
             tableDefinition = {
                 name: testTableName,
                 columnDefinitions: {
-                    id: MobileServiceSQLiteStore.ColumnType.Integer,
-                    flag: MobileServiceSQLiteStore.ColumnType.Integer
+                    id: MobileServiceSqliteStore.ColumnType.Integer,
+                    flag: MobileServiceSqliteStore.ColumnType.Integer
                 }
             };
 
@@ -113,7 +113,7 @@ $testGroup('SQLiteStore - defineTable tests')
             return store.upsert(testTableName, row);
         }).then(function () {
             // Change type of the flag column from Integer to Boolean
-            tableDefinition.columnDefinitions.flag = MobileServiceSQLiteStore.ColumnType.Boolean;
+            tableDefinition.columnDefinitions.flag = MobileServiceSqliteStore.ColumnType.Boolean;
             return store.defineTable(tableDefinition);
         }).then(function () {
             return store.lookup(testTableName, row.id);
@@ -129,8 +129,8 @@ $testGroup('SQLiteStore - defineTable tests')
     .checkAsync(function () {
         var tableDefinition = {
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Integer,
-                flag: MobileServiceSQLiteStore.ColumnType.Integer
+                id: MobileServiceSqliteStore.ColumnType.Integer,
+                flag: MobileServiceSqliteStore.ColumnType.Integer
             }
         };
 
@@ -145,8 +145,8 @@ $testGroup('SQLiteStore - defineTable tests')
         var tableDefinition = {
             tableName: '*',
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Integer,
-                flag: MobileServiceSQLiteStore.ColumnType.Integer
+                id: MobileServiceSqliteStore.ColumnType.Integer,
+                flag: MobileServiceSqliteStore.ColumnType.Integer
             }
         };
 
@@ -175,8 +175,8 @@ $testGroup('SQLiteStore - defineTable tests')
             columnDefinitions: {}
         };
 
-        tableDefinition.columnDefinitions.id = MobileServiceSQLiteStore.ColumnType.Integer;
-        tableDefinition.columnDefinitions['*'] = MobileServiceSQLiteStore.ColumnType.Integer;
+        tableDefinition.columnDefinitions.id = MobileServiceSqliteStore.ColumnType.Integer;
+        tableDefinition.columnDefinitions['*'] = MobileServiceSqliteStore.ColumnType.Integer;
 
         return createStore().defineTable(tableDefinition).then(function () {
             $assert.fail('test should fail');
@@ -192,8 +192,8 @@ $testGroup('SQLiteStore - defineTable tests')
             tableDefinition = {
                 name: testTableName,
                 columnDefinitions: {
-                    id: MobileServiceSQLiteStore.ColumnType.Integer,
-                    str: MobileServiceSQLiteStore.ColumnType.Text
+                    id: MobileServiceSqliteStore.ColumnType.Integer,
+                    str: MobileServiceSqliteStore.ColumnType.Text
                 }
             };
 
@@ -216,8 +216,8 @@ $testGroup('SQLiteStore - defineTable tests')
             tableDefinition = {
                 name: testTableName,
                 columnDefinitions: {
-                    id: MobileServiceSQLiteStore.ColumnType.Real,
-                    str: MobileServiceSQLiteStore.ColumnType.Text
+                    id: MobileServiceSqliteStore.ColumnType.Real,
+                    str: MobileServiceSqliteStore.ColumnType.Text
                 }
             };
 
@@ -240,8 +240,8 @@ $testGroup('SQLiteStore - defineTable tests')
             tableDefinition = {
                 name: testTableName,
                 columnDefinitions: {
-                    id: MobileServiceSQLiteStore.ColumnType.String,
-                    str: MobileServiceSQLiteStore.ColumnType.Text
+                    id: MobileServiceSqliteStore.ColumnType.String,
+                    str: MobileServiceSqliteStore.ColumnType.Text
                 }
             };
 
@@ -260,8 +260,8 @@ $testGroup('SQLiteStore - defineTable tests')
     .checkAsync(function () {
         var tableDefinition = {
             columnDefinitions: [
-                MobileServiceSQLiteStore.ColumnType.Integer,
-                MobileServiceSQLiteStore.ColumnType.Integer
+                MobileServiceSqliteStore.ColumnType.Integer,
+                MobileServiceSqliteStore.ColumnType.Integer
             ]
         };
 
@@ -275,7 +275,7 @@ $testGroup('SQLiteStore - defineTable tests')
     .checkAsync(function () {
         var tableDefinition = {
             columnDefinitions: {
-                flag: MobileServiceSQLiteStore.ColumnType.Integer
+                flag: MobileServiceSqliteStore.ColumnType.Integer
             }
         };
 
@@ -290,7 +290,7 @@ $testGroup('SQLiteStore - defineTable tests')
         var tableDefinition = {
             columnDefinitions: {
                 id: 'unsupportedtype',
-                flag: MobileServiceSQLiteStore.ColumnType.Integer
+                flag: MobileServiceSqliteStore.ColumnType.Integer
             }
         };
 
@@ -304,7 +304,7 @@ $testGroup('SQLiteStore - defineTable tests')
     .checkAsync(function () {
         var tableDefinition = {
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Integer,
+                id: MobileServiceSqliteStore.ColumnType.Integer,
                 flag: undefined
             }
         };
@@ -319,7 +319,7 @@ $testGroup('SQLiteStore - defineTable tests')
     .checkAsync(function () {
         var tableDefinition = {
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Integer,
+                id: MobileServiceSqliteStore.ColumnType.Integer,
                 flag: null
             }
         };
@@ -335,9 +335,9 @@ $testGroup('SQLiteStore - defineTable tests')
         return createStore().defineTable({
                 name: testTableName,
                 columnDefinitions: {
-                    id: MobileServiceSQLiteStore.ColumnType.Integer,
-                    flag: MobileServiceSQLiteStore.ColumnType.Integer,
-                    object: MobileServiceSQLiteStore.ColumnType.Object
+                    id: MobileServiceSqliteStore.ColumnType.Integer,
+                    flag: MobileServiceSqliteStore.ColumnType.Integer,
+                    object: MobileServiceSqliteStore.ColumnType.Object
                 }
             },
             'extra parameter'
@@ -357,5 +357,5 @@ $testGroup('SQLiteStore - defineTable tests')
 );
 
 function createStore() {
-    return new MobileServiceSQLiteStore(testDbFile);
+    return new MobileServiceSqliteStore(testDbFile);
 }

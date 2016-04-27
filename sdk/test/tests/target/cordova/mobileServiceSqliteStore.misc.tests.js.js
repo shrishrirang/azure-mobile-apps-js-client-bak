@@ -3,12 +3,12 @@
 // ----------------------------------------------------------------------------
 
 /**
- * @file Miscellaneous MobileServiceSQLiteStore unit tests
+ * @file Miscellaneous MobileServiceSqliteStore unit tests
  */
 
 var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
-    MobileServiceSQLiteStore = require('Platforms/MobileServiceSQLiteStore'),
+    MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore'),
     testTableName = 'sometable',
     testDbFile = 'somedbfile.db';
 
@@ -57,18 +57,18 @@ $testGroup('SQLiteStore - miscellaneous tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.String,
-                object: MobileServiceSQLiteStore.ColumnType.Object,
-                array: MobileServiceSQLiteStore.ColumnType.Array,
-                integer: MobileServiceSQLiteStore.ColumnType.Integer,
-                int: MobileServiceSQLiteStore.ColumnType.Int,
-                float: MobileServiceSQLiteStore.ColumnType.Float,
-                real: MobileServiceSQLiteStore.ColumnType.Real,
-                string: MobileServiceSQLiteStore.ColumnType.String,
-                text: MobileServiceSQLiteStore.ColumnType.Text,
-                boolean: MobileServiceSQLiteStore.ColumnType.Boolean,
-                bool: MobileServiceSQLiteStore.ColumnType.Bool,
-                date: MobileServiceSQLiteStore.ColumnType.Date
+                id: MobileServiceSqliteStore.ColumnType.String,
+                object: MobileServiceSqliteStore.ColumnType.Object,
+                array: MobileServiceSqliteStore.ColumnType.Array,
+                integer: MobileServiceSqliteStore.ColumnType.Integer,
+                int: MobileServiceSqliteStore.ColumnType.Int,
+                float: MobileServiceSqliteStore.ColumnType.Float,
+                real: MobileServiceSqliteStore.ColumnType.Real,
+                string: MobileServiceSqliteStore.ColumnType.String,
+                text: MobileServiceSqliteStore.ColumnType.Text,
+                boolean: MobileServiceSqliteStore.ColumnType.Boolean,
+                bool: MobileServiceSqliteStore.ColumnType.Bool,
+                date: MobileServiceSqliteStore.ColumnType.Date
             }
         }).then(function () {
             return store.upsert(testTableName, row);
@@ -102,18 +102,18 @@ $testGroup('SQLiteStore - miscellaneous tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.String,
-                object: MobileServiceSQLiteStore.ColumnType.Object,
-                array: MobileServiceSQLiteStore.ColumnType.Array,
-                integer: MobileServiceSQLiteStore.ColumnType.Integer,
-                int: MobileServiceSQLiteStore.ColumnType.Int,
-                float: MobileServiceSQLiteStore.ColumnType.Float,
-                real: MobileServiceSQLiteStore.ColumnType.Real,
-                string: MobileServiceSQLiteStore.ColumnType.String,
-                text: MobileServiceSQLiteStore.ColumnType.Text,
-                boolean: MobileServiceSQLiteStore.ColumnType.Boolean,
-                bool: MobileServiceSQLiteStore.ColumnType.Bool,
-                date: MobileServiceSQLiteStore.ColumnType.Date
+                id: MobileServiceSqliteStore.ColumnType.String,
+                object: MobileServiceSqliteStore.ColumnType.Object,
+                array: MobileServiceSqliteStore.ColumnType.Array,
+                integer: MobileServiceSqliteStore.ColumnType.Integer,
+                int: MobileServiceSqliteStore.ColumnType.Int,
+                float: MobileServiceSqliteStore.ColumnType.Float,
+                real: MobileServiceSqliteStore.ColumnType.Real,
+                string: MobileServiceSqliteStore.ColumnType.String,
+                text: MobileServiceSqliteStore.ColumnType.Text,
+                boolean: MobileServiceSqliteStore.ColumnType.Boolean,
+                bool: MobileServiceSqliteStore.ColumnType.Bool,
+                date: MobileServiceSqliteStore.ColumnType.Date
             }
         }).then(function () {
             return store.upsert(testTableName, row);
@@ -133,9 +133,9 @@ $testGroup('SQLiteStore - miscellaneous tests')
             tableDefinition = {
                 name: testTableName,
                 columnDefinitions: {
-                    id: MobileServiceSQLiteStore.ColumnType.Integer,
-                    flag: MobileServiceSQLiteStore.ColumnType.Integer,
-                    object: MobileServiceSQLiteStore.ColumnType.Object
+                    id: MobileServiceSqliteStore.ColumnType.Integer,
+                    flag: MobileServiceSqliteStore.ColumnType.Integer,
+                    object: MobileServiceSqliteStore.ColumnType.Object
                 }
             };
 
@@ -156,20 +156,20 @@ $testGroup('SQLiteStore - miscellaneous tests')
         });
     }),
 
-    $test('Verify MobileServiceSQLiteStore initialization works as expected with the new operator')
+    $test('Verify MobileServiceSqliteStore initialization works as expected with the new operator')
     .check(function () {
-        var store = new MobileServiceSQLiteStore('somedbname');
+        var store = new MobileServiceSqliteStore('somedbname');
         $assert.isNotNull(store._db);
     }),
     
-    $test('Verify MobileServiceSQLiteStore initialization works as expected without the new operator')
+    $test('Verify MobileServiceSqliteStore initialization works as expected without the new operator')
     .check(function () {
-        var store = MobileServiceSQLiteStore('somedbname');
+        var store = MobileServiceSqliteStore('somedbname');
         $assert.isNotNull(store, 'somedbname');
         $assert.isNotNull(store._db);
     })
 );
 
 function createStore() {
-    return new MobileServiceSQLiteStore(testDbFile);
+    return new MobileServiceSqliteStore(testDbFile);
 }

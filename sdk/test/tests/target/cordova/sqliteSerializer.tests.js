@@ -9,7 +9,7 @@
 var Validate = require('../../../../src/Utilities/Validate'),
     Platform = require('Platforms/Platform'),
     SQLiteSerializer = require('../../../../src/Platforms/cordova/SQLiteSerializer'),
-        ColumnType = require('../../../../src/Platforms/cordova/SQLiteTypes').ColumnType;
+        ColumnType = require('../../../../src/Platforms/cordova/ColumnType');
 
 $testGroup('SQLiteSerializer tests').tests(
     

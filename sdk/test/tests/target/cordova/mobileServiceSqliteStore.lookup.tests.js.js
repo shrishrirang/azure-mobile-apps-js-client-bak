@@ -3,12 +3,12 @@
 // ----------------------------------------------------------------------------
 
 /**
- * @file MobileServiceSQLiteStore.lookup(..) unit tests
+ * @file MobileServiceSqliteStore.lookup(..) unit tests
  */
 
 var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
-    MobileServiceSQLiteStore = require('Platforms/MobileServiceSQLiteStore'),
+    MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore'),
     testTableName = 'sometable',
     testDbFile = 'somedbfile.db';
 
@@ -42,8 +42,8 @@ $testGroup('SQLiteStore - lookup tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.String,
-                price: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.String,
+                price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.upsert(testTableName, row);
@@ -64,8 +64,8 @@ $testGroup('SQLiteStore - lookup tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Integer,
-                price: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.Integer,
+                price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.upsert(testTableName, row);
@@ -86,8 +86,8 @@ $testGroup('SQLiteStore - lookup tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Real,
-                price: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.Real,
+                price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.upsert(testTableName, row);
@@ -108,8 +108,8 @@ $testGroup('SQLiteStore - lookup tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Text,
-                description: MobileServiceSQLiteStore.ColumnType.String
+                id: MobileServiceSqliteStore.ColumnType.Text,
+                description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
             return store.upsert(testTableName, row);
@@ -129,9 +129,9 @@ $testGroup('SQLiteStore - lookup tests')
             tableDefinition = {
                 name: testTableName,
                 columnDefinitions: {
-                    id: MobileServiceSQLiteStore.ColumnType.Text,
-                    column1: MobileServiceSQLiteStore.ColumnType.Integer,
-                    column2: MobileServiceSQLiteStore.ColumnType.Integer
+                    id: MobileServiceSqliteStore.ColumnType.Text,
+                    column1: MobileServiceSqliteStore.ColumnType.Integer,
+                    column2: MobileServiceSqliteStore.ColumnType.Integer
                 }
             };
 
@@ -157,8 +157,8 @@ $testGroup('SQLiteStore - lookup tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Integer,
-                price: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.Integer,
+                price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.lookup(testTableName, 'someid');
@@ -177,8 +177,8 @@ $testGroup('SQLiteStore - lookup tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Integer,
-                price: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.Integer,
+                price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.lookup(testTableName, 'some id', 'extra param');
@@ -195,8 +195,8 @@ $testGroup('SQLiteStore - lookup tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Integer,
-                price: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.Integer,
+                price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.lookup(testTableName, null);
@@ -213,8 +213,8 @@ $testGroup('SQLiteStore - lookup tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Integer,
-                price: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.Integer,
+                price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.lookup(testTableName, undefined);
@@ -231,8 +231,8 @@ $testGroup('SQLiteStore - lookup tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Integer,
-                price: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.Integer,
+                price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.lookup(testTableName, undefined);
@@ -249,8 +249,8 @@ $testGroup('SQLiteStore - lookup tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Integer,
-                price: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.Integer,
+                price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
             return store.lookup(testTableName, {invalid: 'invalid'});
@@ -267,8 +267,8 @@ $testGroup('SQLiteStore - lookup tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Text,
-                description: MobileServiceSQLiteStore.ColumnType.String
+                id: MobileServiceSqliteStore.ColumnType.Text,
+                description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
             return store.lookup(null, [{ id: 'something', description: 'something' }]);
@@ -285,8 +285,8 @@ $testGroup('SQLiteStore - lookup tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Text,
-                description: MobileServiceSQLiteStore.ColumnType.String
+                id: MobileServiceSqliteStore.ColumnType.Text,
+                description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
             return store.lookup(undefined, [{ id: 'something', description: 'something' }]);
@@ -303,8 +303,8 @@ $testGroup('SQLiteStore - lookup tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Text,
-                description: MobileServiceSQLiteStore.ColumnType.String
+                id: MobileServiceSqliteStore.ColumnType.Text,
+                description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
             return store.lookup('*', [{ id: 'something', description: 'something' }]);
@@ -321,8 +321,8 @@ $testGroup('SQLiteStore - lookup tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.Text,
-                description: MobileServiceSQLiteStore.ColumnType.String
+                id: MobileServiceSqliteStore.ColumnType.Text,
+                description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
             return store.lookup();
@@ -339,8 +339,8 @@ $testGroup('SQLiteStore - lookup tests')
         return store.defineTable({
             name: testTableName,
             columnDefinitions: {
-                id: MobileServiceSQLiteStore.ColumnType.String,
-                prop: MobileServiceSQLiteStore.ColumnType.Real
+                id: MobileServiceSqliteStore.ColumnType.String,
+                prop: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function() {
             return store.upsert(testTableName, { id: '1', prop: 1.5 });
@@ -349,8 +349,8 @@ $testGroup('SQLiteStore - lookup tests')
             return store.defineTable({
                 name: testTableName,
                 columnDefinitions: {
-                    id: MobileServiceSQLiteStore.ColumnType.String,
-                    prop: MobileServiceSQLiteStore.ColumnType.Date
+                    id: MobileServiceSqliteStore.ColumnType.String,
+                    prop: MobileServiceSqliteStore.ColumnType.Date
                 }
             });
         }).then(function() {
@@ -363,5 +363,5 @@ $testGroup('SQLiteStore - lookup tests')
 );
 
 function createStore() {
-    return new MobileServiceSQLiteStore(testDbFile);
+    return new MobileServiceSqliteStore(testDbFile);
 }
