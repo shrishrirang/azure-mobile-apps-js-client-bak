@@ -6,22 +6,22 @@ var Platform = require('Platforms/Platform'),
     Validate = require('../../Utilities/Validate'),
     _ = require('../../Utilities/Extensions'),
     queryHelper = require('azure-mobile-apps/src/query'),
-    SQLiteTypes = require('./SQLiteTypes'),
+    ColumnType = require('./ColumnType'),
     SQLiteSerializer = require('./SQLiteSerializer'),
     Query = require('query.js').Query,
     formatSql = require('azure-odata-sql').format;
 
 var idPropertyName = "id";
 
-var MobileServiceSQLiteStore = function (dbName) {
+var MobileServiceSqliteStore = function (dbName) {
     /// <summary>
-    /// Initializes a new instance of the MobileServiceSQLiteStore class.
+    /// Initializes a new instance of the MobileServiceSqliteStore class.
     /// </summary>
     
     "use strict"
     
-    if ( !(this instanceof MobileServiceSQLiteStore) ) {
-        return new MobileServiceSQLiteStore(dbName);
+    if ( !(this instanceof MobileServiceSqliteStore) ) {
+        return new MobileServiceSqliteStore(dbName);
     }
 
     this._db = window.sqlitePlugin.openDatabase({ name: dbName });
@@ -35,10 +35,10 @@ var MobileServiceSQLiteStore = function (dbName) {
         ///     name: "todoItemTable",
         ///     columnDefinitions : {
         ///         id : "string",
-        ///         metadata : MobileServiceSQLiteStore.ColumnType.Object,
+        ///         metadata : MobileServiceSqliteStore.ColumnType.Object,
         ///         description : "string",
         ///         purchaseDate : "date",
-        ///         price : MobileServiceSQLiteStore.ColumnType.Real
+        ///         price : MobileServiceSqliteStore.ColumnType.Real
         ///     }
         /// }
         /// </param>
@@ -440,7 +440,7 @@ var MobileServiceSQLiteStore = function (dbName) {
         this._db.transaction(function (transaction) {
 
             if (statements.length < 1 || statements.length > 2) {
-                throw Platform.getResourceString("MobileServiceSQLiteStore_UnexptedNumberOfStatements");
+                throw Platform.getResourceString("MobileServiceSqliteStore_UnexptedNumberOfStatements");
             }
 
             transaction.executeSql(statements[0].sql, getStatementParameters(statements[0]), function (transaction, res) {
@@ -523,7 +523,7 @@ function addMissingColumns(transaction, tableDefinition, existingColumns) {
 }
 
 // Valid SQL types
-MobileServiceSQLiteStore.ColumnType = SQLiteTypes.ColumnType;
+MobileServiceSqliteStore.ColumnType = ColumnType;
 
 // Define the module exports
-module.exports = MobileServiceSQLiteStore;
+module.exports = MobileServiceSqliteStore;

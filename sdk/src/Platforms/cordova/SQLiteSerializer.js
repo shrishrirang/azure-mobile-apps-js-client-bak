@@ -13,8 +13,7 @@
 var Platform = require('Platforms/Platform'),
     Validate = require('../../Utilities/Validate'),
     _ = require('../../Utilities/Extensions'),
-    ColumnType = require('./SQLiteTypes').ColumnType,
-    ColumnAffinity = require('./SQLiteTypes').ColumnAffinity,
+    ColumnType = require('./ColumnType'),
     verror = require('verror'),
     typeConverter = require('./typeConverter');
 

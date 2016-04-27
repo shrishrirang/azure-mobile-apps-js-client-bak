@@ -6,7 +6,7 @@
  * Valid column types to be used for defining table schema.
  * These types will be mapped to an equivalent SQLite type - TEXT / INT / REAL.
  */
-exports.ColumnType = {
+exports = {
     Object: "object",
     Array: "array",
     Integer: "integer",

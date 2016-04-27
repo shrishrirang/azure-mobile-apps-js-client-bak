@@ -7,7 +7,7 @@
     "Validate_InvalidUserParameter"                         : "{0} contains an invalid user-defined query string parameter: {1}. User-defined query string parameters must not begin with a '$'.",
     "Extensions_DefaultErrorMessage"                        : "Unexpected failure.",
     "Extensions_ConnectionFailureMessage"                   : "Unexpected connection failure.",
-    "MobileServiceSQLiteStore_UnexptedNumberOfStatements"   : "Unexpected number of statements",
+    "MobileServiceSqliteStore_UnexptedNumberOfStatements"   : "Unexpected number of statements",
     "MobileServiceTable_ReadMismatchedQueryTables"          : "Cannot get the results of a query for table '{1}' via table '{0}'.",
     "MobileServiceTable_InsertIdAlreadySet"                 : "Cannot insert if the {0} member is already set.",
     "MobileServiceLogin_AuthenticationProviderNotSupported" : "Unsupported authentication provider name. Please specify one of {0}.",
