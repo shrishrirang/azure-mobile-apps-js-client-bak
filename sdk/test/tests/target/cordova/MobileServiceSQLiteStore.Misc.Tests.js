@@ -2,14 +2,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
+/**
+ * @file Miscellaneous MobileServiceSQLiteStore unit tests
+ */
+
 var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
-    MobileServiceSQLiteStore = require('Platforms/MobileServiceSQLiteStore');
-
-var testTableName = 'sometable';
-var testDbFile = 'somedbfile.db';
+    MobileServiceSQLiteStore = require('Platforms/MobileServiceSQLiteStore'),
+    testTableName = 'sometable',
+    testDbFile = 'somedbfile.db';
 
 $testGroup('Miscellaneous SQLiteStore tests')
+
+    // Clear the test table before running each test.
     .beforeEachAsync(Platform.async( function(callback) {
         var db = window.sqlitePlugin.openDatabase({ name: testDbFile });
 
@@ -21,7 +26,7 @@ $testGroup('Miscellaneous SQLiteStore tests')
         });
     })).tests(
 
-    $test('Roundtrip non-null property values')
+    $test('SQLite store misc: Roundtrip non-null property values')
     .checkAsync(function () {
         var store = createStore(),
             row = {
@@ -76,7 +81,7 @@ $testGroup('Miscellaneous SQLiteStore tests')
         });
     }),
 
-    $test('Roundtrip null property values')
+    $test('SQLite store misc: Roundtrip null property values')
     .checkAsync(function () {
         var store = createStore(),
             row = {
@@ -121,7 +126,7 @@ $testGroup('Miscellaneous SQLiteStore tests')
         });
     }),
 
-    $test('Read table with columns missing from definition')
+    $test('SQLite store misc: Read table with columns missing from table definition')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 101, flag: 51, object: { 'a': 21 } },

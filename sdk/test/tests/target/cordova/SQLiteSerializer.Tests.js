@@ -2,13 +2,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
+/**
+ * @file SQLiteSerializer unit tests
+ */
+
 var Validate = require('../../../../src/Utilities/Validate'),
     Platform = require('Platforms/Platform'),
     SQLiteSerializer = require('../../../../src/Platforms/cordova/SQLiteSerializer'),
         ColumnType = require('../../../../src/Platforms/cordova/SQLiteTypes').ColumnType;
 
 $testGroup('SQLiteSerializer tests').tests(
-    $test('Ensure unit tests are up to date')
+    
+    $test('SQLiteSerializer: Ensure unit tests are up to date')
     .check(function () {
 
         // If this test fails, it means the column type enum has changed.
@@ -28,7 +33,7 @@ $testGroup('SQLiteSerializer tests').tests(
         });
     }),
 
-    $test('Verify column affinity computation')
+    $test('SQLiteSerializer: Verify ColumnType to SQLite type conversion')
     .check(function () {
         $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Object), 'TEXT');
         $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Array), 'TEXT');
@@ -52,7 +57,7 @@ $testGroup('SQLiteSerializer tests').tests(
         $assertThrows(function () { SQLiteSerializer.getSqliteType(undefined); });
     }),
 
-    $test('roundtripping: single property')
+    $test('SQLiteSerializer: Roundtripping of an object not containing an ID property')
     .check(function () {
         var value = { a: 1 };
         var columnDefinitions = { a: ColumnType.Integer };
@@ -61,7 +66,7 @@ $testGroup('SQLiteSerializer tests').tests(
         $assert.areEqual(SQLiteSerializer.deserialize(serializedValue, columnDefinitions), value);
     }),
 
-    $test('roundtripping: empty object')
+    $test('SQLiteSerializer: Empty object roundtripping')
     .check(function () {
         var value = {};
         var columnDefinitions = {};
@@ -70,7 +75,7 @@ $testGroup('SQLiteSerializer tests').tests(
         $assert.areEqual(SQLiteSerializer.deserialize(serializedValue, columnDefinitions), value);
     }),
 
-    $test('roundtripping: id property')
+    $test('SQLiteSerializer: Roundtripping of an object containing an ID property')
     .check(function () {
         var value = { id: 1, val: '2' };
         var columnDefinitions = { id: ColumnType.Integer, val: ColumnType.String };
@@ -79,7 +84,7 @@ $testGroup('SQLiteSerializer tests').tests(
         $assert.areEqual(SQLiteSerializer.deserialize(serializedValue, columnDefinitions), value);
     }),
 
-    $test('serialization: missing column in definition')
+    $test('SQLiteSerializer: Serialize object when columns are missing from table definition')
     .check(function () {
         $assertThrows(function () {
             SQLiteSerializer.serialize({
@@ -91,7 +96,7 @@ $testGroup('SQLiteSerializer tests').tests(
         });
     }),
 
-    $test('deserialization: missing column in definition')
+    $test('SQLiteSerializer: Deserialize an object when columns are missing from table definition')
     .check(function () {
         var value = {
             object: { a: 1, b: 'str', c: [1, 2] },
@@ -110,35 +115,35 @@ $testGroup('SQLiteSerializer tests').tests(
         $assert.areEqual(deserializedValue, value);
     }),
 
-    $test('serialization: null column definition')
+    $test('SQLiteSerializer: Serialize an object when column definition is null')
     .check(function () {
         $assertThrows(function () {
             SQLiteSerializer.serialize({ a: 1 }, null);
         });
     }),
 
-    $test('deserialization: undefined column definition')
+    $test('SQLiteSerializer: Serialize an object when column definition is undefined')
     .check(function () {
         $assertThrows(function () {
             SQLiteSerializer.serialize({ a: 1 });
         });
     }),
 
-    $test('deserialization: null column definition')
+    $test('SQLiteSerializer: Deserialize an object when column definition is null')
     .check(function () {
         $assertThrows(function () {
             SQLiteSerializer.deserialize({ a: 1 }, null);
         });
     }),
 
-    $test('deserialization: undefined column definition')
+    $test('SQLiteSerializer: Deserialize an object when column definition is undefined')
     .check(function () {
         $assertThrows(function () {
-            SQLiteSerializer.deserialize({ a: 1 });
+            SQLiteSerializer.deserialize({ a: 1 } /*, undefined column definition */);
         });
     }),
 
-    $test('property of type object, different column types')
+    $test('SQLiteSerializer: Serialize property of type object into columns of different types')
     .check(function () {
         var value = { val: {} },
             columnDefinitions = {},
@@ -166,7 +171,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('property of type array, different column types')
+    $test('SQLiteSerializer: Serialize property of type array into columns of different types')
     .check(function () {
         var value = { val: [1, 2] },
             columnDefinitions = {},
@@ -195,7 +200,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('property of type string, different column types')
+    $test('SQLiteSerializer: Serialize property of type string into columns of different types')
     .check(function () {
         var value = { val: 'somestring' },
             columnDefinitions = {},
@@ -222,7 +227,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('property of type string and integer value, different column types')
+    $test('SQLiteSerializer: Serialize property of type string and integer value into columns of different types')
     .check(function () {
         var value = { val: '5' },
             columnDefinitions = {},
@@ -249,7 +254,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('property with integer value, different column types')
+    $test('SQLiteSerializer: Serialize property with integer value into columns of different types')
     .check(function () {
         var value = { val: 51 },
             columnDefinitions = {},
@@ -285,7 +290,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('property with a boolean true value, different column types')
+    $test('SQLiteSerializer: Serialize property with a boolean true value into columns of different types')
     .check(function () {
         var value = { val: true },
             columnDefinitions = {},
@@ -322,7 +327,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('property with a boolean false value, different column types')
+    $test('SQLiteSerializer: Serialize property with a boolean false value into columns of different types')
     .check(function () {
         var value = { val: false },
             columnDefinitions = {},
@@ -359,7 +364,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('property with a float value, different column types')
+    $test('SQLiteSerializer: Serialize property with a float value into columns of different types')
     .check(function () {
         var value = { val: -5.55 },
             columnDefinitions = {},
@@ -391,7 +396,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('property with a date value, different column types')
+    $test('SQLiteSerializer: Serialize property with a date value into columns of different types')
     .check(function () {
         var value = { val: new Date(2011, 10, 11, 12, 13, 14) },
             columnDefinitions = {},
@@ -422,7 +427,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('property with null value, different column types')
+    $test('SQLiteSerializer: Serialize property with null value into columns of different types')
     .check(function () {
         var value = { val: null },
             columnDefinitions = {};
@@ -436,7 +441,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('property with undefined value, different column types')
+    $test('SQLiteSerializer: Serialize property with undefined value into columns of different types')
     .check(function () {
         var value = { val: null },
             columnDefinitions = {};
@@ -450,7 +455,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('Attempting to serialize to an unsupported column should fail')
+    $test('SQLiteSerializer: Attempting to serialize to an unsupported column should fail')
     .check(function () {
         var value = {},
             columnDefinitions = {val: 'someunsupportedtype'},
@@ -483,7 +488,7 @@ $testGroup('SQLiteSerializer tests').tests(
         $assertThrows(serialize);
     }),
 
-    $test('null object, different column types')
+    $test('SQLiteSerializer: Serialize null object')
     .check(function () {
         var columnDefinitions = {},
             serialize = function () {
@@ -499,7 +504,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('undefined object, different column types')
+    $test('SQLiteSerializer: Serialize undefined object')
     .check(function () {
         var columnDefinitions = {},
             serialize = function () {
@@ -515,7 +520,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('deserialize: property of type object, different column types')
+    $test('SQLiteSerializer: Deserialize property of type object into columns of different types')
     .check(function () {
         var value = { val: { a: 1 } },
             columnDefinitions = {},
@@ -533,7 +538,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('deserialize: property of type array, different column types')
+    $test('SQLiteSerializer: Deserialize property of type array into columns of different types')
     .check(function () {
         var value = { val: [1, 2] },
             columnDefinitions = {},
@@ -551,7 +556,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('deserialize: property of type string, different column types')
+    $test('SQLiteSerializer: Deserialize property of type string into columns of different types')
     .check(function () {
         var value = { val: 'somestring' },
             columnDefinitions = {},
@@ -578,7 +583,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('deserialize: property of type string and integer value, different column types')
+    $test('SQLiteSerializer: Deserialize property of type string and integer value into columns of different types')
     .check(function () {
         var value = { val: '51' },
             columnDefinitions = {},
@@ -605,7 +610,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('deserialize: property of type integer with a non-zero value, different column types')
+    $test('SQLiteSerializer: Deserialize property of type integer with a non-zero value into columns of different types')
     .check(function () {
         var value = { val: 51 },
             columnDefinitions = {},
@@ -647,7 +652,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('deserialize: property of type integer with value zero, different column types')
+    $test('SQLiteSerializer: Deserialize property of type integer with value zero into columns of different types')
     .check(function () {
         var value = { val: 0 },
             columnDefinitions = {},
@@ -689,7 +694,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('deserialize: property with a boolean true value, different column types')
+    $test('SQLiteSerializer: Deserialize property with a boolean true value into columns of different types')
     .check(function () {
         var value = { val: true },
             columnDefinitions = {},
@@ -707,7 +712,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('deserialize: property with a boolean false value, different column types')
+    $test('SQLiteSerializer: Deserialize property with a boolean false value into columns of different types')
     .check(function () {
         var value = { val: false },
             columnDefinitions = {},
@@ -725,7 +730,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('deserialize: property of type float, different column types')
+    $test('SQLiteSerializer: Deserialize property of type float into columns of different types')
     .check(function () {
         var value = { val: -1.5 },
             columnDefinitions = {},
@@ -752,7 +757,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('deserialize: property of type date, different column types')
+    $test('SQLiteSerializer: Deserialize property of type date into columns of different types')
     .check(function () {
         var value = { val: new Date(2011, 10, 11, 12, 13, 14) },
             columnDefinitions = {},
@@ -770,7 +775,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('deserialize: property with null value, different column types')
+    $test('SQLiteSerializer: Deserialize property with null value into columns of different types')
     .check(function () {
         var value = { val: null },
             columnDefinitions = {};
@@ -783,7 +788,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('deserialize: property with undefined value, different column types')
+    $test('SQLiteSerializer: Deserialize property with undefined value into columns of different types')
     .check(function () {
         var value = { val: undefined },
             columnDefinitions = {};
@@ -796,7 +801,7 @@ $testGroup('SQLiteSerializer tests').tests(
         }
     }),
 
-    $test('deserialize: Attempting to deserialize to an unsupported column should fail')
+    $test('SQLiteSerializer: Deserialize Attempting to deserialize to an unsupported column should fail')
     .check(function () {
         var value = {},
             columnDefinitions = { val: 'someunsupportedtype' },
@@ -829,7 +834,7 @@ $testGroup('SQLiteSerializer tests').tests(
         $assertThrows(deserialize);
     }),
     
-    $test('deserialize: null object')
+    $test('SQLiteSerializer: Deserialize a null object')
     .check(function () {
         var value = {},
             columnDefinitions = {},
@@ -847,7 +852,7 @@ $testGroup('SQLiteSerializer tests').tests(
     }),
 
 
-    $test('deserialize: undefined object')
+    $test('SQLiteSerializer: Deserialize an undefined object')
     .check(function () {
         var value = {},
             columnDefinitions = {},
@@ -865,7 +870,7 @@ $testGroup('SQLiteSerializer tests').tests(
     }),
 
 
-    $test('roundtripping: all types')
+    $test('SQLiteSerializer: Roundtripping of properties of all types should be lossless')
     .check(function () {
         var value = {
             object: { a: 1, b: 'str', c: [1, 2] },
