@@ -44,7 +44,7 @@ function getSqliteType (columnType) {
             sqliteType = "REAL";
             break;
         default:
-            throw new Error(_.format(Platform.getResourceString("SQLiteSerializer_UnsupportedColumnType"), columnType));
+            throw new Error(_.format(Platform.getResourceString("sqliteSerializer_UnsupportedColumnType"), columnType));
     }
 
     return sqliteType;
@@ -155,7 +155,7 @@ function serialize (value, columnDefinitions) {
         }
         
     } catch (error) {
-        throw new verror.VError(error, _.format(Platform.getResourceString("SQLiteSerializer_SerializationFailed"), JSON.stringify(value), JSON.stringify(columnDefinitions)));
+        throw new verror.VError(error, _.format(Platform.getResourceString("sqliteSerializer_SerializationFailed"), JSON.stringify(value), JSON.stringify(columnDefinitions)));
     }
 
     return serializedValue;
@@ -180,7 +180,7 @@ function deserialize (value, columnDefinitions) {
         }
         
     } catch (error) {
-        throw new verror.VError(error, _.format(Platform.getResourceString("SQLiteSerializer_DeserializationFailed"), JSON.stringify(value), JSON.stringify(columnDefinitions)));
+        throw new verror.VError(error, _.format(Platform.getResourceString("sqliteSerializer_DeserializationFailed"), JSON.stringify(value), JSON.stringify(columnDefinitions)));
     }
 
     return deserializedValue;
@@ -193,12 +193,12 @@ function serializeMember(value, columnType) {
     
     // Start by checking if the specified column type is valid
     if (!isColumnTypeValid(columnType)) {
-        throw new Error(_.format(Platform.getResourceString("SQLiteSerializer_UnsupportedColumnType"), columnType));
+        throw new Error(_.format(Platform.getResourceString("sqliteSerializer_UnsupportedColumnType"), columnType));
     }
 
     // Now check if the specified value can be stored in a column of type columnType
     if (!isJSValueCompatibleWithColumnType(value, columnType)) {
-        throw new Error(_.format(Platform.getResourceString('SQLiteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, columnType));
+        throw new Error(_.format(Platform.getResourceString('sqliteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, columnType));
     }
 
     // If we are here, it means we are good to proceed with serialization
@@ -217,7 +217,7 @@ function serializeMember(value, columnType) {
             serializedValue = typeConverter.convertToReal(value);
             break;
         default:
-            throw new Error(_.format(Platform.getResourceString("SQLiteSerializer_UnsupportedColumnType"), columnType));
+            throw new Error(_.format(Platform.getResourceString("sqliteSerializer_UnsupportedColumnType"), columnType));
     }
     
     return serializedValue;
@@ -234,12 +234,12 @@ function deserializeMember(value, columnType) {
 
     // Start by checking if the specified column type is valid.
     if (!isColumnTypeValid(columnType)) {
-        throw new Error(_.format(Platform.getResourceString("SQLiteSerializer_UnsupportedColumnType"), columnType));
+        throw new Error(_.format(Platform.getResourceString("sqliteSerializer_UnsupportedColumnType"), columnType));
     }
 
     // Now check if the specified value can be stored in a column of type columnType.
     if (!isSqliteValueCompatibleWithColumnType(value, columnType)) {
-        throw new Error(_.format(Platform.getResourceString('SQLiteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, columnType));
+        throw new Error(_.format(Platform.getResourceString('sqliteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, columnType));
     }
 
     // If we are here, it means we are good to proceed with deserialization
@@ -273,7 +273,7 @@ function deserializeMember(value, columnType) {
             deserializedValue = typeConverter.convertToReal(value);
             break;
         default:
-            throw new Error(_.format(Platform.getResourceString("SQLiteSerializer_UnsupportedColumnType"), columnType));
+            throw new Error(_.format(Platform.getResourceString("sqliteSerializer_UnsupportedColumnType"), columnType));
     }
 
     return deserializedValue;

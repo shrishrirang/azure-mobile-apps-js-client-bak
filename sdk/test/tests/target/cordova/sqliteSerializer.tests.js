@@ -3,15 +3,15 @@
 // ----------------------------------------------------------------------------
 
 /**
- * @file SQLiteSerializer unit tests
+ * @file sqliteSerializer unit tests
  */
 
 var Validate = require('../../../../src/Utilities/Validate'),
     Platform = require('Platforms/Platform'),
-    SQLiteSerializer = require('../../../../src/Platforms/cordova/SQLiteSerializer'),
+    sqliteSerializer = require('../../../../src/Platforms/cordova/sqliteSerializer'),
         ColumnType = require('../../../../src/Platforms/cordova/ColumnType');
 
-$testGroup('SQLiteSerializer tests').tests(
+$testGroup('sqliteSerializer tests').tests(
     
     $test('Ensure unit tests are up to date')
     .check(function () {
@@ -35,59 +35,59 @@ $testGroup('SQLiteSerializer tests').tests(
 
     $test('Verify ColumnType to SQLite type conversion')
     .check(function () {
-        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Object), 'TEXT');
-        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Array), 'TEXT');
-        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.String), 'TEXT');
-        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Text), 'TEXT');
+        $assert.areEqual(sqliteSerializer.getSqliteType(ColumnType.Object), 'TEXT');
+        $assert.areEqual(sqliteSerializer.getSqliteType(ColumnType.Array), 'TEXT');
+        $assert.areEqual(sqliteSerializer.getSqliteType(ColumnType.String), 'TEXT');
+        $assert.areEqual(sqliteSerializer.getSqliteType(ColumnType.Text), 'TEXT');
 
-        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Integer), 'INTEGER');
-        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Int), 'INTEGER');
-        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Boolean), 'INTEGER');
-        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Bool), 'INTEGER');
+        $assert.areEqual(sqliteSerializer.getSqliteType(ColumnType.Integer), 'INTEGER');
+        $assert.areEqual(sqliteSerializer.getSqliteType(ColumnType.Int), 'INTEGER');
+        $assert.areEqual(sqliteSerializer.getSqliteType(ColumnType.Boolean), 'INTEGER');
+        $assert.areEqual(sqliteSerializer.getSqliteType(ColumnType.Bool), 'INTEGER');
 
-        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Real), 'REAL');
-        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Float), 'REAL');
+        $assert.areEqual(sqliteSerializer.getSqliteType(ColumnType.Real), 'REAL');
+        $assert.areEqual(sqliteSerializer.getSqliteType(ColumnType.Float), 'REAL');
 
-        $assert.areEqual(SQLiteSerializer.getSqliteType(ColumnType.Date), 'INTEGER');
+        $assert.areEqual(sqliteSerializer.getSqliteType(ColumnType.Date), 'INTEGER');
 
-        $assertThrows(function () { SQLiteSerializer.getSqliteType('notsupported'); });
-        $assertThrows(function () { SQLiteSerializer.getSqliteType(5); });
-        $assertThrows(function () { SQLiteSerializer.getSqliteType([]); });
-        $assertThrows(function () { SQLiteSerializer.getSqliteType(null); });
-        $assertThrows(function () { SQLiteSerializer.getSqliteType(undefined); });
+        $assertThrows(function () { sqliteSerializer.getSqliteType('notsupported'); });
+        $assertThrows(function () { sqliteSerializer.getSqliteType(5); });
+        $assertThrows(function () { sqliteSerializer.getSqliteType([]); });
+        $assertThrows(function () { sqliteSerializer.getSqliteType(null); });
+        $assertThrows(function () { sqliteSerializer.getSqliteType(undefined); });
     }),
 
     $test('Roundtripping of an object not containing an ID property')
     .check(function () {
         var value = { a: 1 };
         var columnDefinitions = { a: ColumnType.Integer };
-        var serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+        var serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
         $assert.areEqual(serializedValue, value);
-        $assert.areEqual(SQLiteSerializer.deserialize(serializedValue, columnDefinitions), value);
+        $assert.areEqual(sqliteSerializer.deserialize(serializedValue, columnDefinitions), value);
     }),
 
     $test('Empty object roundtripping')
     .check(function () {
         var value = {};
         var columnDefinitions = {};
-        var serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+        var serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
         $assert.areEqual(serializedValue, value);
-        $assert.areEqual(SQLiteSerializer.deserialize(serializedValue, columnDefinitions), value);
+        $assert.areEqual(sqliteSerializer.deserialize(serializedValue, columnDefinitions), value);
     }),
 
     $test('Roundtripping of an object containing an ID property')
     .check(function () {
         var value = { id: 1, val: '2' };
         var columnDefinitions = { id: ColumnType.Integer, val: ColumnType.String };
-        var serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+        var serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
         $assert.areEqual(serializedValue, value);
-        $assert.areEqual(SQLiteSerializer.deserialize(serializedValue, columnDefinitions), value);
+        $assert.areEqual(sqliteSerializer.deserialize(serializedValue, columnDefinitions), value);
     }),
 
     $test('Serialize object when columns are missing from table definition')
     .check(function () {
         $assertThrows(function () {
-            SQLiteSerializer.serialize({
+            sqliteSerializer.serialize({
                 a: 1,
                 nodefinition: false
             }, {
@@ -111,35 +111,35 @@ $testGroup('SQLiteSerializer tests').tests(
             float: 2.2,
             date: new Date(2001, 1, 1)
         };
-        var deserializedValue = SQLiteSerializer.deserialize(value, { /* all columns missing from definition */ });
+        var deserializedValue = sqliteSerializer.deserialize(value, { /* all columns missing from definition */ });
         $assert.areEqual(deserializedValue, value);
     }),
 
     $test('Serialize an object when column definition is null')
     .check(function () {
         $assertThrows(function () {
-            SQLiteSerializer.serialize({ a: 1 }, null);
+            sqliteSerializer.serialize({ a: 1 }, null);
         });
     }),
 
     $test('Serialize an object when column definition is undefined')
     .check(function () {
         $assertThrows(function () {
-            SQLiteSerializer.serialize({ a: 1 });
+            sqliteSerializer.serialize({ a: 1 });
         });
     }),
 
     $test('Deserialize an object when column definition is null')
     .check(function () {
         $assertThrows(function () {
-            SQLiteSerializer.deserialize({ a: 1 }, null);
+            sqliteSerializer.deserialize({ a: 1 }, null);
         });
     }),
 
     $test('Deserialize an object when column definition is undefined')
     .check(function () {
         $assertThrows(function () {
-            SQLiteSerializer.deserialize({ a: 1 } /*, undefined column definition */);
+            sqliteSerializer.deserialize({ a: 1 } /*, undefined column definition */);
         });
     }),
 
@@ -148,7 +148,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: {} },
             columnDefinitions = {},
             serialize = function() {
-            SQLiteSerializer.serialize(value, columnDefinitions);
+            sqliteSerializer.serialize(value, columnDefinitions);
         };
 
         for (var c in ColumnType) {
@@ -160,7 +160,7 @@ $testGroup('SQLiteSerializer tests').tests(
                 case ColumnType.Object:
                 case ColumnType.String:
                 case ColumnType.Text:
-                    var serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+                    var serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
                     $assert.areEqual(serializedValue, { val: JSON.stringify(value.val) });
                     break;
                 // Serializing as any other type should fail
@@ -176,7 +176,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: [1, 2] },
             columnDefinitions = {},
             serialize = function () {
-                SQLiteSerializer.serialize(value, columnDefinitions);
+                sqliteSerializer.serialize(value, columnDefinitions);
             };
 
         for (var c in ColumnType) {
@@ -189,7 +189,7 @@ $testGroup('SQLiteSerializer tests').tests(
                 case ColumnType.Array:
                 case ColumnType.String:
                 case ColumnType.Text:
-                    var serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+                    var serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
                     $assert.areEqual(serializedValue, { val: JSON.stringify(value.val) });
                     break;
                 // Serializing as any other type should fail
@@ -205,7 +205,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: 'somestring' },
             columnDefinitions = {},
             serialize = function () {
-                SQLiteSerializer.serialize(value, columnDefinitions);
+                sqliteSerializer.serialize(value, columnDefinitions);
             };
 
         for (var c in ColumnType) {
@@ -216,7 +216,7 @@ $testGroup('SQLiteSerializer tests').tests(
                 // Serialization should work only for these column types
                 case ColumnType.String:
                 case ColumnType.Text:
-                    var serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+                    var serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
                     $assert.areEqual(serializedValue, value);
                     break;
                 // Serializing as any other type should fail
@@ -232,7 +232,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: '5' },
             columnDefinitions = {},
             serialize = function () {
-                SQLiteSerializer.serialize(value, columnDefinitions);
+                sqliteSerializer.serialize(value, columnDefinitions);
             };
 
         for (var c in ColumnType) {
@@ -243,7 +243,7 @@ $testGroup('SQLiteSerializer tests').tests(
                 // Serialization should work only for these column types
                 case ColumnType.String:
                 case ColumnType.Text:
-                    var serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+                    var serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
                     $assert.areEqual(serializedValue, value);
                     break;
                     // Serializing as any other type should fail
@@ -259,7 +259,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: 51 },
             columnDefinitions = {},
             serialize = function () {
-                SQLiteSerializer.serialize(value, columnDefinitions);
+                sqliteSerializer.serialize(value, columnDefinitions);
             };
 
         for (var c in ColumnType) {
@@ -274,12 +274,12 @@ $testGroup('SQLiteSerializer tests').tests(
                 case ColumnType.Real:
                 case ColumnType.Boolean:
                 case ColumnType.Bool:
-                    serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+                    serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
                     $assert.areEqual(serializedValue, value);
                     break;
                 case ColumnType.String:
                 case ColumnType.Text:
-                    serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+                    serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
                     $assert.areEqual(serializedValue, { val: '51' });
                     break;
                 // Serializing as any other type should fail
@@ -295,7 +295,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: true },
             columnDefinitions = {},
             serialize = function () {
-                SQLiteSerializer.serialize(value, columnDefinitions);
+                sqliteSerializer.serialize(value, columnDefinitions);
             };
 
         for (var c in ColumnType) {
@@ -306,17 +306,17 @@ $testGroup('SQLiteSerializer tests').tests(
             switch (ColumnType[c]) {
                 case ColumnType.Integer:
                 case ColumnType.Int:
-                    serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+                    serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
                     $assert.areEqual(serializedValue, { val: 1 });
                     break;
                 case ColumnType.String:
                 case ColumnType.Text:
-                    serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+                    serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
                     $assert.areEqual(serializedValue, { val: 'true' });
                     break;
                 case ColumnType.Boolean:
                 case ColumnType.Bool:
-                    serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+                    serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
                     $assert.areEqual(serializedValue, { val: 1 });
                     break;
                     // Serializing as any other type should fail
@@ -332,7 +332,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: false },
             columnDefinitions = {},
             serialize = function () {
-                SQLiteSerializer.serialize(value, columnDefinitions);
+                sqliteSerializer.serialize(value, columnDefinitions);
             };
 
         for (var c in ColumnType) {
@@ -343,17 +343,17 @@ $testGroup('SQLiteSerializer tests').tests(
             switch (ColumnType[c]) {
                 case ColumnType.Integer:
                 case ColumnType.Int:
-                    serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+                    serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
                     $assert.areEqual(serializedValue, { val: 0 });
                     break;
                 case ColumnType.String:
                 case ColumnType.Text:
-                    serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+                    serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
                     $assert.areEqual(serializedValue, { val: 'false' });
                     break;
                 case ColumnType.Boolean:
                 case ColumnType.Bool:
-                    serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+                    serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
                     $assert.areEqual(serializedValue, { val: 0 });
                     break;
                 // Serializing as any other type should fail
@@ -369,7 +369,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: -5.55 },
             columnDefinitions = {},
             serialize = function () {
-                SQLiteSerializer.serialize(value, columnDefinitions);
+                sqliteSerializer.serialize(value, columnDefinitions);
             };
 
         for (var c in ColumnType) {
@@ -380,12 +380,12 @@ $testGroup('SQLiteSerializer tests').tests(
             switch (ColumnType[c]) {
                 case ColumnType.Float:
                 case ColumnType.Real:
-                    serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+                    serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
                     $assert.areEqual(serializedValue, { val: -5.55 });
                     break;
                 case ColumnType.String:
                 case ColumnType.Text:
-                    serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+                    serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
                     $assert.areEqual(serializedValue, { val: '-5.55' });
                     break;
                 // Serializing as any other type should fail
@@ -401,7 +401,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: new Date(2011, 10, 11, 12, 13, 14) },
             columnDefinitions = {},
             serialize = function () {
-                SQLiteSerializer.serialize(value, columnDefinitions);
+                sqliteSerializer.serialize(value, columnDefinitions);
             };
 
         for (var c in ColumnType) {
@@ -411,12 +411,12 @@ $testGroup('SQLiteSerializer tests').tests(
             var serializedValue;
             switch (ColumnType[c]) {
                 case ColumnType.Date:
-                    serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+                    serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
                     $assert.areEqual(serializedValue, serializedValue);
                     break;
                 case ColumnType.String:
                 case ColumnType.Text:
-                    serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+                    serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
                     $assert.areEqual(serializedValue, { val: '\"2011-11-11T20:13:14.000Z\"' });
                     break;
                 // Serializing as any other type should fail
@@ -436,7 +436,7 @@ $testGroup('SQLiteSerializer tests').tests(
 
             columnDefinitions.val = ColumnType[c];
 
-            var serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+            var serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
             $assert.areEqual(serializedValue, value);
         }
     }),
@@ -450,7 +450,7 @@ $testGroup('SQLiteSerializer tests').tests(
 
             columnDefinitions.val = ColumnType[c];
 
-            var serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+            var serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
             $assert.areEqual(serializedValue, { val: null });
         }
     }),
@@ -460,7 +460,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = {},
             columnDefinitions = {val: 'someunsupportedtype'},
             serialize = function () {
-                SQLiteSerializer.serialize(value, columnDefinitions);
+                sqliteSerializer.serialize(value, columnDefinitions);
             };
 
         // object
@@ -492,7 +492,7 @@ $testGroup('SQLiteSerializer tests').tests(
     .check(function () {
         var columnDefinitions = {},
             serialize = function () {
-                SQLiteSerializer.serialize(null, columnDefinitions);
+                sqliteSerializer.serialize(null, columnDefinitions);
             };
 
         for (var c in ColumnType) {
@@ -508,7 +508,7 @@ $testGroup('SQLiteSerializer tests').tests(
     .check(function () {
         var columnDefinitions = {},
             serialize = function () {
-                SQLiteSerializer.serialize(undefined, columnDefinitions);
+                sqliteSerializer.serialize(undefined, columnDefinitions);
             };
 
         for (var c in ColumnType) {
@@ -525,7 +525,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: { a: 1 } },
             columnDefinitions = {},
             deserialize = function () {
-                SQLiteSerializer.deserialize(value, columnDefinitions);
+                sqliteSerializer.deserialize(value, columnDefinitions);
             };
 
         var deserializedValue;
@@ -543,7 +543,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: [1, 2] },
             columnDefinitions = {},
             deserialize = function () {
-                SQLiteSerializer.deserialize(value, columnDefinitions);
+                sqliteSerializer.deserialize(value, columnDefinitions);
             };
 
         var deserializedValue;
@@ -561,7 +561,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: 'somestring' },
             columnDefinitions = {},
             deserialize = function () {
-                SQLiteSerializer.deserialize(value, columnDefinitions);
+                sqliteSerializer.deserialize(value, columnDefinitions);
             };
 
         var deserializedValue;
@@ -572,7 +572,7 @@ $testGroup('SQLiteSerializer tests').tests(
             switch (ColumnType[c]) {
                 case ColumnType.String:
                 case ColumnType.Text:
-                    deserializedValue = SQLiteSerializer.deserialize(value, columnDefinitions);
+                    deserializedValue = sqliteSerializer.deserialize(value, columnDefinitions);
                     $assert.areEqual(deserializedValue, value);
                     break;
                     // Deserializing to any other type should fail
@@ -588,7 +588,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: '51' },
             columnDefinitions = {},
             deserialize = function () {
-                SQLiteSerializer.deserialize(value, columnDefinitions);
+                sqliteSerializer.deserialize(value, columnDefinitions);
             };
 
         var deserializedValue;
@@ -599,7 +599,7 @@ $testGroup('SQLiteSerializer tests').tests(
             switch (ColumnType[c]) {
                 case ColumnType.String:
                 case ColumnType.Text:
-                    deserializedValue = SQLiteSerializer.deserialize(value, columnDefinitions);
+                    deserializedValue = sqliteSerializer.deserialize(value, columnDefinitions);
                     $assert.areEqual(deserializedValue, value);
                     break;
                 // Deserializing to any other type should fail
@@ -615,7 +615,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: 51 },
             columnDefinitions = {},
             deserialize = function () {
-                SQLiteSerializer.deserialize(value, columnDefinitions);
+                sqliteSerializer.deserialize(value, columnDefinitions);
             };
 
         var deserializedValue;
@@ -628,16 +628,16 @@ $testGroup('SQLiteSerializer tests').tests(
                 case ColumnType.Int:
                 case ColumnType.Float:
                 case ColumnType.Real:
-                    deserializedValue = SQLiteSerializer.deserialize(value, columnDefinitions);
+                    deserializedValue = sqliteSerializer.deserialize(value, columnDefinitions);
                     $assert.areEqual(deserializedValue, value);
                     break;
                 case ColumnType.Boolean:
                 case ColumnType.Bool:
-                    deserializedValue = SQLiteSerializer.deserialize(value, columnDefinitions);
+                    deserializedValue = sqliteSerializer.deserialize(value, columnDefinitions);
                     $assert.areEqual(deserializedValue, { val: true });
                     break;
                 case ColumnType.Date:
-                    deserializedValue = SQLiteSerializer.deserialize(value, columnDefinitions);
+                    deserializedValue = sqliteSerializer.deserialize(value, columnDefinitions);
                     $assert.isNotNull(deserializedValue);
                     $assert.isNotNull(deserializedValue.val);
                     Validate.isDate(deserializedValue.val);
@@ -657,7 +657,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: 0 },
             columnDefinitions = {},
             deserialize = function () {
-                SQLiteSerializer.deserialize(value, columnDefinitions);
+                sqliteSerializer.deserialize(value, columnDefinitions);
             };
 
         var deserializedValue;
@@ -670,16 +670,16 @@ $testGroup('SQLiteSerializer tests').tests(
                 case ColumnType.Int:
                 case ColumnType.Float:
                 case ColumnType.Real:
-                    deserializedValue = SQLiteSerializer.deserialize(value, columnDefinitions);
+                    deserializedValue = sqliteSerializer.deserialize(value, columnDefinitions);
                     $assert.areEqual(deserializedValue, value);
                     break;
                 case ColumnType.Boolean:
                 case ColumnType.Bool:
-                    deserializedValue = SQLiteSerializer.deserialize(value, columnDefinitions);
+                    deserializedValue = sqliteSerializer.deserialize(value, columnDefinitions);
                     $assert.areEqual(deserializedValue, { val: false });
                     break;
                 case ColumnType.Date:
-                    deserializedValue = SQLiteSerializer.deserialize(value, columnDefinitions);
+                    deserializedValue = sqliteSerializer.deserialize(value, columnDefinitions);
                     $assert.isNotNull(deserializedValue);
                     $assert.isNotNull(deserializedValue.val);
                     Validate.isDate(deserializedValue.val);
@@ -699,7 +699,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: true },
             columnDefinitions = {},
             deserialize = function () {
-                SQLiteSerializer.deserialize(value, columnDefinitions);
+                sqliteSerializer.deserialize(value, columnDefinitions);
             };
 
         var deserializedValue;
@@ -717,7 +717,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: false },
             columnDefinitions = {},
             deserialize = function () {
-                SQLiteSerializer.deserialize(value, columnDefinitions);
+                sqliteSerializer.deserialize(value, columnDefinitions);
             };
 
         var deserializedValue;
@@ -735,7 +735,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: -1.5 },
             columnDefinitions = {},
             deserialize = function () {
-                SQLiteSerializer.deserialize(value, columnDefinitions);
+                sqliteSerializer.deserialize(value, columnDefinitions);
             };
 
         var deserializedValue;
@@ -746,7 +746,7 @@ $testGroup('SQLiteSerializer tests').tests(
             switch (ColumnType[c]) {
                 case ColumnType.Float:
                 case ColumnType.Real:
-                    deserializedValue = SQLiteSerializer.deserialize(value, columnDefinitions);
+                    deserializedValue = sqliteSerializer.deserialize(value, columnDefinitions);
                     $assert.areEqual(deserializedValue, value);
                     break;
                 // Deserializing to any other type should fail
@@ -762,7 +762,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = { val: new Date(2011, 10, 11, 12, 13, 14) },
             columnDefinitions = {},
             deserialize = function () {
-                SQLiteSerializer.deserialize(value, columnDefinitions);
+                sqliteSerializer.deserialize(value, columnDefinitions);
             };
 
         var deserializedValue;
@@ -784,7 +784,7 @@ $testGroup('SQLiteSerializer tests').tests(
 
             columnDefinitions.val = ColumnType[c];
 
-            $assert.areEqual(SQLiteSerializer.deserialize(value, columnDefinitions), value);
+            $assert.areEqual(sqliteSerializer.deserialize(value, columnDefinitions), value);
         }
     }),
 
@@ -797,7 +797,7 @@ $testGroup('SQLiteSerializer tests').tests(
 
             columnDefinitions.val = ColumnType[c];
 
-            $assert.areEqual(SQLiteSerializer.deserialize(value, columnDefinitions), {val: null});
+            $assert.areEqual(sqliteSerializer.deserialize(value, columnDefinitions), {val: null});
         }
     }),
 
@@ -806,7 +806,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = {},
             columnDefinitions = { val: 'someunsupportedtype' },
             deserialize = function () {
-                SQLiteSerializer.deserialize(value, columnDefinitions);
+                sqliteSerializer.deserialize(value, columnDefinitions);
             };
 
         // object
@@ -839,7 +839,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = {},
             columnDefinitions = {},
             deserialize = function () {
-                SQLiteSerializer.deserialize(null, columnDefinitions);
+                sqliteSerializer.deserialize(null, columnDefinitions);
             };
 
         for (var c in ColumnType) {
@@ -857,7 +857,7 @@ $testGroup('SQLiteSerializer tests').tests(
         var value = {},
             columnDefinitions = {},
             deserialize = function () {
-                SQLiteSerializer.deserialize(undefined, columnDefinitions);
+                sqliteSerializer.deserialize(undefined, columnDefinitions);
             };
 
         for (var c in ColumnType) {
@@ -898,7 +898,7 @@ $testGroup('SQLiteSerializer tests').tests(
             float: ColumnType.Float,
             date: ColumnType.Date
         };
-        var serializedValue = SQLiteSerializer.serialize(value, columnDefinitions);
+        var serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
         $assert.areEqual(serializedValue, {
             "object": "{\"a\":1,\"b\":\"str\",\"c\":[1,2]}",
             "array": "[1,2,{\"a\":1}]",
@@ -912,6 +912,6 @@ $testGroup('SQLiteSerializer tests').tests(
             "float": value.float,
             "date": 1008191699000
         });
-        $assert.areEqual(SQLiteSerializer.deserialize(serializedValue, columnDefinitions), value);
+        $assert.areEqual(sqliteSerializer.deserialize(serializedValue, columnDefinitions), value);
     })
 );

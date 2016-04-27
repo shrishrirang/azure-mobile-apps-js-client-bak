@@ -7,7 +7,7 @@ var Platform = require('Platforms/Platform'),
     _ = require('../../Utilities/Extensions'),
     queryHelper = require('azure-mobile-apps/src/query'),
     ColumnType = require('./ColumnType'),
-    SQLiteSerializer = require('./SQLiteSerializer'),
+    sqliteSerializer = require('./sqliteSerializer'),
     Query = require('query.js').Query,
     formatSql = require('azure-odata-sql').format;
 
@@ -149,7 +149,7 @@ var MobileServiceSqliteStore = function (dbName) {
 
             if (!_.isNull(instances[i])) {
                 Validate.isValidId(instances[i][idPropertyName], 'instances[' + i + '].' + idPropertyName);
-                instances[i] = SQLiteSerializer.serialize(instances[i], columnDefinitions);
+                instances[i] = sqliteSerializer.serialize(instances[i], columnDefinitions);
             }
         }
 
@@ -264,7 +264,7 @@ var MobileServiceSqliteStore = function (dbName) {
                 }
 
                 if (instance) {
-                    instance = SQLiteSerializer.deserialize(instance, columnDefinitions);
+                    instance = sqliteSerializer.deserialize(instance, columnDefinitions);
                 }
                 callback(null, instance);
             } catch (err) {
@@ -448,7 +448,7 @@ var MobileServiceSqliteStore = function (dbName) {
                 var row;
                 for (var j = 0; j < res.rows.length; j++) {
 
-                    row = SQLiteSerializer.deserialize(res.rows.item(j), columnDefinitions);
+                    row = sqliteSerializer.deserialize(res.rows.item(j), columnDefinitions);
                     result.push(row);
                 }
             });
@@ -492,7 +492,7 @@ function createTable(transaction, tableDefinition) {
     for (var columnName in columnDefinitions) {
         var columnType = columnDefinitions[columnName];
 
-        var columnDefinitionClause = _.format("[{0}] {1}", columnName, SQLiteSerializer.getSqliteType(columnType));
+        var columnDefinitionClause = _.format("[{0}] {1}", columnName, sqliteSerializer.getSqliteType(columnType));
 
         // TODO(shrirs): Handle cases where id property may be missing
         if (columnName === idPropertyName) {
