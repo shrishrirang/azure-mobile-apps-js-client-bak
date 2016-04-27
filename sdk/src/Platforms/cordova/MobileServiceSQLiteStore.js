@@ -17,6 +17,12 @@ var MobileServiceSQLiteStore = function (dbName) {
     /// <summary>
     /// Initializes a new instance of the MobileServiceSQLiteStore class.
     /// </summary>
+    
+    "use strict"
+    
+    if ( !(this instanceof MobileServiceSQLiteStore) ) {
+        return new MobileServiceSQLiteStore(dbName);
+    }
 
     this._db = window.sqlitePlugin.openDatabase({ name: dbName });
     this._tableDefinitions = {};
@@ -348,7 +354,7 @@ var MobileServiceSQLiteStore = function (dbName) {
         var deleteStatements = [],
             deleteParams = [];
 
-        for (i = 0; i < records.length; i++) {
+        for (var i = 0; i < records.length; i++) {
 
             var row = records[i];
 
