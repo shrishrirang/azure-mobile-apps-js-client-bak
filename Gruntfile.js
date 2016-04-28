@@ -111,6 +111,7 @@ module.exports = function(grunt) {
                 src: [
                     '<%= files.testcore %>',
                     '<%= files.cordova %>',
+                    './sdk/test/tests/target/cordova/**/*.js'
                 ],
                 dest: './sdk/test/app/cordova/www/scripts/generated/tests.js',
                 options: {
