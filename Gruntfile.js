@@ -21,7 +21,7 @@ module.exports = function(grunt) {
             ],
             // List of Cordova entry points
             cordova: [
-                'sdk/src/Platforms/cordova/MobileServiceSQLiteStore.js',
+                'sdk/src/Platforms/cordova/MobileServiceSqliteStore.js',
                 '<%= files.core %>',
             ],
             // Entry points common to tests for all platforms
