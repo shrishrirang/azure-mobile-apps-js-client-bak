@@ -2,6 +2,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
+/**
+ * @file SQLite implementation of the local store.
+ * This uses the https://www.npmjs.com/package/cordova-sqlite-storage Cordova plugin.
+ */
+
 var Platform = require('Platforms/Platform'),
     Validate = require('../../Utilities/Validate'),
     _ = require('../../Utilities/Extensions'),
@@ -10,84 +15,84 @@ var Platform = require('Platforms/Platform'),
     sqliteSerializer = require('./sqliteSerializer'),
     Query = require('query.js').Query,
     formatSql = require('azure-odata-sql').format;
+    idPropertyName = "id"; // TODO: Add support for case insensitive ID
 
-var idPropertyName = "id";
-
+/**
+ * Initializes a new instance of MobileServiceSqliteStore
+ */
 var MobileServiceSqliteStore = function (dbName) {
-    /// <summary>
-    /// Initializes a new instance of the MobileServiceSqliteStore class.
-    /// </summary>
-    
+
+    // Guard against initialization without the new operator
     "use strict";
-    
     if ( !(this instanceof MobileServiceSqliteStore) ) {
         return new MobileServiceSqliteStore(dbName);
     }
 
-    this._db = window.sqlitePlugin.openDatabase({ name: dbName });
+    this._db = window.sqlitePlugin.openDatabase({ name: dbName, location: 'default' });
     this._tableDefinitions = {};
 
+    /**
+     * Defines the schema of the SQLite table
+     * @param tableDefinition An object that defines the table, i.e. the table name and columns
+     * 
+     * Example of a valid tableDefinition object:
+     * name: "todoItemTable",
+     * columnDefinitions : {
+     *      id : "string",
+     *      metadata : MobileServiceSqliteStore.ColumnType.Object,
+     *      description : "string",
+     *      purchaseDate : "date",
+     *      price : MobileServiceSqliteStore.ColumnType.Real
+     * }
+     *
+     * If a table with the same name already exists, the newly defined columns in the table definition will be added to the table.
+     * If no table with the same name exists, a table with the specified schema will be created.  
+     *
+     * @returns A promise that is resolved when the operation is completed successfully OR rejected with the error if it fails.
+     */
     this.defineTable = Platform.async(function (tableDefinition) {
-        /// <summary>Defines the local table in the sqlite store</summary>
-        /// <param name="tableDefinition">Table definition object defining the table name and columns
-        /// Example of a valid tableDefinition object:
-        /// tableDefinition : {
-        ///     name: "todoItemTable",
-        ///     columnDefinitions : {
-        ///         id : "string",
-        ///         metadata : MobileServiceSqliteStore.ColumnType.Object,
-        ///         description : "string",
-        ///         purchaseDate : "date",
-        ///         price : MobileServiceSqliteStore.ColumnType.Real
-        ///     }
-        /// }
-        /// </param>
-        /// <returns type="Promise">
-        /// A promise that is resolved when the operation is completed successfully.
-        /// If the operation fails, the promise is rejected
-        /// </returns>
 
         // Extract the callback argument added by Platform.async and redefine the function arguments
         var callback = Array.prototype.pop.apply(arguments);
         tableDefinition = arguments[0];
 
+        // Validate the function arguments
         Validate.isFunction(callback, 'callback');
         Validate.notNull(tableDefinition, 'tableDefinition');
+        Validate.isObject(tableDefinition, 'tableDefinition');
+        
+        // Do basic table name validation and leave the rest to SQLite
         Validate.isString(tableDefinition.name, 'tableDefinition.name');
         Validate.notNullOrEmpty(tableDefinition.name, 'tableDefinition.name');
 
-        var columnDefinitions = tableDefinition.columnDefinitions;
-
         // Validate the specified column types
+        var columnDefinitions = tableDefinition.columnDefinitions;
         for (var columnName in columnDefinitions) {
-            var columnType = columnDefinitions[columnName];
-
-            Validate.isString(columnType, 'columnType');
-            Validate.notNullOrEmpty(columnType, 'columnType');
+            Validate.isString(columnDefinitions[columnName], 'columnType');
+            Validate.notNullOrEmpty(columnDefinitions[columnName], 'columnType');
         }
+        
+        Validate.notNull(columnDefinitions[idPropertyName]);
 
         this._db.transaction(function(transaction) {
 
+            // Get the table information
             var pragmaStatement = _.format("PRAGMA table_info({0});", tableDefinition.name);
-
             transaction.executeSql(pragmaStatement, [], function (transaction, result) {
 
-                // If table already exists, add missing columns, if any.
-                // Else, create the table
-                if (result.rows.length > 0) {
+                // Check if a table with the specified name exists 
+                if (result.rows.length > 0) { // table already exists, add missing columns.
 
-                    // Columns that are present in the table already
+                    // Get a list of columns present in the SQLite table
                     var existingColumns = {};
-
-                    // Remove columns that are already present in the table from the columnDefinitions array
                     for (var i = 0; i < result.rows.length; i++) {
                         var column = result.rows.item(i);
                         existingColumns[column.name] = true;
                     }
 
                     addMissingColumns(transaction, tableDefinition, existingColumns);
-
-                } else {
+                    
+                } else { // table does not exist, create it.
                     createTable(transaction, tableDefinition);
                 }
             });
@@ -95,25 +100,28 @@ var MobileServiceSqliteStore = function (dbName) {
         }, function (error) {
             callback(error);
         }, function(result) {
+            // Table definition is successful, update the in-memory list of table definitions. 
             this._tableDefinitions[tableDefinition.name] = tableDefinition;
             callback();
         }.bind(this));
     });
 
+    /**
+     * Updates or inserts one or more objects in the local table
+     * 
+     * @param tableName Name of the local table in which data is to be upserted.
+     * @param data A single object OR an array of objects to be inserted/updated in the table
+     * 
+     * @returns A promise that is resolved when the operation is completed successfully OR rejected with the error if it fails.
+     */
     this.upsert = Platform.async(function (tableName, data) {
-        /// <summary>Updates or inserts one or more objects in the local table</summary>
-        /// <param name="tableName">Name of the local table in which the object(s) are to be upserted</param>
-        /// <param name="data">A single object OR an array of objects to be inserted/updated in the table</param>
-        /// <returns type="Promise">
-        /// A promise that is resolved when the operation is completed successfully.
-        /// If the operation fails, the promise is rejected
-        /// </returns>
 
         // Extract the callback argument added by Platform.async and redefine the function arguments
         var callback = Array.prototype.pop.apply(arguments);
         tableName = arguments[0];
         data = arguments[1];
 
+        // Validate the arguments
         Validate.isFunction(callback);
         Validate.isString(tableName, 'tableName');
         Validate.notNullOrEmpty(tableName, 'tableName');
@@ -126,6 +134,7 @@ var MobileServiceSqliteStore = function (dbName) {
         Validate.notNull(columnDefinitions, 'columnDefinitions');
         Validate.isObject(columnDefinitions, 'columnDefinitions');
 
+        // If no data is provided, there is nothing more to be done.
         if (_.isNull(data)) {
             callback();
             return;
@@ -133,44 +142,51 @@ var MobileServiceSqliteStore = function (dbName) {
 
         Validate.isObject(data);
 
-        var instances;
+        // Compute the array of records to be upserted.
+        var records;
         if (!_.isArray(data)) {
-            instances = [data];
+            records = [data];
         } else {
-            instances = data;
+            records = data;
         }
 
-        for (var i = 0; i < instances.length; i++) {
-
-            if (!_.isNull(instances[i])) {
-                Validate.isValidId(instances[i][idPropertyName], 'instances[' + i + '].' + idPropertyName);
-                instances[i] = sqliteSerializer.serialize(instances[i], columnDefinitions);
+        // Serialize the records to a format that can be stored in SQLite.
+        for (var i = 0; i < records.length; i++) {
+            // Skip null or undefined record objects
+            if (!_.isNull(records[i])) {
+                Validate.isValidId(records[i][idPropertyName], 'records[' + i + '].' + idPropertyName);
+                records[i] = sqliteSerializer.serialize(records[i], columnDefinitions);
             }
         }
 
         // Note: The default maximum number of parameters allowed by sqlite is 999
-        // See: http://www.sqlite.org/limits.html#max_variable_number
-        // TODO(shrirs): Add support for tables with more than 999 columns
+        // Refer http://www.sqlite.org/limits.html#max_variable_number
+        // TODO: Add support for tables with more than 999 columns
+        if (columnDefinitions.length > 999) {
+            throw new Error("Number of table columns cannot be more than 999");
+        }
 
-        // Insert and update SQL statements and their parameters corresponding to each record we want to insert/update in the table.
+        // Insert and update SQL statements and their parameters corresponding to each record we want to upsert in the table.
         var statements = [],
-            parameters = [];
+            parameters = [],
+            columnNames, columnParams, updateExpression, insertValues, updateValues, record;
+        for (i = 0; i < records.length; i++) {
 
-        var columnNames, columnParams, updateExpression, insertValues, updateValues, property, instance;
-        for (i = 0; i < instances.length; i++) {
-
-            if (_.isNull(instances[i])) {
+            if (_.isNull(records[i])) {
                 continue;
             }
-                
+            
+            // Reset the variables dirtied in the previous iteration of the loop.
             columnNames = '';
             columnParams = '';
             updateExpression = '';
             insertValues = [];
             updateValues = [];
-            instance = instances[i];
+            record = records[i];
 
-            for (property in instance) {
+            // Compute columnNames, columnParams and updateExpression that will be used later in the INSERT and UPDATE statements.
+            for (var property in record) {
+                
                 // Add comma, if this is not the first column
                 if (columnNames !== '') {
                     columnNames += ', ';
@@ -188,12 +204,12 @@ var MobileServiceSqliteStore = function (dbName) {
                 // We don't want to update the id column
                 if (property !== idPropertyName) {
                     updateExpression += property + ' = ?';
-                    updateValues.push(instance[property]);
+                    updateValues.push(record[property]);
                 }
 
-                insertValues.push(instance[property]);
+                insertValues.push(record[property]);
             }
-
+            
             // Insert the instance. If one with the same id already exists, ignore it.
             statements.push(_.format("INSERT OR IGNORE INTO {0} ({1}) VALUES ({2})", tableName, columnNames, columnParams));
             parameters.push(insertValues);
@@ -201,13 +217,13 @@ var MobileServiceSqliteStore = function (dbName) {
             // If there is any property other than id that needs to be upserted, update the record.
             if (updateValues.length > 0) {
                 statements.push(_.format("UPDATE {0} SET {1} WHERE {2} = ?", tableName, updateExpression, idPropertyName));
-                updateValues.push(instance[idPropertyName]);
+                updateValues.push(record[idPropertyName]);
                 parameters.push(updateValues);
             }
         }
 
         this._db.transaction(function (transaction) {
-
+            // Execute the INSERT and UPDATE statements.
             for (var i = 0; i < statements.length; i++) {
                 transaction.executeSql(statements[i], parameters[i]);
             }
@@ -218,24 +234,26 @@ var MobileServiceSqliteStore = function (dbName) {
         });
     });
 
+    /**
+     * Perform a record lookup in the local table
+     * 
+     * @param tableName Name of the local table in which lookup is to be performed
+     * @param id ID of the object to be looked up
+     * 
+     * @returns Promise that will be resolved with the looked up object when the operation completes successfully OR 
+     * rejected with the error if it fials. 
+     */
     this.lookup = Platform.async(function (tableName, id) {
-        /// <summary>Perform a lookup against a local table</summary>
-        /// <param name="tableName">Name of the local table in which look up is to be performed</param>
-        /// <param name="id">ID of the object to be looked up</param>
-        /// <returns type="Promise">
-        /// A promise that is resolved with the looked up object when the operation is completed successfully.
-        /// If the operation fails, the promise is rejected
-        /// </returns>
 
         // Extract the callback argument added by Platform.async and redefine the function arguments
         var callback = Array.prototype.pop.apply(arguments);
         tableName = arguments[0];
         id = arguments[1];
 
+        // Validate the arguments
         Validate.isFunction(callback, 'callback');
         Validate.isString(tableName, 'tableName');
         Validate.notNullOrEmpty(tableName, 'tableName');
-
         Validate.isValidId(id, 'id');
         
         var tableDefinition = this._tableDefinitions[tableName];
@@ -251,15 +269,16 @@ var MobileServiceSqliteStore = function (dbName) {
         this._db.executeSql(lookupStatement, [id], function (result) {
 
             try {
-                var instance = null;
+                var record;
                 if (result.rows.length !== 0) {
-                    instance = result.rows.item(0);
+                    record = result.rows.item(0);
                 }
 
-                if (instance) {
-                    instance = sqliteSerializer.deserialize(instance, columnDefinitions);
+                // Deserialize the record read from the SQLite store into its original form.
+                if (record) {
+                    record = sqliteSerializer.deserialize(record, columnDefinitions);
                 }
-                callback(null, instance);
+                callback(null, record);
             } catch (err) {
                 callback(err);
             }
@@ -268,46 +287,51 @@ var MobileServiceSqliteStore = function (dbName) {
         });
     });
 
+    /**
+     * Deletes one or more records from the local table
+     * 
+     * @param tableNameOrQuery Either the name of the local table in which delete is to be performed,
+     *                         Or a QueryJS object defining records to be deleted.
+     * @param ids A single ID or an array of IDs of records to be deleted
+     *            This argument is expected only if the first argument is table name and not a QueryJS object.
+     * 
+     * @returns Promise that is resolved when the operation completes successfully or rejected with the error if it fails.
+     */
     this.del = Platform.async(function (tableNameOrQuery, ids) {
-        /// <summary>Deletes records from the local table</summary>
-        /// <param name="tableNameOrQuery">Name of the local table in which delete is to be performed OR a queryjs object defining records to be deleted</param>
-        /// <param name="ids">A single ID or and array of IDs of records to be deleted. This argument is expected only if the first argument is table name</param>
-        /// <returns type="Promise">
-        /// A promise that is resolved when the operation is completed successfully.
-        /// If the operation fails, the promise is rejected
-        /// </returns>
 
         // Extract the callback argument added by Platform.async and redefine the function arguments
         var callback = Array.prototype.pop.apply(arguments);
         tableNameOrQuery = arguments[0];
         ids = arguments[1];
 
+        // Validate parameters
         Validate.isFunction(callback);
         Validate.notNull(tableNameOrQuery);
 
-        var tableName, query;
         if (_.isString(tableNameOrQuery)) {
             Validate.notNullOrEmpty(tableNameOrQuery, 'tableNameOrQuery');
-            tableName = tableNameOrQuery;
 
-            if (_.isNull(ids)) {
-                callback(); // there's nothing to be deleted
-                return;
-            } else if (!_.isArray(ids)) { // If a single id is specified, convert it to an array and proceed
+            // If a single id is specified, convert it to an array and proceed.
+            // Detailed validation of individual IDs in the array will be taken care of later.
+            if (!_.isArray(ids)) {
                 ids = [ids];
             }
+            
+            this._deleteIds(tableNameOrQuery /* table name */, ids, callback);
         } else if (_.isObject(tableNameOrQuery)) {
-            query = tableNameOrQuery;
+            this._deleteUsingQuery(tableNameOrQuery /* query */, callback);
         } else {
             throw _.format(Platform.getResourceString("TypeCheckError"), 'tableNameOrQuery', 'Object or String', typeof tableNameOrQuery);
         }
-
-        if (query) {
-            // The query can select specific columns. However, we need to know values of all the columns
-            // to avoid deleting wrong records. 
-            // Explicitly remove selection from the query, if any.
+    });
+    
+    // Deletes the records selected by the specified query and notifies the callback.
+    this._deleteUsingQuery = function (query, callback) {
+        
+            // The query can have a 'select' clause that queries only specific columns. However, we need to know values of all the columns
+            // to avoid deleting wrong records. So we explicitly remove selection from the query, if any.
             var components = query.getComponents();
-            if (components.selections && components.selections.length) {
+            if (components.selections && components.selections.length > 0) {
                 components.selections = [];
                 query.setComponents(components);
             }
@@ -331,34 +355,30 @@ var MobileServiceSqliteStore = function (dbName) {
             }.bind(this), function (error) {
                 callback(error);
             });
-        } else {
-            this._deleteIds(tableName, ids, callback);
-        }
-    });
+    };
 
     // Delete the specified records from the table.
     // If multiple rows match any of the specified records, all will be deleted.
-    this._deleteRecords = function(tableName, records, callback) {
+    this._deleteRecords = function (tableName, records, callback) {
 
-        // SQL DELETE statements and parameters corresponding to each record we want to delete from the table.
+        // Compute the SQL DELETE statements and parameters corresponding to each record we want to delete from the table.
         var deleteStatements = [],
             deleteParams = [];
-
         for (var i = 0; i < records.length; i++) {
 
-            var row = records[i];
-
-            var whereClauses = [],
+            var record = records[i],
+                whereClauses = [],
                 whereParams = [];
-            for (var propertyName in row) {
+            for (var propertyName in record) {
                 whereClauses.push(_.format('{0} = ?', propertyName));
-                whereParams.push(row[propertyName]);
+                whereParams.push(record[propertyName]);
             }
 
             deleteStatements.push(_.format('DELETE FROM {0} WHERE {1}', tableName, whereClauses.join(' AND ')));
             deleteParams.push(whereParams);
         }
 
+        // Execute the DELETE statements
         this._db.transaction(function (transaction) {
             for (var i = 0; i < deleteStatements.length; i++) {
                 transaction.executeSql(deleteStatements[i], deleteParams[i]);
@@ -384,7 +404,6 @@ var MobileServiceSqliteStore = function (dbName) {
         }
 
         var deleteStatement = _.format("DELETE FROM {0} WHERE {1} in ({2})", tableName, idPropertyName, deleteExpressions.join());
-
         this._db.executeSql(deleteStatement, deleteParams, function () {
             callback();
         }, function (error) {
@@ -392,17 +411,14 @@ var MobileServiceSqliteStore = function (dbName) {
         });
     };
 
+    /**
+     * Read a local table
+     * 
+     * @param query A QueryJS object representing the query to use while reading the table
+     * @returns A promise that is resolved with the read results when the operation is completed successfully or rejected with
+     *          the error if it fails.
+     */
     this.read = Platform.async(function (query) {
-        /// <summary>
-        /// Read a table
-        /// </summary>
-        /// <param name="query" type="Object">
-        /// A QueryJS object representing the query to be performed while reading the table.
-        /// </param>
-        /// <returns type="Promise">
-        /// A promise that is resolved with the read results when the operation is completed successfully.
-        /// If the operation fails, the promise is rejected
-        /// </returns>
 
         // Extract the callback argument added by Platform.async and redefine the function arguments
         var callback = Array.prototype.pop.apply(arguments);
@@ -422,22 +438,23 @@ var MobileServiceSqliteStore = function (dbName) {
 
         var count,
             result = [],
-            odataQuery = queryHelper.toOData(query),
-            statements = formatSql(odataQuery, { flavor: 'sqlite' });
+            statements = getSqlStatementsFromQuery(query);
 
         this._db.transaction(function (transaction) {
 
+            // If the query requests the result count we expect 2 SQLite statements. Else, we expect a single statement.
             if (statements.length < 1 || statements.length > 2) {
                 throw Platform.getResourceString("MobileServiceSqliteStore_UnexptedNumberOfStatements");
             }
 
+            // The first statement gets the query results. Execute it.
+            // TODO: Figure out a better way to determine what the statements in the array correspond to.    
             transaction.executeSql(statements[0].sql, getStatementParameters(statements[0]), function (transaction, res) {
-
-                var row;
+                var record;
                 for (var j = 0; j < res.rows.length; j++) {
-
-                    row = sqliteSerializer.deserialize(res.rows.item(j), columnDefinitions);
-                    result.push(row);
+                    // Deserialize the record read from the SQLite store into its original form.
+                    record = sqliteSerializer.deserialize(res.rows.item(j), columnDefinitions);
+                    result.push(record);
                 }
             });
 
@@ -450,6 +467,7 @@ var MobileServiceSqliteStore = function (dbName) {
         }, function (error) {
             callback(error);
         }, function () {
+            // If we fetched the record count, combine the records and the count into an object.
             if (count !== undefined) {
                 result = {
                     result: result,
@@ -461,6 +479,19 @@ var MobileServiceSqliteStore = function (dbName) {
     });
 };
 
+// Converts the QueryJS object into equivalent SQLite statements
+function getSqlStatementsFromQuery(query) {
+    
+    // Convert QueryJS object to an OData query string
+    var odataQuery = queryHelper.toOData(query);
+    
+    // Convert the OData query string into equivalent SQLite statements
+    var statements = formatSql(odataQuery, { flavor: 'sqlite' });
+    
+    return statements;
+}
+
+// Gets the parameters from a statement defined by azure-odata-sql
 function getStatementParameters(statement) {
     var params = [];
 
@@ -473,7 +504,9 @@ function getStatementParameters(statement) {
     return params;
 }
 
+// Creates a table as per the specified definition and as part of the specified SQL transaction. 
 function createTable(transaction, tableDefinition) {
+
     var columnDefinitions = tableDefinition.columnDefinitions;
     var columnDefinitionClauses = [];
 
@@ -482,27 +515,27 @@ function createTable(transaction, tableDefinition) {
 
         var columnDefinitionClause = _.format("[{0}] {1}", columnName, sqliteSerializer.getSqliteType(columnType));
 
-        // TODO(shrirs): Handle cases where id property may be missing
         if (columnName === idPropertyName) {
             columnDefinitionClause += " PRIMARY KEY";
         }
 
         columnDefinitionClauses.push(columnDefinitionClause);
     }
-
+    
     var createTableStatement = _.format("CREATE TABLE [{0}] ({1})", tableDefinition.name, columnDefinitionClauses.join());
 
     transaction.executeSql(createTableStatement);
 }
 
-// Add missing columns to the table
+// Alters the table to add the missing columns
 function addMissingColumns(transaction, tableDefinition, existingColumns) {
 
-    // SQLite does not support adding multiple columns using a single statement; Add one column at a time
+    // Add necessary columns to the table
     var columnDefinitions = tableDefinition.columnDefinitions;
     for (var columnName in columnDefinitions) {
 
-        // If this column does not already exist, we need to create it
+        // If this column does not already exist, we need to create it.
+        // SQLite does not support adding multiple columns using a single statement. Add one column at a time.
         if (!existingColumns[columnName]) {
             var alterStatement = _.format("ALTER TABLE {0} ADD COLUMN {1} {2}", tableDefinition.name, columnName, columnDefinitions[columnName]);
             transaction.executeSql(alterStatement);

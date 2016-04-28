@@ -16,7 +16,7 @@ $testGroup('SQLiteStore - upsert tests')
 
     // Clear the test table before running each test.
     .beforeEachAsync(Platform.async( function(callback) {
-        var db = window.sqlitePlugin.openDatabase({ name: testDbFile });
+        var db = window.sqlitePlugin.openDatabase({ name: testDbFile, location: 'default' });
 
         // Delete table created by the unit tests
         db.executeSql('DROP TABLE IF EXISTS ' + testTableName, null, function() {
