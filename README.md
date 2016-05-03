@@ -21,7 +21,7 @@ The SDK files are present in the package's _/dist_ directory.
 To build the SDK yourself, run:
 
     git clone https://github.com/Azure/azure-mobile-apps-js-client.git
-    cd azure-mobile-apps-client
+    cd azure-mobile-apps-js-client
     npm install
     npm run build
 
