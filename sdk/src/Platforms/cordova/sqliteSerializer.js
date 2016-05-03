@@ -153,7 +153,7 @@ function serialize (value, columnDefinitions) {
         }
         
     } catch (error) {
-        throw new verror.VError(error, _.format(Platform.getResourceString("sqliteSerializer_SerializationFailed"), JSON.stringify(value), JSON.stringify(columnDefinitions)));
+        throw new verror.VError(error, Platform.getResourceString("sqliteSerializer_SerializationFailed"), JSON.stringify(value), JSON.stringify(columnDefinitions));
     }
 
     return serializedValue;
@@ -178,7 +178,7 @@ function deserialize (value, columnDefinitions) {
         }
         
     } catch (error) {
-        throw new verror.VError(error, _.format(Platform.getResourceString("sqliteSerializer_DeserializationFailed"), JSON.stringify(value), JSON.stringify(columnDefinitions)));
+        throw new verror.VError(error, Platform.getResourceString("sqliteSerializer_DeserializationFailed"), JSON.stringify(value), JSON.stringify(columnDefinitions));
     }
 
     return deserializedValue;

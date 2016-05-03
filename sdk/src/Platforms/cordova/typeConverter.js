@@ -109,7 +109,7 @@ exports.convertToObject = function (value) {
         error = err; 
     }
 
-    throw new verror.VError(error, _.format(Platform.getResourceString('sqliteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, 'Object'));    
+    throw new verror.VError(error, Platform.getResourceString('sqliteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, 'Object');    
 };
 
 exports.convertToArray = function (value) {
@@ -135,5 +135,5 @@ exports.convertToArray = function (value) {
         error = err; 
     }
 
-    throw new verror.VError(error, _.format(Platform.getResourceString('sqliteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, 'Array'));    
+    throw new verror.VError(error, Platform.getResourceString('sqliteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, 'Array');    
 };

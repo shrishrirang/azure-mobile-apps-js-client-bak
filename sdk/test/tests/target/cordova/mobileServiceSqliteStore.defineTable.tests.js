@@ -97,7 +97,8 @@ $testGroup('SQLiteStore - defineTable tests')
         });
     }),
 
-    $test('change type of existing columns')
+    $test('Redefining table with changed column types should read table data accordingly')
+    .description('Sqlite does not let you alter datatype of columns. This test only checks that deserializing is performed as per latest table definition')
     .checkAsync(function () {
         var store = createStore(),
             row = { id: 101, flag: 51 },
