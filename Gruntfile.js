@@ -21,7 +21,7 @@ module.exports = function(grunt) {
             ],
             // List of Cordova entry points
             cordova: [
-                'sdk/src/Platforms/cordova/MobileServiceSQLiteStore.js',
+                'sdk/src/Platforms/cordova/MobileServiceSqliteStore.js',
                 '<%= files.core %>',
             ],
             // Entry points common to tests for all platforms
@@ -94,7 +94,7 @@ module.exports = function(grunt) {
                 src: '<%= files.cordova %>',
                 dest: './sdk/src/generated/MobileServices.Cordova.js',
                 options: {
-                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
+                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/cordova', expose: 'Platforms' } ] )
                 }
             },
             webTest: {
@@ -109,14 +109,13 @@ module.exports = function(grunt) {
             },
             cordovaTest: {
                 src: [
+                    '<%= files.testcore %>',
                     '<%= files.cordova %>',
-                    './sdk/test/web/js/TestFrameworkAdapter.js',
-                    './sdk/test/web/js/TestClientHelper.js',
-                    '<%= files.testcore %>'
+                    './sdk/test/tests/target/cordova/**/*.js'
                 ],
                 dest: './sdk/test/app/cordova/www/scripts/generated/tests.js',
                 options: {
-                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
+                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/cordova', expose: 'Platforms' } ] )
                 }
             },
         },
@@ -146,7 +145,7 @@ module.exports = function(grunt) {
 
                     // Copy the test bundle to the Cordova unit test app's android directory.
                     // This is needed to host the Cordova bits so that the Cordova app can refresh on the fly.
-                    {src: ['sdk/test/app/cordova/www/scripts/generated/tests.js'], dest: 'sdk/test/app/cordova/platforms/android/assets/www/'},
+                    {src: ['tests.js'], dest: __dirname + '/sdk/test/app/cordova/platforms/android/assets/www/', cwd: __dirname + '/sdk/test/app/cordova/www/scripts/generated', expand: true},
                 ]
             }
         },

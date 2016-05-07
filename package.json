@@ -3,6 +3,8 @@
   "description": "Javascript client for Azure Mobile Apps. For more details visit http://azure.microsoft.com/en-us/develop/mobile",
   "version": "2.0.0-beta5",
   "devDependencies": {
+    "azure-mobile-apps": "~2.0.2",
+    "azure-odata-sql": "~0.0.3",
     "browserify": "~11.1.0",
     "browserify-derequire": "~0.9.4",
     "es6-promise": "^3.1.2",
@@ -24,6 +26,7 @@
     "remapify": "~2.0.3",
     "request": "^2.69.0",
     "rimraf": "^2.5.2",
+    "verror": "^1.6.1",
     "wd": "^0.4.0"
   },
   "license": "Apache-2.0",
