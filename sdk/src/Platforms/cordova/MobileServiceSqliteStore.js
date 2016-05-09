@@ -316,7 +316,7 @@ var MobileServiceSqliteStore = function (dbName) {
         Validate.isFunction(callback);
         Validate.notNull(tableNameOrQuery);
 
-        if (_.isString(tableNameOrQuery)) {
+        if (_.isString(tableNameOrQuery)) { // tableNameOrQuery is table name, delete records with specified IDs.
             Validate.notNullOrEmpty(tableNameOrQuery, 'tableNameOrQuery');
 
             // If a single id is specified, convert it to an array and proceed.
@@ -325,10 +325,22 @@ var MobileServiceSqliteStore = function (dbName) {
                 ids = [ids];
             }
             
-            this._deleteIds(tableNameOrQuery /* table name */, ids, callback);
-        } else if (_.isObject(tableNameOrQuery)) {
+            this._db.transaction(function(transaction) {
+                for (var i in ids) {
+                    if (! _.isNull(ids[i])) {
+                        Validate.isValidId(ids[i]);
+                    }
+                }
+                this._deleteIds(transaction, tableNameOrQuery /* table name */, ids);
+            }.bind(this), function (error) {
+                callback(error);
+            }, function () {
+                callback();
+            });
+
+        } else if (_.isObject(tableNameOrQuery)) { // tableNameOrQuery is a query, delete all records specified by the query.
             this._deleteUsingQuery(tableNameOrQuery /* query */, callback);
-        } else {
+        } else { // error
             throw _.format(Platform.getResourceString("TypeCheckError"), 'tableNameOrQuery', 'Object or String', typeof tableNameOrQuery);
         }
     });
@@ -399,25 +411,19 @@ var MobileServiceSqliteStore = function (dbName) {
     };
 
     // Delete records from the table that match the specified IDs.
-    this._deleteIds = function (tableName, ids, callback) {
-
+    this._deleteIds = function (transaction, tableName, ids) {
         var deleteExpressions = [],
             deleteParams = [];
         for (var i = 0; i < ids.length; i++) {
             if (!_.isNull(ids[i])) {
-                Validate.isValidId(ids[i]);
                 deleteExpressions.push('?');
                 deleteParams.push(ids[i]);
             }
         }
-
+        
         var deleteStatement = _.format("DELETE FROM {0} WHERE {1} in ({2})", tableName, idPropertyName, deleteExpressions.join());
-        this._db.executeSql(deleteStatement, deleteParams, function () {
-            callback();
-        }, function (error) {
-            callback(error);
-        });
-    };
+        transaction.executeSql(deleteStatement, deleteParams);
+    }
 
     /**
      * Read a local table
