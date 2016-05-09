@@ -129,7 +129,7 @@ var MobileServiceSqliteStore = function (dbName) {
             callback(error);
         }, function () {
             callback();
-        })
+        });
     });
     
     // Performs the upsert operation.
@@ -237,7 +237,10 @@ var MobileServiceSqliteStore = function (dbName) {
         }
 
         // Execute the INSERT and UPDATE statements.
-        for (var i = 0; i < statements.length; i++) {
+        for (i = 0; i < statements.length; i++) {
+            if (this._editStatement) { // test hook
+                statements[i] = this._editStatement(statements[i]);
+            }
             transaction.executeSql(statements[i], parameters[i]);
         }
     };
@@ -403,7 +406,7 @@ var MobileServiceSqliteStore = function (dbName) {
             for (var i = 0; i < deleteStatements.length; i++) {
                 transaction.executeSql(deleteStatements[i], deleteParams[i]);
             }
-        }, function (error) {
+        }.bind(this), function (error) {
             callback(error);
         }, function () {
             callback();
@@ -422,8 +425,11 @@ var MobileServiceSqliteStore = function (dbName) {
         }
         
         var deleteStatement = _.format("DELETE FROM {0} WHERE {1} in ({2})", tableName, idPropertyName, deleteExpressions.join());
+        if (this._editStatement) { // test hook
+            deleteStatement = this._editStatement(deleteStatement);
+        }
         transaction.executeSql(deleteStatement, deleteParams);
-    }
+    };
 
     /**
      * Read a local table
@@ -489,6 +495,64 @@ var MobileServiceSqliteStore = function (dbName) {
                 };
             }
             callback(null, result);
+        });
+    });
+    
+    /**
+     * Executes the specified operations as part of a single SQL transaction.
+     * 
+     * @param operations Array of operations to be performed. Each operation in the array is an object of the following form:
+     * {
+     *      action: 'upsert',
+     *      tableName: name of the table,
+     *      data: record / object to be upserted
+     * }
+     * 
+     * OR
+     * 
+     * {
+     *      action: 'delete',
+     *      tableName: name of the table,
+     *      id: ID of the record to be deleted
+     * }
+     * 
+     * @returns A promise that is resolved when the operations are completed successfully OR rejected with the error if they fail.
+     */
+    this.executeBatch = Platform.async(function (operations) {
+
+        // Extract the callback argument added by Platform.async and redefine the function arguments
+        var callback = Array.prototype.pop.apply(arguments);
+        operations = arguments[0];
+
+        // Validate the function arguments
+        Validate.isFunction(callback, 'callback');
+        Validate.isArray(operations);
+        
+        this._db.transaction(function(transaction) {
+            for (var i in operations) {
+                var operation = operations[i];
+                
+                Validate.isString(operation.action);
+                Validate.notNullOrEmpty(operation.action);
+
+                Validate.isString(operation.tableName);
+                Validate.notNullOrEmpty(operation.tableName);
+                
+                if (operation.action.toLowerCase() === 'upsert') {
+                    this._upsert(transaction, operation.tableName, operation.data);
+                } else if (operation.action.toLowerCase() === 'delete') {
+                    if ( ! _.isNull(records[i]) ) {
+                        Validate.isValidId(operation.id);
+                        this._deleteIds(transaction, operation.tableName, [operation.id]);
+                    }
+                } else {
+                    throw new Error(_.format("Operation '{0}' is not supported", operation.action));
+                }
+            }
+        }.bind(this), function (error) {
+            callback(error);
+        }, function () {
+            callback();
         });
     });
 };
