@@ -115,7 +115,6 @@ var MobileServiceSqliteStore = function (dbName) {
      * @returns A promise that is resolved when the operation is completed successfully OR rejected with the error if it fails.
      */
     this.upsert = Platform.async(function (tableName, data) {
-
         // Extract the callback argument added by Platform.async and redefine the function arguments
         var callback = Array.prototype.pop.apply(arguments);
         tableName = arguments[0];
@@ -123,6 +122,22 @@ var MobileServiceSqliteStore = function (dbName) {
 
         // Validate the arguments
         Validate.isFunction(callback);
+        
+        this._db.transaction(function(transaction) {
+            this._upsert(transaction, tableName, data);
+        }.bind(this), function (error) {
+            callback(error);
+        }, function () {
+            callback();
+        });
+    });
+    
+    // Performs the upsert operation.
+    // This method validates all arguments, callers can skip validation. 
+    this._upsert = function (transaction, tableName, data) {
+
+        Validate.isObject(transaction);
+        Validate.notNull(transaction);
         Validate.isString(tableName, 'tableName');
         Validate.notNullOrEmpty(tableName, 'tableName');
 
@@ -136,7 +151,6 @@ var MobileServiceSqliteStore = function (dbName) {
 
         // If no data is provided, there is nothing more to be done.
         if (_.isNull(data)) {
-            callback();
             return;
         }
 
@@ -222,17 +236,14 @@ var MobileServiceSqliteStore = function (dbName) {
             }
         }
 
-        this._db.transaction(function (transaction) {
-            // Execute the INSERT and UPDATE statements.
-            for (var i = 0; i < statements.length; i++) {
-                transaction.executeSql(statements[i], parameters[i]);
+        // Execute the INSERT and UPDATE statements.
+        for (i = 0; i < statements.length; i++) {
+            if (this._editStatement) { // test hook
+                statements[i] = this._editStatement(statements[i]);
             }
-        }, function (error) {
-            callback(error);
-        }, function () {
-            callback();
-        });
-    });
+            transaction.executeSql(statements[i], parameters[i]);
+        }
+    };
 
     /**
      * Perform a record lookup in the local table
@@ -308,7 +319,7 @@ var MobileServiceSqliteStore = function (dbName) {
         Validate.isFunction(callback);
         Validate.notNull(tableNameOrQuery);
 
-        if (_.isString(tableNameOrQuery)) {
+        if (_.isString(tableNameOrQuery)) { // tableNameOrQuery is table name, delete records with specified IDs.
             Validate.notNullOrEmpty(tableNameOrQuery, 'tableNameOrQuery');
 
             // If a single id is specified, convert it to an array and proceed.
@@ -317,10 +328,22 @@ var MobileServiceSqliteStore = function (dbName) {
                 ids = [ids];
             }
             
-            this._deleteIds(tableNameOrQuery /* table name */, ids, callback);
-        } else if (_.isObject(tableNameOrQuery)) {
+            this._db.transaction(function(transaction) {
+                for (var i in ids) {
+                    if (! _.isNull(ids[i])) {
+                        Validate.isValidId(ids[i]);
+                    }
+                }
+                this._deleteIds(transaction, tableNameOrQuery /* table name */, ids);
+            }.bind(this), function (error) {
+                callback(error);
+            }, function () {
+                callback();
+            });
+
+        } else if (_.isObject(tableNameOrQuery)) { // tableNameOrQuery is a query, delete all records specified by the query.
             this._deleteUsingQuery(tableNameOrQuery /* query */, callback);
-        } else {
+        } else { // error
             throw _.format(Platform.getResourceString("TypeCheckError"), 'tableNameOrQuery', 'Object or String', typeof tableNameOrQuery);
         }
     });
@@ -383,7 +406,7 @@ var MobileServiceSqliteStore = function (dbName) {
             for (var i = 0; i < deleteStatements.length; i++) {
                 transaction.executeSql(deleteStatements[i], deleteParams[i]);
             }
-        }, function (error) {
+        }.bind(this), function (error) {
             callback(error);
         }, function () {
             callback();
@@ -391,24 +414,21 @@ var MobileServiceSqliteStore = function (dbName) {
     };
 
     // Delete records from the table that match the specified IDs.
-    this._deleteIds = function (tableName, ids, callback) {
-
+    this._deleteIds = function (transaction, tableName, ids) {
         var deleteExpressions = [],
             deleteParams = [];
         for (var i = 0; i < ids.length; i++) {
             if (!_.isNull(ids[i])) {
-                Validate.isValidId(ids[i]);
                 deleteExpressions.push('?');
                 deleteParams.push(ids[i]);
             }
         }
-
+        
         var deleteStatement = _.format("DELETE FROM {0} WHERE {1} in ({2})", tableName, idPropertyName, deleteExpressions.join());
-        this._db.executeSql(deleteStatement, deleteParams, function () {
-            callback();
-        }, function (error) {
-            callback(error);
-        });
+        if (this._editStatement) { // test hook
+            deleteStatement = this._editStatement(deleteStatement);
+        }
+        transaction.executeSql(deleteStatement, deleteParams);
     };
 
     /**
@@ -475,6 +495,64 @@ var MobileServiceSqliteStore = function (dbName) {
                 };
             }
             callback(null, result);
+        });
+    });
+    
+    /**
+     * Executes the specified operations as part of a single SQL transaction.
+     * 
+     * @param operations Array of operations to be performed. Each operation in the array is an object of the following form:
+     * {
+     *      action: 'upsert',
+     *      tableName: name of the table,
+     *      data: record / object to be upserted
+     * }
+     * 
+     * OR
+     * 
+     * {
+     *      action: 'delete',
+     *      tableName: name of the table,
+     *      id: ID of the record to be deleted
+     * }
+     * 
+     * @returns A promise that is resolved when the operations are completed successfully OR rejected with the error if they fail.
+     */
+    this.executeBatch = Platform.async(function (operations) {
+
+        // Extract the callback argument added by Platform.async and redefine the function arguments
+        var callback = Array.prototype.pop.apply(arguments);
+        operations = arguments[0];
+
+        // Validate the function arguments
+        Validate.isFunction(callback, 'callback');
+        Validate.isArray(operations);
+        
+        this._db.transaction(function(transaction) {
+            for (var i in operations) {
+                var operation = operations[i];
+                
+                Validate.isString(operation.action);
+                Validate.notNullOrEmpty(operation.action);
+
+                Validate.isString(operation.tableName);
+                Validate.notNullOrEmpty(operation.tableName);
+                
+                if (operation.action.toLowerCase() === 'upsert') {
+                    this._upsert(transaction, operation.tableName, operation.data);
+                } else if (operation.action.toLowerCase() === 'delete') {
+                    if ( ! _.isNull(records[i]) ) {
+                        Validate.isValidId(operation.id);
+                        this._deleteIds(transaction, operation.tableName, [operation.id]);
+                    }
+                } else {
+                    throw new Error(_.format("Operation '{0}' is not supported", operation.action));
+                }
+            }
+        }.bind(this), function (error) {
+            callback(error);
+        }, function () {
+            callback();
         });
     });
 };

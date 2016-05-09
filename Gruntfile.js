@@ -144,7 +144,7 @@ module.exports = function(grunt) {
 
                     // Copy the test bundle to the Cordova unit test app's android directory.
                     // This is needed to host the Cordova bits so that the Cordova app can refresh on the fly.
-                    {src: ['tests.js'], dest: __dirname + '/sdk/test/app/cordova/platforms/android/assets/www/', cwd: __dirname + '/sdk/test/app/cordova/www/scripts/generated', expand: true},
+                    {src: ['tests.js'], dest: __dirname + '/sdk/test/app/cordova/platforms/android/assets/www/scripts/generated', cwd: __dirname + '/sdk/test/app/cordova/www/scripts/generated', expand: true},
                 ]
             }
         },
