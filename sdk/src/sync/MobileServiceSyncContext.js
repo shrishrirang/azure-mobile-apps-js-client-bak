@@ -2,9 +2,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-var Validate = require('./Utilities/Validate'),
+var Validate = require('../Utilities/Validate'),
     Platform = require('Platforms/Platform'),
-    _ = require('./Utilities/Extensions');
+    _ = require('../Utilities/Extensions');
 
 /**
  * Creates an instance of MobileServiceSyncContext
