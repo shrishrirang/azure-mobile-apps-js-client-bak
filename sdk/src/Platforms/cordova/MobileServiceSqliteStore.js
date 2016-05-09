@@ -115,7 +115,6 @@ var MobileServiceSqliteStore = function (dbName) {
      * @returns A promise that is resolved when the operation is completed successfully OR rejected with the error if it fails.
      */
     this.upsert = Platform.async(function (tableName, data) {
-
         // Extract the callback argument added by Platform.async and redefine the function arguments
         var callback = Array.prototype.pop.apply(arguments);
         tableName = arguments[0];
@@ -123,6 +122,22 @@ var MobileServiceSqliteStore = function (dbName) {
 
         // Validate the arguments
         Validate.isFunction(callback);
+        
+        this._db.transaction(function(transaction) {
+            this._upsert(transaction, tableName, data);
+        }.bind(this), function (error) {
+            callback(error);
+        }, function () {
+            callback();
+        })
+    });
+    
+    // Performs the upsert operation.
+    // This method validates all arguments, callers can skip validation. 
+    this._upsert = function (transaction, tableName, data) {
+
+        Validate.isObject(transaction);
+        Validate.notNull(transaction);
         Validate.isString(tableName, 'tableName');
         Validate.notNullOrEmpty(tableName, 'tableName');
 
@@ -136,7 +151,6 @@ var MobileServiceSqliteStore = function (dbName) {
 
         // If no data is provided, there is nothing more to be done.
         if (_.isNull(data)) {
-            callback();
             return;
         }
 
@@ -222,17 +236,11 @@ var MobileServiceSqliteStore = function (dbName) {
             }
         }
 
-        this._db.transaction(function (transaction) {
-            // Execute the INSERT and UPDATE statements.
-            for (var i = 0; i < statements.length; i++) {
-                transaction.executeSql(statements[i], parameters[i]);
-            }
-        }, function (error) {
-            callback(error);
-        }, function () {
-            callback();
-        });
-    });
+        // Execute the INSERT and UPDATE statements.
+        for (var i = 0; i < statements.length; i++) {
+            transaction.executeSql(statements[i], parameters[i]);
+        }
+    };
 
     /**
      * Perform a record lookup in the local table
