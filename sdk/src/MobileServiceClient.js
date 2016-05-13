@@ -6,8 +6,8 @@ var _ = require('./Utilities/Extensions'),
     constants = require('./constants'),
     Validate = require('./Utilities/Validate'),
     Platform = require('Platforms/Platform'),
-    MobileServiceSyncContext = require('./MobileServiceSyncContext').MobileServiceSyncContext,
-    MobileServiceSyncTable = require('./MobileServiceSyncTable').MobileServiceSyncTable,
+    MobileServiceSyncContext = require('./sync/MobileServiceSyncContext').MobileServiceSyncContext,
+    MobileServiceSyncTable = require('./sync/MobileServiceSyncTable').MobileServiceSyncTable,
     MobileServiceTable = require('./MobileServiceTable'),
     MobileServiceLogin = require('./MobileServiceLogin');
 
