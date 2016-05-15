@@ -532,6 +532,10 @@ var MobileServiceSqliteStore = function (dbName) {
             for (var i in operations) {
                 var operation = operations[i];
                 
+                if (_.isNull(operation)) {
+                    continue;
+                }
+                
                 Validate.isString(operation.action);
                 Validate.notNullOrEmpty(operation.action);
 
@@ -541,7 +545,7 @@ var MobileServiceSqliteStore = function (dbName) {
                 if (operation.action.toLowerCase() === 'upsert') {
                     this._upsert(transaction, operation.tableName, operation.data);
                 } else if (operation.action.toLowerCase() === 'delete') {
-                    if ( ! _.isNull(records[i]) ) {
+                    if ( ! _.isNull(operation.id) ) {
                         Validate.isValidId(operation.id);
                         this._deleteIds(transaction, operation.tableName, [operation.id]);
                     }

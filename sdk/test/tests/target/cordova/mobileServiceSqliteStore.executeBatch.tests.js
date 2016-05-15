@@ -175,6 +175,62 @@ $testGroup('SQLiteStore - executeBatch tests')
         });
     }),
     
+    $test('operations parameter containing null operation')
+    .checkAsync(function () {
+        var store = createStore(),
+            row = { id: 101, description: 'original' };
+
+        return store.defineTable({
+            name: testTableName,
+            columnDefinitions: {
+                id: MobileServiceSqliteStore.ColumnType.Integer,
+                description: MobileServiceSqliteStore.ColumnType.String
+            }
+        }).then(function () {
+            return store.executeBatch([
+                null,
+                {
+                    action: 'upsert',
+                    tableName: testTableName,
+                    data: row
+                }]);
+        }).then(function (result) {
+            return store.read(new Query(testTableName));
+        }).then(function (result) {
+            $assert.areEqual(result, [row]);
+        }, function (error) {
+            $assert.fail(error);
+        });
+    }),
+    
+    $test('operations parameter containing undefined operation')
+    .checkAsync(function () {
+        var store = createStore(),
+            row = { id: 101, description: 'original' };
+
+        return store.defineTable({
+            name: testTableName,
+            columnDefinitions: {
+                id: MobileServiceSqliteStore.ColumnType.Integer,
+                description: MobileServiceSqliteStore.ColumnType.String
+            }
+        }).then(function () {
+            return store.executeBatch([
+                undefined,
+                {
+                    action: 'upsert',
+                    tableName: testTableName,
+                    data: row
+                }]);
+        }).then(function (result) {
+            return store.read(new Query(testTableName));
+        }).then(function (result) {
+            $assert.areEqual(result, [row]);
+        }, function (error) {
+            $assert.fail(error);
+        });
+    }),
+    
     $test('Missing operation.action')
     .checkAsync(function () {
         var store = createStore(),
