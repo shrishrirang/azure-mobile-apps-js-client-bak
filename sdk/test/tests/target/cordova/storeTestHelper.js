@@ -21,7 +21,7 @@ function createStore() {
             store = new MobileServiceSqliteStore(testDbFile);
         }
 
-        callback(null, store);
+        callback(null, Object.create(store));
     })();
 }
 
