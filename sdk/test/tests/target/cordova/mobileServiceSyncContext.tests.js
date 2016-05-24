@@ -57,7 +57,7 @@ $testGroup('MobileServiceSyncContext tests')
             return executeBatch.call(store, operationBatch);
         };
         
-        return performActionWithCustomLogging('insert').then(function(syncContext) {
+        return performActionWithCustomLogging(testId, 'insert').then(function(syncContext) {
         }, function(error) {
             $assert.fail(error);
         });
@@ -96,7 +96,7 @@ $testGroup('MobileServiceSyncContext tests')
         return defineTestTable().then(function() {
             return store.upsert(storeTestHelper.testTableName, {id: testId});
         }).then(function() {
-            return performActionWithCustomLogging('update');
+            return performActionWithCustomLogging(testId, 'update');
         }).then(function(syncContext) {
         }, function(error) {
             $assert.fail(error);
@@ -129,9 +129,71 @@ $testGroup('MobileServiceSyncContext tests')
             return executeBatch.call(store, operationBatch);
         };
         
-        return performActionWithCustomLogging('del').then(function(syncContext) {
+        return performActionWithCustomLogging(testId, 'del').then(function(syncContext) {
         }, function(error) {
             $assert.fail(error);
+        });
+    }),
+
+    $test('Inserting object without ID should auto-generate ID')
+    .checkAsync(function () {
+        
+        var executeBatch = store.executeBatch;
+        store.executeBatch = function(operationBatch) {
+            
+            $assert.isNotNull(operationBatch);
+            $assert.areEqual(operationBatch.length, 2);
+            $assert.isNotNull(operationBatch[0].data.id);
+            $assert.isNotNull(operationBatch[1].data.id);
+            return executeBatch.call(store, operationBatch);
+        };
+        
+        return performActionWithCustomLogging(undefined, 'insert').then(function(syncContext) {
+            // Success expected
+        }, function(error) {
+            $assert.fail(error);
+        });
+    }),
+
+    $test('Updating object without ID should fail')
+    .checkAsync(function () {
+        
+        var executeBatch = store.executeBatch;
+        store.executeBatch = function(operationBatch) {
+            $assert.fail('We should have failed long before this getting called!');
+            return executeBatch.call(store, operationBatch);
+        };
+        
+        // insert a record in the table in advance, so that we can update it subsequently
+        return defineTestTable().then(function() {
+            return store.upsert(storeTestHelper.testTableName, {id: testId});
+        }).then(function() {
+            return performActionWithCustomLogging(undefined /* do not set ID */, 'update');
+        }).then(function(syncContext) {
+            $assert.fail('failure expected');
+        }, function(error) {
+            // failure expected
+        });
+    }),
+
+    $test('Deleting object without ID should fail')
+    .checkAsync(function () {
+        
+        var executeBatch = store.executeBatch;
+        store.executeBatch = function(operationBatch) {
+            $assert.fail('We should have failed long before this getting called!');
+            return executeBatch.call(store, operationBatch);
+        };
+        
+        // insert a record in the table in advance, so that we can update it subsequently
+        return defineTestTable().then(function() {
+            return store.upsert(storeTestHelper.testTableName, {id: testId});
+        }).then(function() {
+            return performActionWithCustomLogging(undefined /* do not set ID */, 'del');
+        }).then(function(syncContext) {
+            $assert.fail('failure expected');
+        }, function(error) {
+            // failure expected
         });
     }),
 
@@ -190,7 +252,7 @@ $testGroup('MobileServiceSyncContext tests')
     })
 );
 
-function performActionWithCustomLogging(action) {
+function performActionWithCustomLogging(id, action) {
     var syncContext = new MobileServiceSyncContext(new MobileServiceClient('someurl'));
 
     return syncContext.initialize(store).then(function() {
@@ -214,11 +276,11 @@ function performActionWithCustomLogging(action) {
         };
     }).then(function() {
         if (action === 'insert') {
-            return syncContext.insert(storeTestHelper.testTableName, {id: testId, name: 'somename'});
+            return syncContext.insert(storeTestHelper.testTableName, {id: id, name: 'somename'});
         } else if (action === 'update') {
-            return syncContext.update(storeTestHelper.testTableName, {id: testId, name: 'somename'});
+            return syncContext.update(storeTestHelper.testTableName, {id: id, name: 'somename'});
         } else if (action === 'del') {
-            return syncContext.del(storeTestHelper.testTableName, {id: testId, name: ''});
+            return syncContext.del(storeTestHelper.testTableName, {id: id, name: ''});
         } else {
             throw new Error('unsupported action. fix the test.');
         }
