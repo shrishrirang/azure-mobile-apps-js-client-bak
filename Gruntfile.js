@@ -138,14 +138,19 @@ module.exports = function(grunt) {
                 cwd: 'node_modules/qunitjs/qunit'
             },
             cordovaTest: {
-                files: [
-                    // Copy qunit css and js files to the Cordova unit test app directory
-                    {src: ['*'], dest: 'sdk/test/app/cordova/www/external/qunit/', cwd: 'node_modules/qunitjs/qunit', expand: true},
-
-                    // Copy the test bundle to the Cordova unit test app's android directory.
-                    // This is needed to host the Cordova bits so that the Cordova app can refresh on the fly.
-                    {src: ['tests.js'], dest: __dirname + '/sdk/test/app/cordova/platforms/android/assets/www/scripts/generated', cwd: __dirname + '/sdk/test/app/cordova/www/scripts/generated', expand: true},
-                ]
+                // Copy qunit css and js files to the Cordova unit test app directory
+                src: ['*'],
+                dest: 'sdk/test/app/cordova/www/external/qunit/',
+                expand: true,
+                cwd: 'node_modules/qunitjs/qunit'
+            },
+            hostCordovaTest: {
+                // Copy the test bundle to the Cordova unit test app's android directory.
+                // This is needed to host the Cordova bits so that the Cordova app can refresh on the fly.
+                src: ['tests.js'],
+                dest: __dirname + '/sdk/test/app/cordova/platforms/android/assets/www/scripts/generated',
+                expand: true,
+                cwd: __dirname + '/sdk/test/app/cordova/www/scripts/generated'
             }
         },
         watch: {
@@ -159,7 +164,7 @@ module.exports = function(grunt) {
             },
             cordova: {
                 files: '<%= files.all %>',
-                tasks: ['concat', 'browserify:cordova', 'browserify:cordovaTest', 'copy:cordova', 'copy:cordovaTest']
+                tasks: ['concat', 'browserify:cordova', 'browserify:cordovaTest', 'copy:cordova', 'copy:cordovaTest', 'copy:hostCordovaTest']
             }
         }
     });
@@ -173,7 +178,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-copy');
         
     // Default task(s).
-    grunt.registerTask('build', ['concat', 'browserify', 'uglify', 'copy', 'jshint']);
+    grunt.registerTask('build', ['buildbrowser', 'buildcordova']);
     grunt.registerTask('buildbrowser', ['concat', 'browserify:web', 'browserify:webTest', 'copy:web', 'copy:webTest']);
     grunt.registerTask('buildcordova', ['concat', 'browserify:cordova', 'browserify:cordovaTest', 'copy:cordova', 'copy:cordovaTest']);
 
