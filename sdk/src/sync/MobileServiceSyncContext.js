@@ -6,6 +6,7 @@ var Validate = require('../Utilities/Validate'),
     Platform = require('Platforms/Platform'),
     createOperationTableManager = require('./operations').createOperationTableManager,
     taskRunner = require('../Utilities/taskRunner'),
+    uuid = require('node-uuid'),
     _ = require('../Utilities/Extensions');
 
 // NOTE: The store can be a custom store provided by the user code.
@@ -46,7 +47,6 @@ function MobileServiceSyncContext(client) {
         
     };
 
-    // TODO(shrirs): Add tracking operations to the operations table for insert/update/delete
     /**
      * Insert a new object into the specified local table.
      * 
@@ -57,11 +57,18 @@ function MobileServiceSyncContext(client) {
      * If the operation fails, the promise is rejected
      */
     this.insert = function (tableName, instance) { //TODO: add an insert method to the store
-        // Delegate parameter validation to upsert
-        return upsert(tableName, instance, 'insert', function(existingRecord) { // precondition validator
-            if (!_.isNull(existingRecord)) {
-                throw new Error('Cannot perform insert as a record with ID ' + id + ' already exists in the table ' + tableName);
+        return storeTaskRunner.run(function() {
+            // Generate an ID if it is not set already 
+            if (_.isNull(instance.id)) {
+                instance.id = uuid.v4();
             }
+
+            // Delegate parameter validation to upsert
+            return upsert(tableName, instance, 'insert', function(existingRecord) { // precondition validator
+                if (!_.isNull(existingRecord)) {
+                    throw new Error('Cannot perform insert as a record with ID ' + existingRecord.id + ' already exists in the table ' + tableName);
+                }
+            });
         });
     };
 
@@ -75,11 +82,13 @@ function MobileServiceSyncContext(client) {
      * If the operation fails, the promise is rejected.
      */
     this.update = function (tableName, instance) { //TODO: add an update method to the store
-        // Delegate parameter validation to upsert
-        return upsert(tableName, instance, 'update', function(existingRecord) { // precondition validator
-            if (_.isNull(existingRecord)) {
-                throw new Error('Cannot update record with ID ' + id + ' as it does not exist the table ' + tableName);
-            }
+        return storeTaskRunner.run(function() {
+            // Delegate parameter validation to upsert
+            return upsert(tableName, instance, 'update', function(existingRecord) { // precondition validator
+                if (_.isNull(existingRecord)) {
+                    throw new Error('Cannot update record with ID ' + existingRecord.id + ' as it does not exist the table ' + tableName);
+                }
+            });
         });
     };
 
@@ -147,35 +156,33 @@ function MobileServiceSyncContext(client) {
     
     // Validates parameters. Callers can skip validation
     function upsert(tableName, instance, action, preconditionValidator) {
-        return storeTaskRunner.run(function() {
-            Validate.isString(tableName, 'tableName');
-            Validate.notNullOrEmpty(tableName, 'tableName');
+        Validate.isString(tableName, 'tableName');
+        Validate.notNullOrEmpty(tableName, 'tableName');
 
-            Validate.notNull(instance, 'instance');
-            Validate.isValidId(instance.id, 'instance.id'); //TODO(shrirs): Generate an ID if ID is not defined
-            
-            if (!store) {
-                throw new Error('MobileServiceSyncContext not initialized');
-            }
-            
-            return store.lookup(tableName, instance.id).then(function(existingRecord) {
-                return preconditionValidator(existingRecord);
-            }).then(function() {
-                return operationTableManager.getLoggingOperation(tableName, action, instance.id);
-            }).then(function(loggingOperation) {
-                return store.executeBatch([
-                    {
-                        action: 'upsert',
-                        tableName: tableName,
-                        data: instance
-                    },
-                    loggingOperation
-                ]);
-            }).then(function() {
-                return instance;
-            });
+        Validate.notNull(instance, 'instance');
+        Validate.isValidId(instance.id, 'instance.id');
+        
+        if (!store) {
+            throw new Error('MobileServiceSyncContext not initialized');
+        }
+        
+        return store.lookup(tableName, instance.id).then(function(existingRecord) {
+            return preconditionValidator(existingRecord);
+        }).then(function() {
+            return operationTableManager.getLoggingOperation(tableName, action, instance.id);
+        }).then(function(loggingOperation) {
+            return store.executeBatch([
+                {
+                    action: 'upsert',
+                    tableName: tableName,
+                    data: instance
+                },
+                loggingOperation
+            ]);
+        }).then(function() {
+            return instance;
         });
-    };
+    }
 }
 
 module.exports = MobileServiceSyncContext;
