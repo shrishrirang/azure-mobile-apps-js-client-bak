@@ -326,7 +326,3 @@ function defineTestTable() {
         }
     });
 }
-
-function createStore() {
-    return MobileServiceSqliteStore(testDbFile);
-}

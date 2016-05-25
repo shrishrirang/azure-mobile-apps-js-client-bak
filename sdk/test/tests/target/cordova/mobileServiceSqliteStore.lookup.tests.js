@@ -8,27 +8,21 @@
 
 var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
-    MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore'),
-    testTableName = 'sometable',
-    testDbFile = 'somedbfile.db';
+    storeTestHelper = require('./storeTestHelper'),
+    MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore');
 
 $testGroup('SQLiteStore - lookup tests')
 
     // Clear the test table before running each test.
-    .beforeEachAsync(Platform.async( function(callback) {
-        var db = window.sqlitePlugin.openDatabase({ name: testDbFile, location: 'default' });
-
-        // Delete table created by the unit tests
-        db.executeSql('DROP TABLE IF EXISTS ' + testTableName, null, function() {
-            callback();
-        }, function(err) {
-            callback(err);
+    .beforeEachAsync(function() {
+        return storeTestHelper.createEmptyStore().then(function(emptyStore) {
+            store = emptyStore;
         });
-    })).tests(
+    }).tests(
 
     $test('table not defined')
     .checkAsync(function () {
-        return createStore().lookup(testTableName, 'one').then(function (result) {
+        return store.lookup(storeTestHelper.testTableName, 'one').then(function (result) {
             $assert.fail('failure expected');
         }, function (err) {
         });
@@ -36,19 +30,18 @@ $testGroup('SQLiteStore - lookup tests')
 
     $test('Id of type string')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 'someid', price: 51.5 };
+        var row = { id: 'someid', price: 51.5 };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.String,
                 price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
-            return store.upsert(testTableName, row);
+            return store.upsert(storeTestHelper.testTableName, row);
         }).then(function () {
-            return store.lookup(testTableName, row.id);
+            return store.lookup(storeTestHelper.testTableName, row.id);
         }).then(function (result) {
             $assert.areEqual(result, row);
         }, function (error) {
@@ -58,19 +51,18 @@ $testGroup('SQLiteStore - lookup tests')
 
     $test('Id of type integer')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 51, price: 51.5 };
+        var row = { id: 51, price: 51.5 };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
-            return store.upsert(testTableName, row);
+            return store.upsert(storeTestHelper.testTableName, row);
         }).then(function () {
-            return store.lookup(testTableName, '51');
+            return store.lookup(storeTestHelper.testTableName, '51');
         }).then(function (result) {
             $assert.areEqual(result, row);
         }, function (error) {
@@ -80,19 +72,18 @@ $testGroup('SQLiteStore - lookup tests')
 
     $test('Id of type real')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 21.11, price: 51.5 };
+        var row = { id: 21.11, price: 51.5 };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Real,
                 price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
-            return store.upsert(testTableName, row);
+            return store.upsert(storeTestHelper.testTableName, row);
         }).then(function () {
-            return store.lookup(testTableName, '21.11');
+            return store.lookup(storeTestHelper.testTableName, '21.11');
         }).then(function (result) {
             $assert.areEqual(result, row);
         }, function (error) {
@@ -102,19 +93,18 @@ $testGroup('SQLiteStore - lookup tests')
 
     $test('verify id case insensitivity')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 'ABC', description: 'something' };
+        var row = { id: 'ABC', description: 'something' };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Text,
                 description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
-            return store.upsert(testTableName, row);
+            return store.upsert(storeTestHelper.testTableName, row);
         }).then(function () {
-            return store.lookup(testTableName, 'abc');
+            return store.lookup(storeTestHelper.testTableName, 'abc');
         }).then(function (result) {
             $assert.areEqual(result, row);
         }, function (error) {
@@ -124,10 +114,9 @@ $testGroup('SQLiteStore - lookup tests')
 
     $test('read columns that are missing in table definition')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 'ABC', column1: 1, column2: 2 },
+        var row = { id: 'ABC', column1: 1, column2: 2 },
             tableDefinition = {
-                name: testTableName,
+                name: storeTestHelper.testTableName,
                 columnDefinitions: {
                     id: MobileServiceSqliteStore.ColumnType.Text,
                     column1: MobileServiceSqliteStore.ColumnType.Integer,
@@ -136,13 +125,13 @@ $testGroup('SQLiteStore - lookup tests')
             };
 
         return store.defineTable(tableDefinition).then(function () { 
-            return store.upsert(testTableName, row);
+            return store.upsert(storeTestHelper.testTableName, row);
         }).then(function () {
             // Redefine the table without column2
             delete tableDefinition.columnDefinitions.column2;
             return store.defineTable(tableDefinition);
         }).then(function () {
-            return store.lookup(testTableName, 'abc');
+            return store.lookup(storeTestHelper.testTableName, 'abc');
         }).then(function (result) {
             $assert.areEqual(result, row);
         }, function (error) {
@@ -152,16 +141,14 @@ $testGroup('SQLiteStore - lookup tests')
 
     $test('record not found')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
-            return store.lookup(testTableName, 'someid');
+            return store.lookup(storeTestHelper.testTableName, 'someid');
         }).then(function (result) {
             $assert.isNull(result);
         }, function (error) {
@@ -172,16 +159,14 @@ $testGroup('SQLiteStore - lookup tests')
     $test('invoked with extra parameters')
     .description('Check that promise returned by lookup is either resolved or rejected even when invoked with extra parameters')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
-            return store.lookup(testTableName, 'some id', 'extra param');
+            return store.lookup(storeTestHelper.testTableName, 'some id', 'extra param');
         }).then(function (result) {
         }, function (error) {
             $assert.fail(error);
@@ -190,16 +175,14 @@ $testGroup('SQLiteStore - lookup tests')
 
     $test('null id')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
-            return store.lookup(testTableName, null);
+            return store.lookup(storeTestHelper.testTableName, null);
         }).then(function (result) {
             $assert.fail('failure expected');
         }, function (error) {
@@ -208,16 +191,14 @@ $testGroup('SQLiteStore - lookup tests')
 
     $test('id defined as undefined')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
-            return store.lookup(testTableName, undefined);
+            return store.lookup(storeTestHelper.testTableName, undefined);
         }).then(function (result) {
             $assert.fail('failure expected');
         }, function (error) {
@@ -226,16 +207,14 @@ $testGroup('SQLiteStore - lookup tests')
 
     $test('id property not defined')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
-            return store.lookup(testTableName, undefined);
+            return store.lookup(storeTestHelper.testTableName, undefined);
         }).then(function (result) {
             $assert.fail('failure expected');
         }, function (error) {
@@ -244,16 +223,14 @@ $testGroup('SQLiteStore - lookup tests')
 
     $test('invalid id')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 price: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function () {
-            return store.lookup(testTableName, {invalid: 'invalid'});
+            return store.lookup(storeTestHelper.testTableName, {invalid: 'invalid'});
         }).then(function (result) {
             $assert.fail('failure expected');
         }, function (error) {
@@ -262,10 +239,8 @@ $testGroup('SQLiteStore - lookup tests')
 
     $test('null table name')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Text,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -280,10 +255,8 @@ $testGroup('SQLiteStore - lookup tests')
 
     $test('undefined table name')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Text,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -298,10 +271,8 @@ $testGroup('SQLiteStore - lookup tests')
 
     $test('invalid table name')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Text,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -316,10 +287,8 @@ $testGroup('SQLiteStore - lookup tests')
 
     $test('invoked without any parameter')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Text,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -334,34 +303,28 @@ $testGroup('SQLiteStore - lookup tests')
 
     $test('verify deserialization error is handled properly')
     .checkAsync(function() {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.String,
                 prop: MobileServiceSqliteStore.ColumnType.Real
             }
         }).then(function() {
-            return store.upsert(testTableName, { id: '1', prop: 1.5 });
+            return store.upsert(storeTestHelper.testTableName, { id: '1', prop: 1.5 });
         }).then(function() {
             // Change table definition to introduce deserialization error;
             return store.defineTable({
-                name: testTableName,
+                name: storeTestHelper.testTableName,
                 columnDefinitions: {
                     id: MobileServiceSqliteStore.ColumnType.String,
                     prop: MobileServiceSqliteStore.ColumnType.Date
                 }
             });
         }).then(function() {
-            return store.lookup(testTableName, '1');
+            return store.lookup(storeTestHelper.testTableName, '1');
         }).then(function(result) {
             $assert.fail('lookup should have failed');
         }, function(error) {
         });
     })
 );
-
-function createStore() {
-    return new MobileServiceSqliteStore(testDbFile);
-}
