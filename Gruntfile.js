@@ -178,7 +178,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-copy');
         
     // Default task(s).
-    grunt.registerTask('build', ['concat', 'browserify', 'uglify', 'copy', 'jshint']);
+    grunt.registerTask('build', ['buildbrowser', 'buildcordova']);
     grunt.registerTask('buildbrowser', ['concat', 'browserify:web', 'browserify:webTest', 'copy:web', 'copy:webTest']);
     grunt.registerTask('buildcordova', ['concat', 'browserify:cordova', 'browserify:cordovaTest', 'copy:cordova', 'copy:cordovaTest']);
 
