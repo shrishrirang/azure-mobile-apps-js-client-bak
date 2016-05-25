@@ -8,28 +8,21 @@
 
 var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
-    MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore'),
-    testTableName = 'sometable',
-    testDbFile = 'somedbfile.db';
+    storeTestHelper = require('./storeTestHelper'),
+    MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore');
 
 $testGroup('SQLiteStore - miscellaneous tests')
 
     // Clear the test table before running each test.
-    .beforeEachAsync(Platform.async( function(callback) {
-        var db = window.sqlitePlugin.openDatabase({ name: testDbFile, location: 'default' });
-
-        // Delete table created by the unit tests
-        db.executeSql('DROP TABLE IF EXISTS ' + testTableName, null, function() {
-            callback();
-        }, function(err) {
-            callback(err);
+    .beforeEachAsync(function() {
+        return storeTestHelper.createEmptyStore().then(function(emptyStore) {
+            store = emptyStore;
         });
-    })).tests(
+    }).tests(
 
     $test('Roundtrip non-null property values')
     .checkAsync(function () {
-        var store = createStore(),
-            row = {
+        var row = {
                 id: 'someid',
                 object: {
                     int: 1,
@@ -55,7 +48,7 @@ $testGroup('SQLiteStore - miscellaneous tests')
             };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.String,
                 object: MobileServiceSqliteStore.ColumnType.Object,
@@ -71,9 +64,9 @@ $testGroup('SQLiteStore - miscellaneous tests')
                 date: MobileServiceSqliteStore.ColumnType.Date
             }
         }).then(function () {
-            return store.upsert(testTableName, row);
+            return store.upsert(storeTestHelper.testTableName, row);
         }).then(function () {
-            return store.lookup(testTableName, row.id);
+            return store.lookup(storeTestHelper.testTableName, row.id);
         }).then(function (result) {
             $assert.areEqual(result, row);
         }, function (error) {
@@ -83,8 +76,7 @@ $testGroup('SQLiteStore - miscellaneous tests')
 
     $test('Roundtrip null property values')
     .checkAsync(function () {
-        var store = createStore(),
-            row = {
+        var row = {
                 id: '1',
                 object: null,
                 array: null,
@@ -100,7 +92,7 @@ $testGroup('SQLiteStore - miscellaneous tests')
             };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.String,
                 object: MobileServiceSqliteStore.ColumnType.Object,
@@ -116,9 +108,9 @@ $testGroup('SQLiteStore - miscellaneous tests')
                 date: MobileServiceSqliteStore.ColumnType.Date
             }
         }).then(function () {
-            return store.upsert(testTableName, row);
+            return store.upsert(storeTestHelper.testTableName, row);
         }).then(function () {
-            return store.lookup(testTableName, row.id);
+            return store.lookup(storeTestHelper.testTableName, row.id);
         }).then(function (result) {
             $assert.areEqual(result, row);
         }, function (error) {
@@ -128,10 +120,9 @@ $testGroup('SQLiteStore - miscellaneous tests')
 
     $test('Read table with columns missing from table definition')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 101, flag: 51, object: { 'a': 21 } },
+        var row = { id: 101, flag: 51, object: { 'a': 21 } },
             tableDefinition = {
-                name: testTableName,
+                name: storeTestHelper.testTableName,
                 columnDefinitions: {
                     id: MobileServiceSqliteStore.ColumnType.Integer,
                     flag: MobileServiceSqliteStore.ColumnType.Integer,
@@ -140,14 +131,14 @@ $testGroup('SQLiteStore - miscellaneous tests')
             };
 
         return store.defineTable(tableDefinition).then(function () {
-            return store.upsert(testTableName, row);
+            return store.upsert(storeTestHelper.testTableName, row);
         }).then(function () {
             // Now change column definition to only contain id column
             delete tableDefinition.columnDefinitions.flag;
             return store.defineTable(tableDefinition);
         }).then(function () {
             // Now read data inserted before changing column definition
-            return store.lookup(testTableName, row.id);
+            return store.lookup(storeTestHelper.testTableName, row.id);
         }).then(function (result) {
             // Check that the original data is read irrespective of whether the properties are defined by defineColumn
             $assert.areEqual(result, row);
@@ -169,7 +160,3 @@ $testGroup('SQLiteStore - miscellaneous tests')
         $assert.isNotNull(store._db);
     })
 );
-
-function createStore() {
-    return new MobileServiceSqliteStore(testDbFile);
-}

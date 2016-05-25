@@ -8,61 +8,54 @@
 
 var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
-    MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore'),
-    testTableName = 'sometable';
-    testDbFile = 'somedbfile.db';
+    storeTestHelper = require('./storeTestHelper'),
+    MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore');
 
 $testGroup('SQLiteStore - executeBatch tests')
 
     // Clear the test table before running each test.
-    .beforeEachAsync(Platform.async( function(callback) {
-        var db = window.sqlitePlugin.openDatabase({ name: testDbFile, location: 'default' });
-
-        // Delete table created by the unit tests
-        db.executeSql('DROP TABLE IF EXISTS ' + testTableName, null, function() {
-            callback();
-        }, function(err) {
-            callback(err);
+    .beforeEachAsync(function() {
+        return storeTestHelper.createEmptyStore().then(function(emptyStore) {
+            store = emptyStore;
         });
-    })).tests(
+    }).tests(
 
     $test('basic executeBatch scenario - batch of UPSERTs and DELETEs')
     .checkAsync(function () {
-        var store = createStore(),
-            row1 = { id: 101, description: 'original' },
+        var row1 = { id: 101, description: 'original' },
             row2 = { id: 102, description: 'original' },
             row3 = { id: 103, description: 'original' },
             row4 = { id: 201, description: 'new' };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
-            return store.upsert(testTableName, [row1, row2, row3]);
+            return store.upsert(storeTestHelper.testTableName, [row1, row2, row3]);
         }).then(function () {
             row1.description = 'new';
             return store.executeBatch([
                 {
                     action: 'upsert',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     data: row1
                 },
                 {
                     action: 'delete',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     id: row3.id
                 },
                 {
                     action: 'upsert',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     data: row4
                 },
             ]);
         }).then(function (result) {
-            return store.read(new Query(testTableName).orderBy('id'));
+            return store.read(new Query(storeTestHelper.testTableName).orderBy('id'));
         }).then(function (result) {
             $assert.areEqual(result, [
                 row1,
@@ -76,35 +69,34 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('An invalid operation.action should rollback the transaction')
     .checkAsync(function () {
-        var store = createStore(),
-            row1 = { id: 101, description: 'original' },
+        var row1 = { id: 101, description: 'original' },
             row2 = { id: 102, description: 'original' },
             row3 = { id: 103, description: 'original' };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
-            return store.upsert(testTableName, [row1, row2, row3]);
+            return store.upsert(storeTestHelper.testTableName, [row1, row2, row3]);
         }).then(function () {
             
             return store.executeBatch([
                 {
                     action: 'upsert',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     data: {id: row1.id, description: 'new'}
                 },
                 {
                     action: '__invalid__action__',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     data: {id: row2.id, description: 'new'}
                 },
                 {
                     action: 'upsert',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     data: {id: row3.id, description: 'new'}
                 },
             ]);
@@ -112,7 +104,7 @@ $testGroup('SQLiteStore - executeBatch tests')
             $assert.fail('executeBatch should have failed');
         }, function (error) {
             store._editStatement = undefined;
-            return store.read(new Query(testTableName));
+            return store.read(new Query(storeTestHelper.testTableName));
         }).then(function (result) {
             $assert.areEqual(result, [row1, row2, row3]);
         }, function (error) {
@@ -122,20 +114,19 @@ $testGroup('SQLiteStore - executeBatch tests')
 
     $test('SQLite error while executing a SQL statement should rollback the transaction')
     .checkAsync(function () {
-        var store = createStore(),
-            row1 = { id: 101, description: 'original' },
+        var row1 = { id: 101, description: 'original' },
             row2 = { id: 102, description: 'original' },
             row3 = { id: 103, description: 'original' },
             statementCount = 0;
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
             }
         }).then(function () {
-            return store.upsert(testTableName, [row1, row2, row3]);
+            return store.upsert(storeTestHelper.testTableName, [row1, row2, row3]);
         }).then(function () {
             store._editStatement = function (statement) {
                 ++statementCount;
@@ -148,17 +139,17 @@ $testGroup('SQLiteStore - executeBatch tests')
             return store.executeBatch([
                 {
                     action: 'upsert',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     data: {id: row1.id, description: 'new'}
                 },
                 {
                     action: 'upsert',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     data: {id: row2.id, description: 'new'}
                 },
                 {
                     action: 'upsert',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     data: {id: row3.id, description: 'new'}
                 },
             ]);
@@ -167,7 +158,7 @@ $testGroup('SQLiteStore - executeBatch tests')
         }, function (error) {
             $assert.areEqual(statementCount, 6); // Each of the 3 UPSERTs will generate 2 SQL statements.
             store._editStatement = undefined;
-            return store.read(new Query(testTableName));
+            return store.read(new Query(storeTestHelper.testTableName));
         }).then(function (result) {
             $assert.areEqual(result, [row1, row2, row3]);
         }, function (error) {
@@ -177,11 +168,10 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('operations parameter containing null operation')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 101, description: 'original' };
+        var row = { id: 101, description: 'original' };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -191,11 +181,11 @@ $testGroup('SQLiteStore - executeBatch tests')
                 null,
                 {
                     action: 'upsert',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     data: row
                 }]);
         }).then(function (result) {
-            return store.read(new Query(testTableName));
+            return store.read(new Query(storeTestHelper.testTableName));
         }).then(function (result) {
             $assert.areEqual(result, [row]);
         }, function (error) {
@@ -205,11 +195,10 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('operations parameter containing undefined operation')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 101, description: 'original' };
+        var row = { id: 101, description: 'original' };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -219,11 +208,11 @@ $testGroup('SQLiteStore - executeBatch tests')
                 undefined,
                 {
                     action: 'upsert',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     data: row
                 }]);
         }).then(function (result) {
-            return store.read(new Query(testTableName));
+            return store.read(new Query(storeTestHelper.testTableName));
         }).then(function (result) {
             $assert.areEqual(result, [row]);
         }, function (error) {
@@ -233,11 +222,10 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('Missing operation.action')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 101, description: 'original' };
+        var row = { id: 101, description: 'original' };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -246,7 +234,7 @@ $testGroup('SQLiteStore - executeBatch tests')
             return store.executeBatch([
                 {
                     // action is missing
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     data: row
                 }
             ]);
@@ -259,10 +247,8 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('UPSERT: null data')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -271,7 +257,7 @@ $testGroup('SQLiteStore - executeBatch tests')
             return store.executeBatch([
                 {
                     action: 'upsert',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     data: null
                 }
             ]);
@@ -284,10 +270,8 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('UPSERT: undefined data')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -296,7 +280,7 @@ $testGroup('SQLiteStore - executeBatch tests')
             return store.executeBatch([
                 {
                     action: 'upsert',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     data: undefined
                 }
             ]);
@@ -309,11 +293,10 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('UPSERT error handling - missing tableName')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 101, description: 'original' };
+        var row = { id: 101, description: 'original' };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -322,7 +305,7 @@ $testGroup('SQLiteStore - executeBatch tests')
             return store.executeBatch([
                 {
                     action: 'upsert',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     data: {id: row1.id, description: 'new'}
                 }
             ]);
@@ -335,11 +318,10 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('UPSERT error handling - null tableName')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 101, description: 'original' };
+        var row = { id: 101, description: 'original' };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -361,11 +343,10 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('UPSERT error handling - invalid tableName')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 101, description: 'original' };
+        var row = { id: 101, description: 'original' };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -387,11 +368,10 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('UPSERT error handling - empty tableName string')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 101, description: 'original' };
+        var row = { id: 101, description: 'original' };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -413,11 +393,10 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('UPSERT error handling - data is not an object')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 101, description: 'original' };
+        var row = { id: 101, description: 'original' };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -426,7 +405,7 @@ $testGroup('SQLiteStore - executeBatch tests')
             return store.executeBatch([
                 {
                     action: 'upsert',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     data: 'invalid data'
                 }
             ]);
@@ -439,11 +418,10 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('UPSERT error handling - data is an array')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 101, description: 'original' };
+        var row = { id: 101, description: 'original' };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -465,11 +443,10 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('UPSERT error handling - data does not have ID')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 101, description: 'original' };
+        var row = { id: 101, description: 'original' };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -491,11 +468,10 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('UPSERT error handling - data has invalid ID')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 101, description: 'original' };
+        var row = { id: 101, description: 'original' };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -504,7 +480,7 @@ $testGroup('SQLiteStore - executeBatch tests')
             return store.executeBatch([
                 {
                     action: 'upsert',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     data: {id: {}, description: 'new'}
                 }
             ]);
@@ -517,10 +493,8 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('DELETE: null ID')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -529,7 +503,7 @@ $testGroup('SQLiteStore - executeBatch tests')
             return store.executeBatch([
                 {
                     action: 'delete',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     id: null
                 }
             ]);
@@ -542,10 +516,8 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('DELETE: undefined ID')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -554,7 +526,7 @@ $testGroup('SQLiteStore - executeBatch tests')
             return store.executeBatch([
                 {
                     action: 'delete',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     id: undefined
                 }
             ]);
@@ -567,10 +539,8 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('DELETE error handling - missing tableName')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -592,10 +562,8 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('DELETE error handling - null tableName')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -617,10 +585,8 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('DELETE error handling - invalid tableName')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -642,10 +608,8 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('DELETE error handling - empty tableName string')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -667,10 +631,8 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('DELETE error handling - invalid ID')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -679,7 +641,7 @@ $testGroup('SQLiteStore - executeBatch tests')
             return store.executeBatch([
                 {
                     action: 'delete',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     id: {}
                 }
             ]);
@@ -692,10 +654,8 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('DELETE error handling - ID is an array')
     .checkAsync(function () {
-        var store = createStore();
-
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -704,7 +664,7 @@ $testGroup('SQLiteStore - executeBatch tests')
             return store.executeBatch([
                 {
                     action: 'delete',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     id: [101]
                 }
             ]);
@@ -717,11 +677,10 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('UPSERT error handling - data has null ID')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 101, description: 'original' };
+        var row = { id: 101, description: 'original' };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -730,7 +689,7 @@ $testGroup('SQLiteStore - executeBatch tests')
             return store.executeBatch([
                 {
                     action: 'upsert',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     data: {id: null, description: 'new'}
                 }
             ]);
@@ -743,11 +702,10 @@ $testGroup('SQLiteStore - executeBatch tests')
     
     $test('UPSERT error handling - data has undefined ID')
     .checkAsync(function () {
-        var store = createStore(),
-            row = { id: 101, description: 'original' };
+        var row = { id: 101, description: 'original' };
 
         return store.defineTable({
-            name: testTableName,
+            name: storeTestHelper.testTableName,
             columnDefinitions: {
                 id: MobileServiceSqliteStore.ColumnType.Integer,
                 description: MobileServiceSqliteStore.ColumnType.String
@@ -756,7 +714,7 @@ $testGroup('SQLiteStore - executeBatch tests')
             return store.executeBatch([
                 {
                     action: 'upsert',
-                    tableName: testTableName,
+                    tableName: storeTestHelper.testTableName,
                     data: {id: undefined, description: 'new'}
                 }
             ]);
@@ -767,7 +725,3 @@ $testGroup('SQLiteStore - executeBatch tests')
         });
     })
 );
-
-function createStore() {
-    return new MobileServiceSqliteStore(testDbFile);
-}

@@ -10,8 +10,7 @@ var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
     operations = require('../../../../src/sync/operations'),
     MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore'),
-    storeTestHelper = require('./storeTestHelper'),
-    testDbFile = 'somedbfile.db';
+    storeTestHelper = require('./storeTestHelper');
     
 var createOperationTableManager = operations.createOperationTableManager,
     operationTableName = operations._operationTableName,
@@ -273,14 +272,6 @@ $testGroup('operations tests')
         return performActionsAndVerifyError(['delete', 'lock'], 'update');
     })
 );
-
-function createStore() {
-    if (!store) {
-         store = new MobileServiceSqliteStore(testDbFile);
-    }
-    
-    return store;
-}
 
 // Perform the specified actions and verify that the operation table has the expected operations
 function performActionsAndVerifySuccess(actions, expectedOperations) {
