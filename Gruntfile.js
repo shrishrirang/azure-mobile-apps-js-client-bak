@@ -160,11 +160,11 @@ module.exports = function(grunt) {
             },
             web: {
                 files: '<%= files.all %>',
-                tasks: ['concat', 'browserify:web', 'browserify:webTest', 'copy:web', 'copy:webTest']
+                tasks: ['concat', 'browserify:webTest', 'copy:webTest']
             },
             cordova: {
                 files: '<%= files.all %>',
-                tasks: ['concat', 'browserify:cordova', 'browserify:cordovaTest', 'copy:cordova', 'copy:cordovaTest', 'copy:hostCordovaTest']
+                tasks: ['concat', 'browserify:cordovaTest', 'copy:cordovaTest', 'copy:hostCordovaTest']
             }
         }
     });
