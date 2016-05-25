@@ -239,14 +239,7 @@ $testGroup('task runner',
                 callback();
             })();
             for (var i = 0; i < numTasks; i++) {
-                (function(index) {
-                    // Start the next task irrespective of success or failure
-                    promise = promise.then(function() {
-                        return runner.run(getTask(index));
-                    }, function() {
-                        return runner.run(getTask(index));
-                    })
-                })(i);
+                promise = addTask(promise, runner, getTask(i));
             }
             
             // verify promise chain executes till the last task
@@ -254,7 +247,7 @@ $testGroup('task runner',
                 $assert.areEqual(result, numTasks-1);
             }, function(error) {
                 $assert.fail(error);
-            })
+            });
             
             function getTask(index) {
                 return Platform.async(function(callback) {
@@ -280,14 +273,7 @@ $testGroup('task runner',
                 callback();
             })();
             for (var i = 0; i < numTasks; i++) {
-                (function(index) {
-                    // Start the next task irrespective of success or failure
-                    promise = promise.then(function() {
-                        return runner.run(getTask(index));
-                    }, function() {
-                        return runner.run(getTask(index));
-                    })
-                })(i);
+                promise = addTask(promise, runner, getTask(i));
             }
             
             // verify promise chain executes till the last task
@@ -295,7 +281,7 @@ $testGroup('task runner',
                 $assert.areEqual(result, numTasks-1);
             }, function(error) {
                 $assert.fail(error);
-            })
+            });
             
             function getTask(index) {
                 return function() {
@@ -322,3 +308,12 @@ $testGroup('task runner',
         })
 );
 
+
+function addTask(chain, taskRunner, task) {
+    // Start the next task irrespective of success or failure
+    return chain.then(function() {
+        return taskRunner.run(task);
+    }, function() {
+        return taskRunner.run(task);
+    });
+}
