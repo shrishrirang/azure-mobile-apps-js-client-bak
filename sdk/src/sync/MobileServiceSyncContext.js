@@ -20,6 +20,8 @@ var Validate = require('../Utilities/Validate'),
 function MobileServiceSyncContext(client) {
 
     Validate.notNull(client, 'client');
+    
+    this.client = client;
 
     var store,
         operationTableManager,
