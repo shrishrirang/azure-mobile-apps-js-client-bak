@@ -14,11 +14,12 @@ var Platform = require('Platforms/Platform'),
     MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore'),
     storeTestHelper = require('./storeTestHelper');
     
-var syncContext = new MobileServiceSyncContext(new MobileServiceClient('http://shrirs-js-dev.azurewebsites.net')),
+var syncContext = new MobileServiceSyncContext(new MobileServiceClient('http://shrirs-js-dev.azurewebsites.net' /* FIXME */)),
     store,
     tableName = 'todoitem';
     
 $testGroup('pullManager tests')
+    .functional() //FIXME
     .beforeEachAsync(function() {
         return storeTestHelper.createEmptyStore().then(function(localStore) {
             store = localStore;
@@ -52,6 +53,12 @@ $testGroup('pullManager tests')
         //query.skip(1);
         // query.take(1);
         //query.includeTotalCount(1);
+        
+        var client = new MobileServiceClient('http://shrirs-js-dev.azurewebsites.net');
+        var table = client.getTable('todoitem');
+        
+        table.update({id: 'a', complete: 3});
+        
         return syncContext.pull(query).then(function() {
             query = new Query(tableName);
             return store.read(query);

@@ -221,7 +221,7 @@ function MobileServiceSyncContext(client) {
         return store.lookup(tableName, instance.id).then(function(existingRecord) {
             return preconditionValidator(existingRecord);
         }).then(function() {
-            return operationTableManager.readPendingOperations(tableName, action, instance.id);
+            return operationTableManager.getLoggingOperation(tableName, action, instance.id);
         }).then(function(loggingOperation) {
             return store.executeBatch([
                 {
