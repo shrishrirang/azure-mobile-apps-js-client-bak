@@ -26,15 +26,13 @@ function createOperationTableManager(store) {
         maxOperationId = 0,
         lockedOperationId;
 
-    var operationTableManager = {
+    return operationTableManager = {
         initialize: initialize,
         lockOperation: lockOperation,
         unlockOperation: unlockOperation,
+        readPendingOperations: readPendingOperations,
         getLoggingOperation: getLoggingOperation
     };
-    // test purpose exports only
-    operationTableManager._readPendingOperations = readPendingOperations;
-    return operationTableManager;
     
     /**
      * Defines the operation table in the local store.

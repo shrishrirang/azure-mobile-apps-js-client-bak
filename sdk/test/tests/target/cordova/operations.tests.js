@@ -48,7 +48,7 @@ $testGroup('operations tests')
         }).then(function(op) {
             return store.executeBatch([op]);
         }).then(function() {
-            return operationTableManager._readPendingOperations(storeTestHelper.testTableName, itemId);
+            return operationTableManager.readPendingOperations(storeTestHelper.testTableName, itemId);
         }).then(function(result) {
             $assert.areEqual(result, [
                 {
@@ -74,7 +74,7 @@ $testGroup('operations tests')
         }).then(function(op) {
             return store.executeBatch([op]);
         }).then(function() {
-            return operationTableManager._readPendingOperations(storeTestHelper.testTableName, itemId1);
+            return operationTableManager.readPendingOperations(storeTestHelper.testTableName, itemId1);
         }).then(function(result) {
             $assert.areEqual(result, [
                 {
@@ -93,7 +93,7 @@ $testGroup('operations tests')
         }).then(function(op) {
             return store.executeBatch([op]);
         }).then(function() {
-            return operationTableManager._readPendingOperations(storeTestHelper.testTableName, itemId1);
+            return operationTableManager.readPendingOperations(storeTestHelper.testTableName, itemId1);
         }).then(function(result) {
             $assert.areEqual(result, [
                 {
@@ -111,7 +111,7 @@ $testGroup('operations tests')
         }).then(function(op) {
             return store.executeBatch([op]);
         }).then(function() {
-            return operationTableManager._readPendingOperations(storeTestHelper.testTableName, itemId2);
+            return operationTableManager.readPendingOperations(storeTestHelper.testTableName, itemId2);
         }).then(function(result) {
             $assert.areEqual(result, [
                 {
@@ -330,7 +330,7 @@ function performAction(asyncChain, operationTableManager, itemId, action) {
 
 // Verify that the pending operations in the operation table are as expected
 function verifyOperations(operationTableManager, itemId, expectedOperations) {
-    return operationTableManager._readPendingOperations(storeTestHelper.testTableName, itemId).then(function(operations) {
+    return operationTableManager.readPendingOperations(storeTestHelper.testTableName, itemId).then(function(operations) {
         
         for (var i in expectedOperations) {
             expectedOperations[i].tableName = storeTestHelper.testTableName;

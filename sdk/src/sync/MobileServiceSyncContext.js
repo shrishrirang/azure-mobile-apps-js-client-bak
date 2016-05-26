@@ -6,6 +6,8 @@ var Validate = require('../Utilities/Validate'),
     Platform = require('Platforms/Platform'),
     createOperationTableManager = require('./operations').createOperationTableManager,
     taskRunner = require('../Utilities/taskRunner'),
+    tableConstants = require('../constants').table,
+    createPullManager = require('./pull').createPullManager,
     uuid = require('node-uuid'),
     _ = require('../Utilities/Extensions');
 
@@ -25,6 +27,7 @@ function MobileServiceSyncContext(client) {
 
     var store,
         operationTableManager,
+        pullManager = createPullManager(),
         storeTaskRunner = taskRunner(); // Used to run insert / update / delete tasks on the store
 
     /**
@@ -65,8 +68,8 @@ function MobileServiceSyncContext(client) {
                 instance.id = uuid.v4();
             }
 
-            // Delegate parameter validation to upsert
-            return upsert(tableName, instance, 'insert', function(existingRecord) { // precondition validator
+            // Delegate parameter validation to upsertInternal
+            return upsertWithLogging(tableName, instance, 'insert', function(existingRecord) { // precondition validator
                 if (!_.isNull(existingRecord)) {
                     throw new Error('Cannot perform insert as a record with ID ' + existingRecord.id + ' already exists in the table ' + tableName);
                 }
@@ -85,8 +88,8 @@ function MobileServiceSyncContext(client) {
      */
     this.update = function (tableName, instance) { //TODO: add an update method to the store
         return storeTaskRunner.run(function() {
-            // Delegate parameter validation to upsert
-            return upsert(tableName, instance, 'update', function(existingRecord) { // precondition validator
+            // Delegate parameter validation to upsertInternal
+            return upsertWithLogging(tableName, instance, 'update', function(existingRecord) { // precondition validator
                 if (_.isNull(existingRecord)) {
                     throw new Error('Cannot update record with ID ' + existingRecord.id + ' as it does not exist the table ' + tableName);
                 }
@@ -151,13 +154,60 @@ function MobileServiceSyncContext(client) {
         });
     };
     
+    /**
+     * Pulls records from the server into the local table.
+     * 
+     * @param query Query specifying which records to pull
+     * @param queryId A unique string ID for an incremental pull query OR null for a vanilla pull query.
+     * 
+     * @returns A promsie that is fulfilled when all records are pulled OR rejected if the pull fails or is cancelled.  
+     */
+    this.pull = function (query, queryId) { //TODO: Implement cancel
+        return pullManager.pull(query, queryId, pullHandler);
+    };
+    
     // Unit test purposes only
     this._getOperationTableManager = function () {
         return operationTableManager;
     };
     
+    function pullHandler(tableName, pulledRecord) {
+        return Platform.async(function(callback) {
+            callback();
+        })().then(function() {
+            if (Validate.isValidId(pulledRecord[tableConstants.idPropertyName])) {
+                throw new Error('Pulled record does not have a valid ID');
+            }
+            
+            return operationTableManager.readPendingOperations(tableName, pulledRecord[tableConstants.idPropertyName]).then(function(pendingOperations) {
+                // If there are pending operations for the record we just pulled, we want to ignore the pulled record
+                if (pendingOperations.count <= 0) {
+                    return;
+                }
+
+                if (pulledRecord[tableConstants.deletedColumnName] === true) {
+                    return syncContext.del(syncContext)
+                } else if (pulledRecord[tableConstants.deletedColumnName] === false) {
+                    return syncContext.upsert(mobileServiceTable.getTableName(), pulledRecord);
+                }
+            });
+        });
+    }
+    
+    function upsertWithoutLogging(tableName, instance) {
+        return storeTaskRunner.run(function() {
+            return store.upsert(tableName, instance);
+        });
+    }
+    
+    function delWithoutLogging(tableName, instance) {
+        return storeTaskRunner.run(function() {
+            return store.del(tableName, instance);
+        });
+    }
+    
     // Validates parameters. Callers can skip validation
-    function upsert(tableName, instance, action, preconditionValidator) {
+    function upsertWithLogging(tableName, instance, action, preconditionValidator) {
         Validate.isString(tableName, 'tableName');
         Validate.notNullOrEmpty(tableName, 'tableName');
 
@@ -171,7 +221,7 @@ function MobileServiceSyncContext(client) {
         return store.lookup(tableName, instance.id).then(function(existingRecord) {
             return preconditionValidator(existingRecord);
         }).then(function() {
-            return operationTableManager.getLoggingOperation(tableName, action, instance.id);
+            return operationTableManager.readPendingOperations(tableName, action, instance.id);
         }).then(function(loggingOperation) {
             return store.executeBatch([
                 {

@@ -7,12 +7,11 @@ var Validate = require('../Utilities/Validate'),
     createOperationTableManager = require('./operations').createOperationTableManager,
     taskRunner = require('../Utilities/taskRunner'),
     MobileServiceTable = require('../MobileServiceTable'),
-    tableConstants = require('../constants').table,
     _ = require('../Utilities/Extensions');
 
 var pageSize = 2;
 
-function createPullManager(pulledRecordHandler) {
+function createPullManager(pullHandler) {
     
     pullTaskRunner = taskRunner();
 
@@ -31,27 +30,31 @@ function createPullManager(pulledRecordHandler) {
         query = JSON.parse(JSON.stringify(query));
         
         return pullTaskRunner.run(function() {
-            Validate.isObject(syncContext);
-            Validate.notNull(syncContext);
-            validatePullQuery(query);
+            validateQuery(query);
+            Validate.isString(queryId); // non-null string or null - both are valid
             
             reset();
-            setupQuery(query, queryId);
-            return pullAllPages(query, queryId)
+            return setupQuery(query, queryId).then(function() {
+                return pullAllPages(query, queryId)
+            });
         });
     }
     
     function setupQuery(query, queryId) {
-        // Sort the results by 'updatedAt' column and fetch pageSize results
-        query.orderBy('updatedAt');
-        query.take(pageSize);
+        return Platform.async(function(callback) {
+            // Sort the results by 'updatedAt' column and fetch pageSize results
+            query.orderBy('updatedAt');
+            query.take(pageSize);
+
+            // FIXME: implement incremental sync
+        })();
     }
     
     function pullAllPages(query, queryId) {
         mobileServiceTable = syncContext.client.getTable(query.getComponents().table);
         
         return pullPage(query, queryId).then(function(pulledRecords) {
-            if (pullRecords.count > 0) {
+            if (pulledRecords.count > 0) {
                 return updateQueryForNextPage(query, queryId).then(function() {
                     return pullAllPages(query, queryId);
                 });
@@ -82,25 +85,10 @@ function createPullManager(pulledRecordHandler) {
     
     function processPulledRecord(chain, record) {
         chain = chain.then(function() {
-            return pulledRecordHandler(record);
+            return pullHandler(mobileServiceTable.getTableName(), record);
         });
     }
 
-/*    
-    function processPulledRecord(chain, record) {
-        return chain.then(function() {
-            if (Validate.isValidId(record[tableConstants.idPropertyName])) {
-                throw new Error('Pulled record does not have a valid ID');
-            }
-            
-            if (record[tableConstants.deletedColumnName] === true) {
-                return syncContext.del(syncContext)
-            } else if (record[tableConstants.deletedColumnName] === false) {
-                return syncContext.upsert(mobileServiceTable.getTableName(), record);
-            }
-        });
-    }
-*/
     function updateQueryForNextPage(query, queryId) {
         // update the query to get the next page
         if (queryId) { // Incremental pull
@@ -110,7 +98,7 @@ function createPullManager(pulledRecordHandler) {
         }
     }
 
-    function validatePullQuery(query) {
+    function validateQuery(query) {
         Validate.isObject(query);
         Validate.notNull(query);
         
@@ -136,5 +124,4 @@ function createPullManager(pulledRecordHandler) {
             throw new Error('includeTotalCount is not supported in the pull query');
         }
     }
-
 }
