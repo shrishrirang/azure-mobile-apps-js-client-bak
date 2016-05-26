@@ -11,9 +11,13 @@ var Validate = require('../Utilities/Validate'),
 
 var pageSize = 2;
 
-function createPullManager(pullHandler) {
+function createPullManager(syncContext, pullHandler) {
     
     pullTaskRunner = taskRunner();
+    
+    return {
+        pull: pull
+    };
 
     var mobileServiceTable;
     
@@ -26,8 +30,7 @@ function createPullManager(pullHandler) {
         //FIXME: support queryId
         //TODO: page size should be configurable
 
-        // Make a copy of the query
-        query = JSON.parse(JSON.stringify(query));
+        //TODO: Make a copy of the query
         
         return pullTaskRunner.run(function() {
             validateQuery(query);
@@ -47,6 +50,8 @@ function createPullManager(pullHandler) {
             query.take(pageSize);
 
             // FIXME: implement incremental sync
+            
+            callback();
         })();
     }
     
@@ -54,8 +59,8 @@ function createPullManager(pullHandler) {
         mobileServiceTable = syncContext.client.getTable(query.getComponents().table);
         
         return pullPage(query, queryId).then(function(pulledRecords) {
-            if (pulledRecords.count > 0) {
-                return updateQueryForNextPage(query, queryId).then(function() {
+            if (pulledRecords.length > 0) {
+                return updateQueryForNextPage(query, queryId, pulledRecords).then(function() {
                     return pullAllPages(query, queryId);
                 });
             }
@@ -64,38 +69,42 @@ function createPullManager(pullHandler) {
     
     function pullPage(query, queryId) {
         return mobileServiceTable.read(query).then(function(pulledRecords) {
-            if (pulledRecords.count <= 0) {
+            if (pulledRecords.length <= 0) {
                 return pulledRecords;
             }
             
-            var chain = Promise.async(function(callback) {
+            var chain = Platform.async(function(callback) {
                 callback();
             })();
             
             for (var i in pulledRecords) {
-                var record = pulledRecords[i];
-                chain = processPulledRecord(chain, record); 
+                chain = processPulledRecord(chain, pulledRecords[i]); 
             }
             
-            chain.then(function() {
+            return chain.then(function() {
                 return pulledRecords;
             });
         });
     }
     
     function processPulledRecord(chain, record) {
-        chain = chain.then(function() {
+        return chain.then(function() {
             return pullHandler(mobileServiceTable.getTableName(), record);
         });
     }
 
-    function updateQueryForNextPage(query, queryId) {
-        // update the query to get the next page
-        if (queryId) { // Incremental pull
-            
-        } else { // Vanilla pull
-            
-        }
+    // update the query to get the next page
+    function updateQueryForNextPage(query, queryId, pulledRecords) {
+        
+        return Platform.async(function(callback) {
+            callback();
+        })().then(function() {
+            if (queryId) {
+                //FIXME: Incremental pull
+            } else {
+                query.skip(query.getComponents().skip + pulledRecords.length);
+            }
+        });
     }
 
     function validateQuery(query) {
@@ -125,3 +134,5 @@ function createPullManager(pullHandler) {
         }
     }
 }
+
+exports.createPullManager = createPullManager;

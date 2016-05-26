@@ -27,7 +27,7 @@ function MobileServiceSyncContext(client) {
 
     var store,
         operationTableManager,
-        pullManager = createPullManager(),
+        pullManager = createPullManager(this, pullHandler),
         storeTaskRunner = taskRunner(); // Used to run insert / update / delete tasks on the store
 
     /**
@@ -163,7 +163,7 @@ function MobileServiceSyncContext(client) {
      * @returns A promsie that is fulfilled when all records are pulled OR rejected if the pull fails or is cancelled.  
      */
     this.pull = function (query, queryId) { //TODO: Implement cancel
-        return pullManager.pull(query, queryId, pullHandler);
+        return pullManager.pull(query, queryId);
     };
     
     // Unit test purposes only
@@ -181,14 +181,14 @@ function MobileServiceSyncContext(client) {
             
             return operationTableManager.readPendingOperations(tableName, pulledRecord[tableConstants.idPropertyName]).then(function(pendingOperations) {
                 // If there are pending operations for the record we just pulled, we want to ignore the pulled record
-                if (pendingOperations.count <= 0) {
+                if (pendingOperations.length > 0) {
                     return;
                 }
 
                 if (pulledRecord[tableConstants.deletedColumnName] === true) {
-                    return syncContext.del(syncContext)
+                    return delWithoutLogging(tableName, pulledRecord)
                 } else if (pulledRecord[tableConstants.deletedColumnName] === false) {
-                    return syncContext.upsert(mobileServiceTable.getTableName(), pulledRecord);
+                    return upsertWithoutLogging(tableName, pulledRecord);
                 }
             });
         });

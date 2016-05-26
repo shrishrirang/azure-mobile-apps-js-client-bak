@@ -15,9 +15,26 @@ var Platform = require('Platforms/Platform'),
     storeTestHelper = require('./storeTestHelper');
     
 var syncContext = new MobileServiceSyncContext(new MobileServiceClient('http://shrirs-js-dev.azurewebsites.net')),
+    store,
     tableName = 'todoitem';
     
-$testGroup('pullManager tests').tests(
+$testGroup('pullManager tests')
+    .beforeEachAsync(function() {
+        return storeTestHelper.createEmptyStore().then(function(localStore) {
+            store = localStore;
+            return store.defineTable({
+                name: tableName,
+                columnDefinitions: {
+                    id: MobileServiceSqliteStore.ColumnType.String,
+                    text: MobileServiceSqliteStore.ColumnType.String,
+                    complete: MobileServiceSqliteStore.ColumnType.Boolean,
+                    version: MobileServiceSqliteStore.ColumnType.String
+                }
+            });
+        }).then(function() {
+            return syncContext.initialize(store);
+        });
+    }).tests(
 
     $test('basic')
     .checkAsync(function () {
@@ -35,7 +52,12 @@ $testGroup('pullManager tests').tests(
         //query.skip(1);
         // query.take(1);
         //query.includeTotalCount(1);
-        return pullManager.pull(syncContext, query);
+        return syncContext.pull(query).then(function() {
+            query = new Query(tableName);
+            return store.read(query);
+        }).then(function(records) {
+            records = records;
+        });
     })
 );
 
