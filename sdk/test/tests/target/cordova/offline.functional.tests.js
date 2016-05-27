@@ -12,6 +12,7 @@ var Platform = require('Platforms/Platform'),
     
 var syncContext = new MobileServiceSyncContext(new MobileServiceClient('http://shrirs-js-dev.azurewebsites.net' /* FIXME */)),
     store,
+    testId = 'x1',
     tableName = 'todoitem';
     
 $testGroup('offline tests')
@@ -30,6 +31,8 @@ $testGroup('offline tests')
             });
         }).then(function() {
             return syncContext.initialize(store);
+        }).then(function() {
+            return syncContext.insert(tableName, {id: testId, text: 'inserted locally'});
         });
     }).tests(
 
@@ -39,13 +42,29 @@ $testGroup('offline tests')
         var client = new MobileServiceClient('http://shrirs-js-dev.azurewebsites.net');
         var table = client.getTable('todoitem');
         
-        table.update({id: 'a', complete: 3});
+        // return syncContext.pull(query).then(function() {
+        //     query = new Query(tableName);
+        //     return store.read(query);
+        // }).then(function(records) {
+        //     records = records;
+        // });
         
-        return syncContext.pull(query).then(function() {
-            query = new Query(tableName);
-            return store.read(query);
-        }).then(function(records) {
-            records = records;
+        return syncContext.push().then(function() {
+            return syncContext.update(tableName, {id: testId, text: 'updated locally'});
+        }).then(function() {
+            return syncContext.push();
+        }).then(function() {
+            return syncContext.del(tableName, {id: testId});
+        }).then(function() {
+            return syncContext.push();
+        }).then(function(x) {
+        }).then(function(x) {
+            var t = x;
+            t = t;
+        }).then(function() {
+        }, function(error) {
+            var x = 1;
+            x = error;
         });
     })
 );

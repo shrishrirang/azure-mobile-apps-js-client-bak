@@ -38,33 +38,7 @@ $testGroup('table pull tests')
     }).tests(
 
     $test('basic')
-    .checkAsync(function () {
-        var query = new Query(tableName);
-        //query.select('a');
-        //query.orderByDescending('propertyOrderBy');
-        
-        // syncContext.client.getTable('todoitem').insert({
-        //     id: 'item4',
-        //     text: 'another false',
-        //     complete: false
-        // });
-        
-        
-        //query.skip(1);
-        // query.take(1);
-        //query.includeTotalCount(1);
-        
-        var client = new MobileServiceClient('http://shrirs-js-dev.azurewebsites.net');
-        var table = client.getTable('todoitem');
-        
-        table.update({id: 'a', complete: 3});
-        
-        return syncContext.pull(query).then(function() {
-            query = new Query(tableName);
-            return store.read(query);
-        }).then(function(records) {
-            records = records;
-        });
+    .check(function () {
     })
 );
 
