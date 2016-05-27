@@ -88,7 +88,7 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
             case 'update':
                 return mobileServiceTable.update(operation.data);
             case 'delete':
-                return mobileServiceTable.del(operation.data);
+                return mobileServiceTable.del({id: operation.logRecord.itemId});
             default:
                 throw new Erorr('Unsupported action ' + operation.logRecord.action);
         }
