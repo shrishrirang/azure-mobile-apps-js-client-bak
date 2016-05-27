@@ -86,7 +86,9 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
                     store.upsert(operation.logRecord.tableName, result);
                 });
             case 'update':
-                return mobileServiceTable.update(operation.data);
+                return mobileServiceTable.update(operation.data).then(function(result) {
+                    store.upsert(operation.logRecord.tableName, result);
+                });
             case 'delete':
                 return mobileServiceTable.del({id: operation.logRecord.itemId});
             default:
