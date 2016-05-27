@@ -17,10 +17,12 @@ module.exports = {
     apiVersion: "2.0.0",
     table: {
         idPropertyName: "id",
-        deletedColumnName: "deleted",
-        createdAtColumnName: "createdAt",
-        updatedAtColumnName: "updatedAt",
-        versionColumnName: "version",
+        sysProps: {
+            deletedColumnName: "deleted",
+            createdAtColumnName: "createdAt",
+            updatedAtColumnName: "updatedAt",
+            versionColumnName: "version"
+        },
         includeDeletedFlag: "__includeDeleted"
     }
 };

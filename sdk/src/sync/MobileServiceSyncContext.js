@@ -6,9 +6,8 @@ var Validate = require('../Utilities/Validate'),
     Platform = require('Platforms/Platform'),
     createOperationTableManager = require('./operations').createOperationTableManager,
     taskRunner = require('../Utilities/taskRunner'),
-    tableConstants = require('../constants').table,
     createPullManager = require('./pull').createPullManager,
-    createPushManager = require('./pull').createPushManager,
+    createPushManager = require('./push').createPushManager,
     uuid = require('node-uuid'),
     _ = require('../Utilities/Extensions');
 
@@ -26,8 +25,9 @@ function MobileServiceSyncContext(client) {
     
     var store,
         operationTableManager,
-        pullManager = createPullManager(client, pullHandler),
-        pushManager = createPushManager(client, operationTableManager);
+        pullManager,
+        pushManager,
+        syncTaskRunner = taskRunner(),
         storeTaskRunner = taskRunner(); // Used to run insert / update / delete tasks on the store
 
     /**
@@ -48,6 +48,8 @@ function MobileServiceSyncContext(client) {
             return operationTableManager.initialize(localStore);
         }).then(function() {
             store = localStore; // Assigning to store after all initialization steps are complete
+            pullManager = createPullManager(client, store, storeTaskRunner);
+            pushManager = createPushManager(client, store, storeTaskRunner, operationTableManager);
         });
         
     };
@@ -163,7 +165,9 @@ function MobileServiceSyncContext(client) {
      * @returns A promise that is fulfilled when all records are pulled OR is rejected if the pull fails or is cancelled.  
      */
     this.pull = function (query, queryId) { //TODO: Implement cancel
-        return pullManager.push(query, queryId);
+        return syncTaskRunner.run(function() {
+            return pullManager.pull(query, queryId);
+        });
     };
     
     /**
@@ -172,7 +176,9 @@ function MobileServiceSyncContext(client) {
      * @returns A promise that is fulfilled when all pending operations are pushed OR is rejected if the push fails or is cancelled.  
      */
     this.push = function (query, queryId) { //TODO: Implement cancel
-        return pushManager.push();
+        return syncTaskRunner.run(function() {
+            return pushManager.push();
+        });
     };
     
     // Unit test purposes only
@@ -180,41 +186,13 @@ function MobileServiceSyncContext(client) {
         return operationTableManager;
     };
     
-    // Processes pulled records by updating the store appopriately 
-    function pullHandler(tableName, pulledRecord) {
-        return Platform.async(function(callback) {
-            callback();
-        })().then(function() {
-            if (Validate.isValidId(pulledRecord[tableConstants.idPropertyName])) {
-                throw new Error('Pulled record does not have a valid ID');
-            }
-            
-            return operationTableManager.readPendingOperations(tableName, pulledRecord[tableConstants.idPropertyName]).then(function(pendingOperations) {
-                // If there are pending operations for the record we just pulled, we want to ignore the pulled record
-                if (pendingOperations.length > 0) {
-                    return;
-                }
-
-                if (pulledRecord[tableConstants.deletedColumnName] === true) {
-                    return delWithoutLogging(tableName, pulledRecord)
-                } else if (pulledRecord[tableConstants.deletedColumnName] === false) {
-                    return upsertWithoutLogging(tableName, pulledRecord);
+    function lockAndReadFirstPendingOperation() {
+        storeTaskRunner.run(function() {
+            return operationTableManager.readFirstPendingOperation().then(function(operation) {
+                if (operation) {
+                    return operation.lockOperation(operation.id);
                 }
             });
-        });
-    }
-    
-    // Performs upsert, but without logging the action in the operation table
-    function upsertWithoutLogging(tableName, instance) {
-        return storeTaskRunner.run(function() {
-            return store.upsert(tableName, instance);
-        });
-    }
-    
-    // Performs delete, but without logging the action in the operation table
-    function delWithoutLogging(tableName, instance) {
-        return storeTaskRunner.run(function() {
-            return store.del(tableName, instance);
         });
     }
     

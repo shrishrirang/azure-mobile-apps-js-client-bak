@@ -29,6 +29,7 @@ function resetStore(store) {
     return Platform.async(function(callback) {
         store._db.sqlBatch([
             'DROP TABLE IF EXISTS ' + operations._operationTableName,
+            'DROP TABLE IF EXISTS ' + 'todoitem',
             'DROP TABLE IF EXISTS ' + testTableName
         ], function() {
             callback(null, store);

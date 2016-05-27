@@ -31,8 +31,8 @@ function createOperationTableManager(store) {
         lockOperation: lockOperation,
         unlockOperation: unlockOperation,
         readPendingOperations: readPendingOperations,
-        getFirstPendingOperation: getFirstPendingOperation,
-        removePendingOperation: removePendingOperation,
+        readFirstPendingOperationWithData: readFirstPendingOperationWithData,
+        removeLockedOperation: removeLockedOperation,
         getLoggingOperation: getLoggingOperation
     };
     
@@ -71,25 +71,28 @@ function createOperationTableManager(store) {
      * the record would have been deleted.
      */
     function lockOperation(id) {
-        
-        // Locking a locked operation should have no effect
-        if (lockedOperationId === id) {
-            return;
-        }
-        
-        if (!lockedOperationId) {
-            lockedOperationId = id;
-            return;
-        }
+        return runner.run(function() {
+            // Locking a locked operation should have no effect
+            if (lockedOperationId === id) {
+                return;
+            }
+            
+            if (!lockedOperationId) {
+                lockedOperationId = id;
+                return;
+            }
 
-        throw new Error('Only one operation can be locked at a time');
+            throw new Error('Only one operation can be locked at a time');
+        });
     }
     
     /**
      * Unlock the locked operation
      */
     function unlockOperation() {
-        lockedOperationId = undefined;
+        return runner.run(function() {
+            lockedOperationId = undefined;
+        });
     }
     
     /**
@@ -174,14 +177,14 @@ function createOperationTableManager(store) {
     /**
      * Gets the first pending operation, i.e. the one with smallest id value
      */
-    function getFirstPendingOperation() {
+    function readFirstPendingOperationWithData() {
         // Use the task runner to avoid interleaving
         return runner.run(function() {
-            return getFirstPendingOperationInternal();
+            return readFirstPendingOperationWithDataInternal();
         });
     }
     
-    function getFirstPendingOperationInternal() {
+    function readFirstPendingOperationWithDataInternal() {
         var logRecord;
         return store.read(new Query(operationTableName).orderBy('id').take(1)).then(function(result) {
             if (result.length === 1) {
@@ -218,14 +221,27 @@ function createOperationTableManager(store) {
                 // 
                 // FIXME: what happens if a non-existent ID is attempted to be deleted on MServiceTable?
                 return removePendingOperation(logRecord.id).then(function() {
-                    return getFirstPendingOperationInternal();
+                    return readFirstPendingOperationWithDataInternal();
                 });
             });
         });
     }
     
+    function removeLockedOperation() {
+        return removePendingOperation(lockedOperationId).then(function() {
+            return unlockOperation();
+        });
+    }
+    
     function removePendingOperation(id) {
-        return store.del(operationTableName, {id: logRecord.id});
+        return runner.run(function() {
+            
+            if (!id) {
+                throw new Error('Invalid operation id');
+            }
+            
+            return store.del(operationTableName, id);
+        });
     }
 
     /**

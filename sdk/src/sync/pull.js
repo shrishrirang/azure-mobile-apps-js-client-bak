@@ -11,11 +11,14 @@ var Validate = require('../Utilities/Validate'),
     Platform = require('Platforms/Platform'),
     taskRunner = require('../Utilities/taskRunner'),
     MobileServiceTable = require('../MobileServiceTable'),
+    tableConstants = require('../constants').table,
     _ = require('../Utilities/Extensions');
-
-var pageSize = 2; //TODO: This needs to be 50
-
-function createPullManager(client, pullHandler) {
+    
+var pageSize = 2, //TODO: This needs to be 50
+    idPropertyName = tableConstants.idPropertyName,
+    sysProps = tableConstants.sysProps;
+    
+function createPullManager(client, store, storeTaskRunner) {
     // Task runner for running pull tasks. We want only one pull to run at a time. 
     var pullTaskRunner = taskRunner();
     
@@ -93,7 +96,29 @@ function createPullManager(client, pullHandler) {
     
     function processPulledRecord(chain, record) {
         return chain.then(function() {
-            return pullHandler(mobileServiceTable.getTableName(), record);
+
+            // Update the store as per the pulled record 
+            return storeTaskRunner.run(function() {
+                if (Validate.isValidId(pulledRecord[idPropertyName])) {
+                    throw new Error('Pulled record does not have a valid ID');
+                }
+                
+                return operationTableManager.readPendingOperations(tableName, pulledRecord[idPropertyName]).then(function(pendingOperations) {
+                    // If there are pending operations for the record we just pulled, we want to ignore the pulled record
+                    if (pendingOperations.length > 0) {
+                        return;
+                    }
+
+                    if (pulledRecord[sysProps.deletedColumnName] === true) {
+                        return store.del(tableName, pulledRecord.id);
+                    } else if (pulledRecord[sysProps.deletedColumnName] === false) {
+                        return store.upsert(tableName, pulledRecord);
+                    } else {
+                        throw new Error('Something is wrong. ' + sysProps.deletedColumnName + ' system property is missing.');
+                    }
+                });
+            });
+            
         });
     }
 
