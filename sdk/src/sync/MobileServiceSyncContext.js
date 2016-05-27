@@ -160,7 +160,7 @@ function MobileServiceSyncContext(client) {
      * @param query Query specifying which records to pull
      * @param queryId A unique string ID for an incremental pull query OR null for a vanilla pull query.
      * 
-     * @returns A promsie that is fulfilled when all records are pulled OR rejected if the pull fails or is cancelled.  
+     * @returns A promise that is fulfilled when all records are pulled OR rejected if the pull fails or is cancelled.  
      */
     this.pull = function (query, queryId) { //TODO: Implement cancel
         return pullManager.pull(query, queryId);
@@ -171,6 +171,7 @@ function MobileServiceSyncContext(client) {
         return operationTableManager;
     };
     
+    // Processes pulled records by updating the store appopriately 
     function pullHandler(tableName, pulledRecord) {
         return Platform.async(function(callback) {
             callback();
@@ -194,18 +195,21 @@ function MobileServiceSyncContext(client) {
         });
     }
     
+    // Performs upsert, but without logging the action in the operation table
     function upsertWithoutLogging(tableName, instance) {
         return storeTaskRunner.run(function() {
             return store.upsert(tableName, instance);
         });
     }
     
+    // Performs delete, but without logging the action in the operation table
     function delWithoutLogging(tableName, instance) {
         return storeTaskRunner.run(function() {
             return store.del(tableName, instance);
         });
     }
     
+    // Performs upsert and logs the action in the operation table
     // Validates parameters. Callers can skip validation
     function upsertWithLogging(tableName, instance, action, preconditionValidator) {
         Validate.isString(tableName, 'tableName');

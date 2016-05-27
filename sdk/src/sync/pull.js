@@ -16,8 +16,8 @@ var Validate = require('../Utilities/Validate'),
 var pageSize = 2; //TODO: This needs to be 50
 
 function createPullManager(syncContext, pullHandler) {
-    
-    pullTaskRunner = taskRunner();
+    // Task runner for running pull tasks. We want only one pull to run at a time. 
+    var pullTaskRunner = taskRunner();
     
     return {
         pull: pull
@@ -33,7 +33,7 @@ function createPullManager(syncContext, pullHandler) {
             validateQuery(query);
             Validate.isString(queryId); // non-null string or null - both are valid
 
-            // Make a copy of the query as we will be editing it            
+            // Make a copy of the query as we will be modifying it            
             var components = query.getComponents();
             pullQuery = new Query(components.table);
             pullQuery.setComponents(components);
@@ -44,6 +44,7 @@ function createPullManager(syncContext, pullHandler) {
         });
     }
     
+    // Setup the query to get started with pull
     function setupQuery(query, queryId) {
         return Platform.async(function(callback) {
             
@@ -54,11 +55,12 @@ function createPullManager(syncContext, pullHandler) {
             callback();
         })();
     }
-    
+
     function pullAllPages(query, queryId) {
         mobileServiceTable = syncContext.client.getTable(query.getComponents().table);
         
         return pullPage(query, queryId).then(function(pulledRecords) {
+            // Keep fetching pages till a pull fetches no record
             if (pulledRecords.length > 0) {
                 return updateQueryForNextPage(query, queryId, pulledRecords).then(function() {
                     return pullAllPages(query, queryId);
@@ -69,6 +71,7 @@ function createPullManager(syncContext, pullHandler) {
     
     function pullPage(query, queryId) {
         return mobileServiceTable.read(query).then(function(pulledRecords) {
+            // If page has no records, we are done
             if (pulledRecords.length <= 0) {
                 return pulledRecords;
             }
@@ -77,6 +80,7 @@ function createPullManager(syncContext, pullHandler) {
                 callback();
             })();
             
+            // Process all records in the page
             for (var i in pulledRecords) {
                 chain = processPulledRecord(chain, pulledRecords[i]); 
             }
@@ -93,20 +97,21 @@ function createPullManager(syncContext, pullHandler) {
         });
     }
 
-    // update the query to get the next page
+    // update the query to pull the next page
     function updateQueryForNextPage(query, queryId, pulledRecords) {
-        
         return Platform.async(function(callback) {
             callback();
         })().then(function() {
-            if (queryId) {
+            if (queryId) { // Incremental pull
                 //FIXME: Incremental pull
-            } else {
+            } else { // Vanilla pull
                 query.skip(query.getComponents().skip + pulledRecords.length);
             }
         });
     }
 
+    // Not all query operations are allowed while pulling.
+    // This function validates that the query does not perform unsupported operations.
     function validateQuery(query) {
         Validate.isObject(query);
         Validate.notNull(query);
