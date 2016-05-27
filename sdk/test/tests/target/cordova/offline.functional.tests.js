@@ -2,10 +2,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-/**
- * @file unit tests for the 'pull' scenarios
- */
-
 var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
     pullManager = require('../../../../src/sync/pull'),
@@ -18,7 +14,7 @@ var syncContext = new MobileServiceSyncContext(new MobileServiceClient('http://s
     store,
     tableName = 'todoitem';
     
-$testGroup('table pull tests')
+$testGroup('offline tests')
     .functional() //FIXME
     .beforeEachAsync(function() {
         return storeTestHelper.createEmptyStore().then(function(localStore) {
@@ -40,20 +36,6 @@ $testGroup('table pull tests')
     $test('basic')
     .checkAsync(function () {
         var query = new Query(tableName);
-        //query.select('a');
-        //query.orderByDescending('propertyOrderBy');
-        
-        // syncContext.client.getTable('todoitem').insert({
-        //     id: 'item4',
-        //     text: 'another false',
-        //     complete: false
-        // });
-        
-        
-        //query.skip(1);
-        // query.take(1);
-        //query.includeTotalCount(1);
-        
         var client = new MobileServiceClient('http://shrirs-js-dev.azurewebsites.net');
         var table = client.getTable('todoitem');
         

@@ -3,7 +3,7 @@
 // ----------------------------------------------------------------------------
 
 /**
- * Pull logic implementation
+ * Table push logic implementation
  */
 
 var Validate = require('../Utilities/Validate'),
@@ -15,7 +15,7 @@ var Validate = require('../Utilities/Validate'),
 
 var pageSize = 2; //TODO: This needs to be 50
 
-function createPullManager(syncContext, pullHandler) {
+function createPullManager(client, pullHandler) {
     // Task runner for running pull tasks. We want only one pull to run at a time. 
     var pullTaskRunner = taskRunner();
     
@@ -57,7 +57,7 @@ function createPullManager(syncContext, pullHandler) {
     }
 
     function pullAllPages(query, queryId) {
-        mobileServiceTable = syncContext.client.getTable(query.getComponents().table);
+        mobileServiceTable = client.getTable(query.getComponents().table);
         
         return pullPage(query, queryId).then(function(pulledRecords) {
             // Keep fetching pages till a pull fetches no record

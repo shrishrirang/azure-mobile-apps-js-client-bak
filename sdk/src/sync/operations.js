@@ -31,6 +31,8 @@ function createOperationTableManager(store) {
         lockOperation: lockOperation,
         unlockOperation: unlockOperation,
         readPendingOperations: readPendingOperations,
+        getFirstPendingOperation: getFirstPendingOperation,
+        removePendingOperation: removePendingOperation,
         getLoggingOperation: getLoggingOperation
     };
     
@@ -167,6 +169,63 @@ function createOperationTableManager(store) {
                 return this.tableName === tableName && this.itemId === itemId;
             }, tableName, itemId).orderBy('id'));
         });
+    }
+    
+    /**
+     * Gets the first pending operation, i.e. the one with smallest id value
+     */
+    function getFirstPendingOperation() {
+        // Use the task runner to avoid interleaving
+        return runner.run(function() {
+            return getFirstPendingOperationInternal();
+        });
+    }
+    
+    function getFirstPendingOperationInternal() {
+        var logRecord;
+        return store.read(new Query(operationTableName).orderBy('id').take(1)).then(function(result) {
+            if (result.length === 1) {
+                logRecord = result[0];
+            } else if (result.length === 0) {
+                return;
+            } else {
+                throw new Error('Something is wrong!')
+            }
+        }).then(function() {
+            if (!logRecord) {
+                return;
+            }
+            
+            if (logRecord.action === 'delete') {
+                return {
+                    logRecord: logRecord
+                };
+            }
+            
+            return store.lookup(logRecord.tableName, logRecord.itemId).then(function(data) {
+                if (data) {
+                    return {
+                        logRecord: logRecord,
+                        data: data
+                    };
+                }
+                
+                // An insert followed by a delete in the store would remove the record from the local table, but could
+                // leave the 'insert' operation in the operation table if it was locked (due to an on-going push) at the time
+                // of deleting. A possible subsequent failure in the push would then unlock the log operation without removing it
+                // from the operation table.
+                // If this is the case, we remove the log operation from the operation table and proceed to the next log operation.
+                // 
+                // FIXME: what happens if a non-existent ID is attempted to be deleted on MServiceTable?
+                return removePendingOperation(logRecord.id).then(function() {
+                    return getFirstPendingOperationInternal();
+                });
+            });
+        });
+    }
+    
+    function removePendingOperation(id) {
+        return store.del(operationTableName, {id: logRecord.id});
     }
 
     /**

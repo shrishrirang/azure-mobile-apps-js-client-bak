@@ -8,6 +8,7 @@ var Validate = require('../Utilities/Validate'),
     taskRunner = require('../Utilities/taskRunner'),
     tableConstants = require('../constants').table,
     createPullManager = require('./pull').createPullManager,
+    createPushManager = require('./pull').createPushManager,
     uuid = require('node-uuid'),
     _ = require('../Utilities/Extensions');
 
@@ -23,11 +24,10 @@ function MobileServiceSyncContext(client) {
 
     Validate.notNull(client, 'client');
     
-    this.client = client;
-
     var store,
         operationTableManager,
-        pullManager = createPullManager(this, pullHandler),
+        pullManager = createPullManager(client, pullHandler),
+        pushManager = createPushManager(client, operationTableManager);
         storeTaskRunner = taskRunner(); // Used to run insert / update / delete tasks on the store
 
     /**
@@ -155,15 +155,24 @@ function MobileServiceSyncContext(client) {
     };
     
     /**
-     * Pulls records from the server into the local table.
+     * Pulls changes from the server tables into the local store.
      * 
      * @param query Query specifying which records to pull
      * @param queryId A unique string ID for an incremental pull query OR null for a vanilla pull query.
      * 
-     * @returns A promise that is fulfilled when all records are pulled OR rejected if the pull fails or is cancelled.  
+     * @returns A promise that is fulfilled when all records are pulled OR is rejected if the pull fails or is cancelled.  
      */
     this.pull = function (query, queryId) { //TODO: Implement cancel
-        return pullManager.pull(query, queryId);
+        return pullManager.push(query, queryId);
+    };
+    
+    /**
+     * Pushes operations performed on the local store to the server tables.
+     * 
+     * @returns A promise that is fulfilled when all pending operations are pushed OR is rejected if the push fails or is cancelled.  
+     */
+    this.push = function (query, queryId) { //TODO: Implement cancel
+        return pushManager.push();
     };
     
     // Unit test purposes only
