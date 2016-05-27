@@ -2,14 +2,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
+/**
+ * Pull logic implementation
+ */
+
 var Validate = require('../Utilities/Validate'),
+    Query = require('query.js').Query,
     Platform = require('Platforms/Platform'),
-    createOperationTableManager = require('./operations').createOperationTableManager,
     taskRunner = require('../Utilities/taskRunner'),
     MobileServiceTable = require('../MobileServiceTable'),
     _ = require('../Utilities/Extensions');
 
-var pageSize = 2;
+var pageSize = 2; //TODO: This needs to be 50
 
 function createPullManager(syncContext, pullHandler) {
     
@@ -19,38 +23,34 @@ function createPullManager(syncContext, pullHandler) {
         pull: pull
     };
 
-    var mobileServiceTable;
-    
-    function reset() {
-        mobileServiceTable = undefined;//FIXME: do we need this
-    }
+    var mobileServiceTable,
+        pullQuery;
     
     function pull(query, queryId) {
-        
         //FIXME: support queryId
         //TODO: page size should be configurable
-
-        //TODO: Make a copy of the query
-        
         return pullTaskRunner.run(function() {
             validateQuery(query);
             Validate.isString(queryId); // non-null string or null - both are valid
-            
-            reset();
-            return setupQuery(query, queryId).then(function() {
-                return pullAllPages(query, queryId)
+
+            // Make a copy of the query as we will be editing it            
+            var components = query.getComponents();
+            pullQuery = new Query(components.table);
+            pullQuery.setComponents(components);
+          
+            return setupQuery(pullQuery, queryId).then(function() {
+                return pullAllPages(pullQuery, queryId)
             });
         });
     }
     
     function setupQuery(query, queryId) {
         return Platform.async(function(callback) {
+            
             // Sort the results by 'updatedAt' column and fetch pageSize results
             query.orderBy('updatedAt');
             query.take(pageSize);
 
-            // FIXME: implement incremental sync
-            
             callback();
         })();
     }
