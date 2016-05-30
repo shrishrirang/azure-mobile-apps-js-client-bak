@@ -26,15 +26,15 @@ function createOperationTableManager(store) {
         maxOperationId = 0,
         lockedOperationId;
 
-    var operationTableManager = {
+    return {
         initialize: initialize,
         lockOperation: lockOperation,
         unlockOperation: unlockOperation,
+        readPendingOperations: readPendingOperations,
+        readFirstPendingOperationWithData: readFirstPendingOperationWithData,
+        removeLockedOperation: removeLockedOperation,
         getLoggingOperation: getLoggingOperation
     };
-    // test purpose exports only
-    operationTableManager._readPendingOperations = readPendingOperations;
-    return operationTableManager;
     
     /**
      * Defines the operation table in the local store.
@@ -71,34 +71,30 @@ function createOperationTableManager(store) {
      * the record would have been deleted.
      */
     function lockOperation(id) {
-        
-        // Locking a locked operation should have no effect
-        if (lockedOperationId === id) {
-            return;
-        }
-        
-        if (!lockedOperationId) {
-            lockedOperationId = id;
-            return;
-        }
+        return runner.run(function() {
+            // Locking a locked operation should have no effect
+            if (lockedOperationId === id) {
+                return;
+            }
+            
+            if (!lockedOperationId) {
+                lockedOperationId = id;
+                return;
+            }
 
-        throw new Error('Only one operation can be locked at a time');
+            throw new Error('Only one operation can be locked at a time');
+        });
     }
     
     /**
      * Unlock the locked operation
      */
     function unlockOperation() {
-        lockedOperationId = undefined;
+        return runner.run(function() {
+            lockedOperationId = undefined;
+        });
     }
     
-    /**
-     * Checks if the specified operation is locked
-     */
-    function isLocked(operation) {
-        return operation && operation.id === lockedOperationId;
-    }
-
     /**
      * Given an operation that will be performed on the store, this method returns a corresponding operation for recording it in the operation table.
      * The logging operation can add a new record, edit an earlier record or remove an earlier record from the operation table.
@@ -168,6 +164,103 @@ function createOperationTableManager(store) {
             return store.read(query.where(function (tableName, itemId) {
                 return this.tableName === tableName && this.itemId === itemId;
             }, tableName, itemId).orderBy('id'));
+        });
+    }
+    
+    /**
+     * Gets the first / oldest pending operation, i.e. the one with smallest id value
+     * 
+     * @returns Object containing logRecord (record from the operation table) and an optional data record (i.e. record associated with logRecord).
+     * The data record will be present only for insert and update operations.
+     */
+    function readFirstPendingOperationWithData(lastProcessedOperationId) {
+        return runner.run(function() {
+            return readFirstPendingOperationWithDataInternal(lastProcessedOperationId);
+        });
+    }
+
+    /**
+     * Removes the operation that is currently locked
+     * 
+     * @returns A promise that is fulfilled when the locked operation is unlocked.
+     * If no operation is currently locked, the promise is rejected.
+     */
+    function removeLockedOperation() {
+        return removePendingOperation(lockedOperationId).then(function() {
+            return unlockOperation();
+        });
+    }
+    
+
+    // Checks if the specified operation is locked
+    function isLocked(operation) {
+        return operation && operation.id === lockedOperationId;
+    }
+
+    function readFirstPendingOperationWithDataInternal(lastProcessedOperationId) {
+        var logRecord, // the record logged in the operation table
+            query = new Query(operationTableName).where(function(lastProcessedOperationId) {
+                        return this.id > lastProcessedOperationId
+                    }, lastProcessedOperationId).orderBy('id').take(1);
+        
+        // Read record from operation table with the smallest ID
+        return store.read(query).then(function(result) {
+            if (result.length === 1) {
+                logRecord = result[0];
+            } else if (result.length === 0) { // no pending records
+                return;
+            } else {
+                throw new Error('Something is wrong!');
+            }
+        }).then(function() {
+            if (!logRecord) { // no pending records
+                return;
+            }
+            
+            if (logRecord.action === 'delete') {
+                return {
+                    logRecord: logRecord
+                };
+            }
+            
+            // Find the data record associated with the log record. 
+            return store.lookup(logRecord.tableName, logRecord.itemId).then(function(data) {
+                if (data) { // Return the log record and the data record.
+                    return {
+                        logRecord: logRecord,
+                        data: data
+                    };
+                }
+                
+                // It is possible that a log record corresponding to an insert / update operation has no corresponding
+                // data record. 
+                // 
+                // This can happen in the following scenario:
+                // insert -> push / lock operation begins -> delete -> push fails
+                //  
+                // In such a case, we remove the log operation from the operation table and proceed to the next log operation.
+                return removePendingOperationInternal(logRecord.id).then(function() {
+                    lastProcessedOperationId = logRecord.id;
+                    return readFirstPendingOperationWithDataInternal(lastProcessedOperationId);
+                });
+            });
+        });
+    }
+    
+    function removePendingOperation(id) {
+        return runner.run(function() {
+            return removePendingOperationInternal(id);
+        });
+    }
+
+    function removePendingOperationInternal(id) {
+        return Platform.async(function(callback) {
+            callback();
+        })().then(function() {
+            if (!id) {
+                throw new Error('Invalid operation id');
+            }
+            return store.del(operationTableName, id);
         });
     }
 
