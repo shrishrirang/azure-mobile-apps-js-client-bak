@@ -6,6 +6,8 @@ var Validate = require('../Utilities/Validate'),
     Platform = require('Platforms/Platform'),
     createOperationTableManager = require('./operations').createOperationTableManager,
     taskRunner = require('../Utilities/taskRunner'),
+    createPullManager = require('./pull').createPullManager,
+    createPushManager = require('./push').createPushManager,
     uuid = require('node-uuid'),
     _ = require('../Utilities/Extensions');
 
@@ -20,9 +22,12 @@ var Validate = require('../Utilities/Validate'),
 function MobileServiceSyncContext(client) {
 
     Validate.notNull(client, 'client');
-
+    
     var store,
         operationTableManager,
+        pullManager,
+        pushManager,
+        syncTaskRunner = taskRunner(), // Used to run push / pull tasks
         storeTaskRunner = taskRunner(); // Used to run insert / update / delete tasks on the store
 
     /**
@@ -43,6 +48,8 @@ function MobileServiceSyncContext(client) {
             return operationTableManager.initialize(localStore);
         }).then(function() {
             store = localStore; // Assigning to store after all initialization steps are complete
+            pullManager = createPullManager(client, store, storeTaskRunner, operationTableManager);
+            pushManager = createPushManager(client, store, storeTaskRunner, operationTableManager);
         });
         
     };
@@ -63,8 +70,8 @@ function MobileServiceSyncContext(client) {
                 instance.id = uuid.v4();
             }
 
-            // Delegate parameter validation to upsert
-            return upsert(tableName, instance, 'insert', function(existingRecord) { // precondition validator
+            // Delegate parameter validation to upsertWithLogging
+            return upsertWithLogging(tableName, instance, 'insert', function(existingRecord) { // precondition validator
                 if (!_.isNull(existingRecord)) {
                     throw new Error('Cannot perform insert as a record with ID ' + existingRecord.id + ' already exists in the table ' + tableName);
                 }
@@ -83,8 +90,8 @@ function MobileServiceSyncContext(client) {
      */
     this.update = function (tableName, instance) { //TODO: add an update method to the store
         return storeTaskRunner.run(function() {
-            // Delegate parameter validation to upsert
-            return upsert(tableName, instance, 'update', function(existingRecord) { // precondition validator
+            // Delegate parameter validation to upsertWithLogging
+            return upsertWithLogging(tableName, instance, 'update', function(existingRecord) { // precondition validator
                 if (_.isNull(existingRecord)) {
                     throw new Error('Cannot update record with ID ' + existingRecord.id + ' as it does not exist the table ' + tableName);
                 }
@@ -103,7 +110,7 @@ function MobileServiceSyncContext(client) {
      */
     this.lookup = function (tableName, id) {
         
-        return Platform.async(function() {
+        return Platform.async(function(callback) {
             Validate.isString(tableName, 'tableName');
             Validate.notNullOrEmpty(tableName, 'tableName');
 
@@ -112,6 +119,8 @@ function MobileServiceSyncContext(client) {
             if (!store) {
                 throw new Error('MobileServiceSyncContext not initialized');
             }
+            
+            callback();
         })().then(function() {
             return store.lookup(tableName, id);
         });
@@ -149,13 +158,39 @@ function MobileServiceSyncContext(client) {
         });
     };
     
+    /**
+     * Pulls changes from the server tables into the local store.
+     * 
+     * @param query Query specifying which records to pull
+     * @param queryId A unique string ID for an incremental pull query OR null for a vanilla pull query.
+     * 
+     * @returns A promise that is fulfilled when all records are pulled OR is rejected if the pull fails or is cancelled.  
+     */
+    this.pull = function (query, queryId) { //TODO: Implement cancel
+        return syncTaskRunner.run(function() {
+            return pullManager.pull(query, queryId);
+        });
+    };
+    
+    /**
+     * Pushes operations performed on the local store to the server tables.
+     * 
+     * @returns A promise that is fulfilled when all pending operations are pushed OR is rejected if the push fails or is cancelled.  
+     */
+    this.push = function () { //TODO: Implement cancel
+        return syncTaskRunner.run(function() {
+            return pushManager.push();
+        });
+    };
+    
     // Unit test purposes only
     this._getOperationTableManager = function () {
         return operationTableManager;
     };
     
+    // Performs upsert and logs the action in the operation table
     // Validates parameters. Callers can skip validation
-    function upsert(tableName, instance, action, preconditionValidator) {
+    function upsertWithLogging(tableName, instance, action, preconditionValidator) {
         Validate.isString(tableName, 'tableName');
         Validate.notNullOrEmpty(tableName, 'tableName');
 
