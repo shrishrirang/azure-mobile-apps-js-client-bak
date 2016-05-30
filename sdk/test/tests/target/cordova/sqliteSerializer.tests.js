@@ -86,14 +86,13 @@ $testGroup('sqliteSerializer tests').tests(
 
     $test('Serialize object when columns are missing from table definition')
     .check(function () {
-        $assertThrows(function () {
-            sqliteSerializer.serialize({
-                a: 1,
-                nodefinition: false
-            }, {
-                a: ColumnType.Integer
-            });
+        var serializedValue = sqliteSerializer.serialize({
+            a: 1,
+            nodefinition: false
+        }, {
+            a: ColumnType.Integer
         });
+        $assert.areEqual(serializedValue, { a: 1 });
     }),
 
     $test('Deserialize an object when columns are missing from table definition')
