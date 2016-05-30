@@ -81,25 +81,6 @@ $testGroup('SQLiteStore - upsert tests')
         });
     }),
 
-    $test('adding record with columns that are not defined should fail')
-    .checkAsync(function () {
-        var row = { id: 101, flag: 51, undefinedColumn: 1 },
-            tableDefinition = {
-                name: storeTestHelper.testTableName,
-                columnDefinitions: {
-                    id: MobileServiceSqliteStore.ColumnType.Integer,
-                    flag: MobileServiceSqliteStore.ColumnType.Integer
-                }
-            };
-
-        return store.defineTable(tableDefinition).then(function () {
-            return store.upsert(storeTestHelper.testTableName, row);
-        }).then(function (result) {
-            $assert.fail('test should have failed');
-        }, function (err) {
-        });
-    }),
-
     $test('update property of an existing record')
     .checkAsync(function () {
         return store.defineTable({
@@ -313,7 +294,7 @@ $testGroup('SQLiteStore - upsert tests')
         });
     }),
 
-    $test('adding record with columns that are not defined should fail')
+    $test('adding record with columns that are not defined should succeed')
     .checkAsync(function () {
         var row = { id: 101, flag: 51, undefinedColumn: 1 },
             tableDefinition = {
@@ -326,9 +307,14 @@ $testGroup('SQLiteStore - upsert tests')
 
         return store.defineTable(tableDefinition).then(function () {
             return store.upsert(storeTestHelper.testTableName, row);
+        }).then(function () {
+            return store.lookup(storeTestHelper.testTableName, row.id);
         }).then(function (result) {
-            $assert.fail('test should have failed');
+            $assert.areEqual(result, { id: row.id, flag: row.flag });
+        }).then(function (result) {
+            // Success expected
         }, function (err) {
+            $assert.fail(err);
         });
     }),
 

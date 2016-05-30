@@ -14,7 +14,7 @@ var Platform = require('Platforms/Platform'),
     ColumnType = require('../../sync/ColumnType'),
     sqliteSerializer = require('./sqliteSerializer'),
     Query = require('query.js').Query,
-    formatSql = require('azure-odata-sql').format;
+    formatSql = require('azure-odata-sql').format,
     idPropertyName = "id"; // TODO: Add support for case insensitive ID
 
 /**

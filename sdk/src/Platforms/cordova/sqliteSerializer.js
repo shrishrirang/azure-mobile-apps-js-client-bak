@@ -148,8 +148,10 @@ function serialize (value, columnDefinitions) {
 
         for (var property in value) {
             var columnType = columnDefinitions[property];
-            Validate.notNull(columnType); // Make sure the column type is defined. 
-            serializedValue[property] = serializeMember(value[property], columnType);
+            // Skip properties that don't match any column in the table 
+            if (!_.isNull(columnType)) {
+                serializedValue[property] = serializeMember(value[property], columnType);
+            }
         }
         
     } catch (error) {
