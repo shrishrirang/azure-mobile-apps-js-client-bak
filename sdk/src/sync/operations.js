@@ -96,13 +96,6 @@ function createOperationTableManager(store) {
     }
     
     /**
-     * Checks if the specified operation is locked
-     */
-    function isLocked(operation) {
-        return operation && operation.id === lockedOperationId;
-    }
-
-    /**
      * Given an operation that will be performed on the store, this method returns a corresponding operation for recording it in the operation table.
      * The logging operation can add a new record, edit an earlier record or remove an earlier record from the operation table.
      * 
@@ -186,6 +179,24 @@ function createOperationTableManager(store) {
         });
     }
 
+    /**
+     * Removes the operation that is currently locked
+     * 
+     * @returns A promise that is fulfilled when the locked operation is unlocked.
+     * If no operation is currently locked, the promise is rejected.
+     */
+    function removeLockedOperation() {
+        return removePendingOperation(lockedOperationId).then(function() {
+            return unlockOperation();
+        });
+    }
+    
+
+    // Checks if the specified operation is locked
+    function isLocked(operation) {
+        return operation && operation.id === lockedOperationId;
+    }
+
     function readFirstPendingOperationWithDataInternal() {
         var logRecord; // the record logged in the operation table
         
@@ -229,12 +240,6 @@ function createOperationTableManager(store) {
                     return readFirstPendingOperationWithDataInternal();
                 });
             });
-        });
-    }
-    
-    function removeLockedOperation() {
-        return removePendingOperation(lockedOperationId).then(function() {
-            return unlockOperation();
         });
     }
     
