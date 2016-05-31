@@ -116,6 +116,34 @@ $testGroup('offline tests')
         }, function(error) {
             $assert.fail(error);
         });
+    }),
+    
+    $test('basic conflict')
+    .checkAsync(function () {
+        var query = new Query(testTableName),
+            testId = uuid.v4();
+        
+        var record = {id: testId, text: 'something'};
+        
+        return table.insert(record).then(function() {
+            return syncContext.pull(query);
+        }).then(function() {
+            return syncContext.lookup(testTableName, record.id);
+        }).then(function(result) {
+            $assert.areEqual(result.id, record.id);
+            $assert.areEqual(result.text, record.text);
+            record.text = 'updated on server';
+            return table.update(record);
+        }).then(function() {
+            record.text = 'updated on client';
+            return syncContext.update(testTableName, record);
+        }).then(function() {
+            return syncContext.push();
+        }).then(function() {
+            $assert.fail('Conflict expected');
+        }, function(error) {
+            error = error;
+        });
     })
 );
 
