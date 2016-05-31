@@ -136,7 +136,7 @@ $testGroup('offline tests')
             return table.update(record);
         }).then(function() {
             record.text = 'updated on client';
-            return syncContext.update(testTableName, record);
+            return syncContext.del(testTableName, record);
         }).then(function() {
             return syncContext.push();
         }).then(function() {

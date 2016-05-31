@@ -23,7 +23,8 @@ module.exports = {
             updatedAtColumnName: "updatedAt",
             versionColumnName: "version"
         },
-        includeDeletedFlag: "__includeDeleted"
+        includeDeletedFlag: "__includeDeleted",
+        operationTableName: "__operations"
     }
 };
 

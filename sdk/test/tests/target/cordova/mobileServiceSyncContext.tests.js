@@ -10,6 +10,7 @@ var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
     operations = require('../../../../src/sync/operations'),
     MobileServiceClient = require('../../../../src/MobileServiceClient'),
+    tableConstants = require('../../../../src/constants').table,
     MobileServiceSyncContext = require('../../../../src/sync/MobileServiceSyncContext'),
     storeTestHelper = require('./storeTestHelper'),
     MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore');
@@ -17,7 +18,8 @@ var Platform = require('Platforms/Platform'),
 var store,
     testOperationId = 100000,
     testId = 'someid',
-    testName = 'somename';
+    testName = 'somename',
+    operationTableName = tableConstants.operationTableName;
 
 $testGroup('MobileServiceSyncContext tests')
 
@@ -45,7 +47,7 @@ $testGroup('MobileServiceSyncContext tests')
                 },
                 {
                     action: 'upsert',
-                    tableName: operations._operationTableName,
+                    tableName: operationTableName,
                     data: {
                         id: testOperationId,
                         action: 'insert_override',
@@ -80,7 +82,7 @@ $testGroup('MobileServiceSyncContext tests')
                 },
                 {
                     action: 'upsert',
-                    tableName: operations._operationTableName,
+                    tableName: operationTableName,
                     data: {
                         id: testOperationId,
                         action: 'update_override',
@@ -117,7 +119,7 @@ $testGroup('MobileServiceSyncContext tests')
                 },
                 {
                     action: 'upsert',
-                    tableName: operations._operationTableName,
+                    tableName: operationTableName,
                     data: {
                         id: testOperationId,
                         action: 'delete_override',
@@ -263,7 +265,7 @@ function performActionWithCustomLogging(id, action) {
                 callback();
             })().then(function() {
                 return {
-                    tableName: operations._operationTableName,
+                    tableName: operationTableName,
                     action: 'upsert',
                     data: {
                         id: testOperationId,

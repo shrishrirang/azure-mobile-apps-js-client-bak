@@ -11,6 +11,7 @@ var Validate = require('../Utilities/Validate'),
     Platform = require('Platforms/Platform'),
     taskRunner = require('../Utilities/taskRunner'),
     MobileServiceTable = require('../MobileServiceTable'),
+    tableConstants = require('../constants').table,
     sysProps = require('../constants').table.sysProps,
     _ = require('../Utilities/Extensions');
 
