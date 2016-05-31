@@ -13,12 +13,14 @@ var Validate = require('../Utilities/Validate'),
     MobileServiceTable = require('../MobileServiceTable'),
     tableConstants = require('../constants').table,
     sysProps = require('../constants').table.sysProps,
+    createPushError = require('./pushError').createPushError,
     _ = require('../Utilities/Extensions');
 
 function createPushManager(client, store, storeTaskRunner, operationTableManager) {
     // Task runner for running push tasks. We want only one push to run at a time. 
     var pushTaskRunner = taskRunner(),
-        lastProcessOperationId;
+        lastProcessOperationId,
+        pushHandler;
     
     return {
         push: push
@@ -27,11 +29,23 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
     /**
      * Pushes operations performed on the local store to the server tables.
      * 
+     * @param pushHandler An optional object for handling push errors like conflicts, network error, etc
+     *                    
+     *        pushHandler.onRecordPushError(error, tableName, action, data) - this is called when an error is encountered while pushing
+     *                    a record to the server. 
+     *                    error - Error encountered while pushing the record to the server
+     *                    tableName - name of the table for which the push was being performed 
+     *                    action - action that was being pushed. Valid actions are: 'insert', 'update' and 'delete'.
+     *                    data - The value of the record that was pushed. data will be undefined if action is 'delete'
+     *
+     * TODO: Add detailed documentation
+     * 
      * @returns A promise that is fulfilled when all pending operations are pushed OR is rejected if the push fails or is cancelled.  
      */
-    function push() {
+    function push(handler) {
         return pushTaskRunner.run(function() {
             reset();
+            pushHandler = pushHandler;
             return pushAllOperations();
         });
     }
@@ -48,20 +62,29 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
     // 4. If 3 is successful, remove the locked operation from the operation table. Else FIXME: TBD
     // 5. Go to 1. 
     function pushAllOperations() {
+        var currentOperation,
+            pushError;
         return readAndLockFirstPendingOperation().then(function(pendingOperation) {
             if (!pendingOperation) {
                 return; // No more pending operations. Push is complete
             }
             
-            return pushOperation(pendingOperation).then(function() {
+            var currentOperation = pendingOperation;
+            
+            return pushOperation(currentOperation).then(function() {
                 return removeLockedOperation();
             }, function(error) {
                 // failed to push
                 // FIXME: Handle errors / conflicts
-                
                 return unlockPendingOperation().then(function() {
-                    throw error;
+                    pushError = createPushError(store, storeTaskRunner, currentOperation, error, pushHandler);
+                    pushError.handleError();
                 });
+            }).then(function() {
+                // Move on to the next operation unless there was a push error and it was handled successfully
+                if (!pushError || !pushError.isHandled) {
+                    lastProcessOperationId = currentOperation.logRecord.id;
+                }
             }).then(function() {
                 return pushAllOperations(); // push remaining operations
             });
@@ -78,7 +101,6 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
                     return;
                 }
                 
-                lastProcessOperationId = operation.logRecord.id;
                 return operationTableManager.lockOperation(pendingOperation.logRecord.id);
             }).then(function() {
                 return pendingOperation;
