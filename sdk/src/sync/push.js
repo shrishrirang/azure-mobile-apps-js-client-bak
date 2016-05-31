@@ -8,6 +8,7 @@
 
 var Validate = require('../Utilities/Validate'),
     Query = require('query.js').Query,
+    verror = require('verror'),
     Platform = require('Platforms/Platform'),
     taskRunner = require('../Utilities/taskRunner'),
     MobileServiceTable = require('../MobileServiceTable'),
@@ -20,6 +21,7 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
     // Task runner for running push tasks. We want only one push to run at a time. 
     var pushTaskRunner = taskRunner(),
         lastProcessOperationId,
+        pushErrors,
         pushHandler;
     
     return {
@@ -53,6 +55,7 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
     // Resets the state for starting a new push operation
     function reset() {
         lastProcessOperationId = -1; // Initialize to an invalid operation id
+        pushErrors = [];
     }
     
     // Pushes all pending operations, one at a time.
@@ -81,9 +84,22 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
                     pushError.handleError();
                 });
             }).then(function() {
-                // Move on to the next operation unless there was a push error and it was handled successfully
-                if (!pushError || !pushError.isHandled) {
+                if (!pushError) { // no push error
                     lastProcessOperationId = currentOperation.logRecord.id;
+                } else if (pushError && !pushError.isHandled) { // push failed and not handled
+
+                    // For conflict errors, we add the error to the list of errors and continue pushing other records
+                    // For other errors, we fail push
+                    if (pushError.isConflict()) {
+                        lastProcessOperationId = currentOperation.logRecord.id;
+                        pushErrors.push(pushError);
+                    } else { 
+                        throw new verror.VError(pushError.error, 'Push failed while pushing operation for tableName : ' + currentOperation.logRecord.tableName +
+                                                                 ', action: ' + currentOperation.logRecord.action +
+                                                                 ', and record ID: ' + currentOperation.logRecord.itemId);
+                    }
+                } else { // push error handled
+                    // NOP.
                 }
             }).then(function() {
                 return pushAllOperations(); // push remaining operations

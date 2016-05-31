@@ -14,16 +14,11 @@ var Validate = require('../Utilities/Validate'),
     Query = require('query.js').Query,
     operationTableName = require('../constants').table.operationTableName;
 
-var errorType = {
-    conflict: 'conflict'
-};
-
-function createPushError(store, storeTaskRunner, pushOperation, pushError, pushHandler) {
-    
-    var type; // type of error. Egs: 'conflict'
+function createPushError(store, storeTaskRunner, pushOperation, operationError, pushHandler) {
     
     return {
         isHandled: false,
+        error: operationError,
         handleError: handleError,
         getErrorType: getErrorType,
         isConflict: isConflict,
@@ -37,12 +32,8 @@ function createPushError(store, storeTaskRunner, pushOperation, pushError, pushH
             callback();
         })().then(function() {
             
-            if (error.request.status === 412) {
-                type = errorType.conflict;
-            }
-            
             if (pushHandler && pushHandler.onRecordPushError) {
-                return pushHandler.onRecordPushError(pushError, 
+                return pushHandler.onRecordPushError(operationError, 
                                                      pushOperation.logRecord.tableName,
                                                      pushOperation.logRecord.action,
                                                      pushOperation.logRecord.data /* this will be undefined for delete operations */);
@@ -55,7 +46,7 @@ function createPushError(store, storeTaskRunner, pushOperation, pushError, pushH
     }
     
     function isConflict() {
-        return type === errorType.conflict;
+        return error.request.status === 412;
     }
     
     function updateRecord(newValue, cancelRecordPush) {
