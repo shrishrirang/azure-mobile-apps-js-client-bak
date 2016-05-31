@@ -10,6 +10,7 @@ var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
     operations = require('../../../../src/sync/operations'),
     MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore'),
+    operationTableName = require('../../../../src/constants').table.operationTableName,
     testTableName = 'sometable',
     testDbFile = 'somedbfile.db',
     store;
@@ -28,7 +29,7 @@ function createStore() {
 function resetStore(store) {
     return Platform.async(function(callback) {
         store._db.sqlBatch([
-            'DROP TABLE IF EXISTS ' + operations._operationTableName,
+            'DROP TABLE IF EXISTS ' + operationTableName,
             'DROP TABLE IF EXISTS ' + 'todoitem',
             'DROP TABLE IF EXISTS ' + testTableName
         ], function() {

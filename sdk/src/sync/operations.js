@@ -11,10 +11,11 @@ var Validate = require('../Utilities/Validate'),
     Platform = require('Platforms/Platform'),
     ColumnType = require('./ColumnType'),
     taskRunner = require('../Utilities/taskRunner'),
+    tableConstants = require('../constants').table,
     _ = require('../Utilities/Extensions'),
     Query = require('query.js').Query;
 
-var operationTableName = '__operations';
+var operationTableName = tableConstants.operationTableName;
     
 function createOperationTableManager(store) {
 
@@ -362,5 +363,3 @@ function createOperationTableManager(store) {
 module.exports = {
     createOperationTableManager: createOperationTableManager
 };
-// exports for unit testing
-module.exports._operationTableName = operationTableName;

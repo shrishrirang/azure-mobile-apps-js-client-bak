@@ -9,11 +9,12 @@
 var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
     operations = require('../../../../src/sync/operations'),
+    tableConstants = require('../../../../src/constants').table,
     MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore'),
     storeTestHelper = require('./storeTestHelper');
     
 var createOperationTableManager = operations.createOperationTableManager,
-    operationTableName = operations._operationTableName,
+    operationTableName = tableConstants.operationTableName,
     store;
 
 $testGroup('operations tests')
