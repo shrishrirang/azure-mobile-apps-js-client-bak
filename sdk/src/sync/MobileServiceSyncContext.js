@@ -174,12 +174,12 @@ function MobileServiceSyncContext(client) {
     
     /**
      * Pushes operations performed on the local store to the server tables.
-     * 
+     * FIXME: Add documentation for pushHandler
      * @returns A promise that is fulfilled when all pending operations are pushed OR is rejected if the push fails or is cancelled.  
      */
-    this.push = function () { //TODO: Implement cancel
+    this.push = function (pushHandler) { //TODO: Implement cancel
         return syncTaskRunner.run(function() {
-            return pushManager.push();
+            return pushManager.push(pushHandler);
         });
     };
     

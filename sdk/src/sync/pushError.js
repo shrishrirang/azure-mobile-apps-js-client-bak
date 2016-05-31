@@ -16,7 +16,7 @@ var Validate = require('../Utilities/Validate'),
 
 function createPushError(store, storeTaskRunner, pushOperation, operationError, pushHandler) {
     
-    return {
+    var pushError = {
         isHandled: false,
         error: operationError,
         handleError: handleError,
@@ -27,16 +27,18 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError, 
         cancelRecordPush: cancelRecordPush
     };
     
+    return pushError;
+    
     function handleError() {
         return Platform.async(function(callback) {
             callback();
         })().then(function() {
             
             if (pushHandler && pushHandler.onRecordPushError) {
-                return pushHandler.onRecordPushError(operationError, 
+                return pushHandler.onRecordPushError(pushError,
                                                      pushOperation.logRecord.tableName,
                                                      pushOperation.logRecord.action,
-                                                     pushOperation.logRecord.data /* this will be undefined for delete operations */);
+                                                     pushOperation.data /* this will be undefined for delete operations */);
             }
         });
     }
@@ -46,7 +48,7 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError, 
     }
     
     function isConflict() {
-        return error.request.status === 412;
+        return operationError.request.status === 412;//FIXME: this cna be property
     }
     
     function updateRecord(newValue, cancelRecordPush) {

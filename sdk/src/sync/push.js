@@ -42,13 +42,17 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
      *
      * TODO: Add detailed documentation
      * 
-     * @returns A promise that is fulfilled when all pending operations are pushed OR is rejected if the push fails or is cancelled.  
+     * @returns A promise that is fulfilled when all pending operations are pushed. Conflict errors won't fail the push operation.
+     *          All conflicts are collected and returned to the user at the completion of the push operation. 
+     *          The promise is rejected if the push fails or is cancelled.
      */
     function push(handler) {
         return pushTaskRunner.run(function() {
             reset();
-            pushHandler = pushHandler;
-            return pushAllOperations();
+            pushHandler = handler;
+            return pushAllOperations().then(function() {
+                return pushErrors;
+            });
         });
     }
     
@@ -81,7 +85,7 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
                 // FIXME: Handle errors / conflicts
                 return unlockPendingOperation().then(function() {
                     pushError = createPushError(store, storeTaskRunner, currentOperation, error, pushHandler);
-                    pushError.handleError();
+                    return pushError.handleError();
                 });
             }).then(function() {
                 if (!pushError) { // no push error
@@ -92,7 +96,7 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
                     // For other errors, we fail push
                     if (pushError.isConflict()) {
                         lastProcessOperationId = currentOperation.logRecord.id;
-                        pushErrors.push(pushError);
+                        pushErrors.push(pushError.error);
                     } else { 
                         throw new verror.VError(pushError.error, 'Push failed while pushing operation for tableName : ' + currentOperation.logRecord.tableName +
                                                                  ', action: ' + currentOperation.logRecord.action +
