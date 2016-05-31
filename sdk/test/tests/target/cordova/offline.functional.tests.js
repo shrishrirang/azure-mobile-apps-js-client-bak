@@ -129,7 +129,7 @@ $testGroup('offline tests')
             if (pushError.isConflict()) {
                 var newValue = data;
                 newValue.version = pushError.error.serverInstance.version;
-                return pushError.updateRecord(newValue).then(function() {
+                return pushError.updateLocalRecord(newValue).then(function() {
                     pushError.isHandled = true;
                 });
             }
