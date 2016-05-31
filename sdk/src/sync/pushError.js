@@ -11,15 +11,52 @@ var Validate = require('../Utilities/Validate'),
     ColumnType = require('./ColumnType'),
     taskRunner = require('../Utilities/taskRunner'),
     _ = require('../Utilities/Extensions'),
-    Query = require('query.js').Query;
+    Query = require('query.js').Query,
+    operationTableName = require('../constants').table.operationTableName;
 
 var errorType = {
     conflict: 'conflict'
 };
 
-function createPushError(store, storeTaskRunner, operationTableManager, pushOperation, pushHandler) {
+function createPushError(store, storeTaskRunner, pushOperation, pushError, pushHandler) {
     
     var type; // type of error. Egs: 'conflict'
+    
+    return {
+        isHandled: false,
+        handleError: handleError,
+        getErrorType: getErrorType,
+        isConflict: isConflict,
+        updateRecord: updateRecord,
+        deleteRecord: deleteRecord,
+        cancelRecordPush: cancelRecordPush
+    };
+    
+    function handleError() {
+        return Platform.async(function(callback) {
+            callback();
+        })().then(function() {
+            
+            if (error.request.status === 412) {
+                type = errorType.conflict;
+            }
+            
+            if (pushHandler && pushHandler.onRecordPushError) {
+                return pushHandler.onRecordPushError(pushError, 
+                                                     pushOperation.logRecord.tableName,
+                                                     pushOperation.logRecord.action,
+                                                     pushOperation.logRecord.data /* this will be undefined for delete operations */);
+            }
+        });
+    }
+    
+    function getErrorType() {
+        return type;
+    }
+    
+    function isConflict() {
+        return type === errorType.conflict;
+    }
     
     function updateRecord(newValue, cancelRecordPush) {
         return storeTaskRunner.run(function() {
@@ -48,38 +85,51 @@ function createPushError(store, storeTaskRunner, operationTableManager, pushOper
             };
             
             var logDeleteOperation = {
-                tableName: 
-            }
-            if (cancelRecordPush) {
-                
+                tableName: operationTableName,
+                action: 'delete',
+                data: newValue.id
             }
             
-            return store.executeBatch([
-                {
-                    tableName: pushOperation.logRecord.tableName,
-                    action: 'upsert',
-                    data: newValue
-                }
-            ]);
+            var operations = [dataUpdateOperation];
+            
+            if (cancelRecordPush) {
+                operations.push(logDeleteOperation);
+            }
+            
+            return store.executeBatch(operations);
         });
     }
     
     function deleteRecord(cancelRecordPush) {
         return storeTaskRunner.run(function() {
-            return store.del(pushOperation.logRecord.tableName, {id: pushOperation.logRecord.itemId});
+            
+            var dataDeleteOperation = {
+                tableName: pushOperation.logRecord.tableName,
+                action: 'delete',
+                data: pushOperation.logRecord.itemId
+            };
+            
+            var logDeleteOperation = {
+                tableName: operationTableName,
+                action: 'delete',
+                data: newValue.id
+            }
+            
+            var operations = [dataDeleteOperation];
+            
+            if (cancelRecordPush) {
+                operations.push(logDeleteOperation);
+            }
+            
+            return store.executeBatch(operations);
         });
     }
     
     function cancelRecordPush() {
         return storeTaskRunner.run(function() {
-            return operationTableManager.removeLockedOperation();
+            return store.del(pushOperation.logRecord.tableName, pushOperation.logRecord.itemId);
         });
     }
-    
-    function deleteRecord() {
-        
-    }
-    
 }
 
 exports.createPushError = createPushError;

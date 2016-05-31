@@ -133,10 +133,10 @@ $testGroup('offline tests')
             $assert.areEqual(result.id, record.id);
             $assert.areEqual(result.text, record.text);
             record.text = 'updated on server';
-            return table.update(record);
+            return table.del(record);
         }).then(function() {
             record.text = 'updated on client';
-            return syncContext.del(testTableName, record);
+            return syncContext.update(testTableName, record);
         }).then(function() {
             return syncContext.push();
         }).then(function() {
