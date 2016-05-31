@@ -125,12 +125,12 @@ $testGroup('offline tests')
         var record1 = {id: uuid.v4(), text: 'server1'},
             record2 = {id: uuid.v4(), text: 'server2'};
             
-        function onRecordPushError(pushError, tableName, action, data) {
-            if (pushError.isConflict()) {
-                var newValue = data;
-                newValue.version = pushError.error.serverInstance.version;
-                return pushError.updateLocalRecord(newValue).then(function() {
-                    pushError.isHandled = true;
+        function onRecordPushError(context) {
+            if (context.pushError.isConflict()) {
+                var newValue = context.clientRecord;
+                newValue.version = context.serverRecord.version;
+                return context.pushError.updateClientRecord(newValue).then(function() {
+                    context.pushError.isHandled = true;
                 });
             }
         }
@@ -179,6 +179,8 @@ $testGroup('offline tests')
             return table.lookup(record2.id);
         }).then(function(result) {
             $assert.areEqual(result.text, record2.text);
+        }, function(error) {
+            $assert.fail(error);
         });
     })
 );

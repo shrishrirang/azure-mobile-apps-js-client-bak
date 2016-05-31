@@ -18,11 +18,11 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError, 
     
     var pushError = {
         isHandled: false,
-        error: operationError,
+        getError: getError,
         handleError: handleError,
         isConflict: isConflict,
-        updateRecord: updateLocalRecord,
-        deleteRecord: deleteRecord,
+        updateClientRecord: updateClientRecord,
+        deleteClientRecord: deleteClientRecord,
         cancelRecordPush: cancelRecordPush
     };
     
@@ -34,13 +34,30 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError, 
         })().then(function() {
             
             if (pushHandler && pushHandler.onRecordPushError) {
-                //TODO: Send a copy as parameter values, instead of the original
-                return pushHandler.onRecordPushError(pushError,
-                                                     pushOperation.logRecord.tableName,
-                                                     pushOperation.logRecord.action,
-                                                     pushOperation.data /* this will be undefined for delete operations */);
+                
+                var context = {
+                    pushError: pushError,
+                    tableName: pushOperation.logRecord.tableName,
+                    operationType: pushOperation.logRecord.action,
+                    clientRecord: pushOperation.data // this will be undefined for delete operations  
+                };
+                
+                if (operationError.serverInstance) { // Set server data if we have it
+                    context.serverRecord = operationError.serverInstance;
+                }
+                
+                //TODO: Parameter value should be a copy and not the original value as it can be changed accidentally
+                return pushHandler.onRecordPushError(context);
             }
         });
+    }
+    
+    /**
+     * Gets the underlying error.
+     * This contains grannular details about the failure. Egs: server response, etc
+     */
+    function getError() {
+        return operationError;
     }
     
     /**
@@ -62,7 +79,7 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError, 
      * 
      * @returns A promise that is fulfilled when the data record is updated and optionally, the pending change is cancelled.
      */
-    function updateLocalRecord(newValue, cancelRecordPush) {
+    function updateClientRecord(newValue, cancelRecordPush) {
         return storeTaskRunner.run(function() {
             //TODO: If the record has changed do not allow error handling for it
             
@@ -113,7 +130,7 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError, 
      * 
      * @returns A promise that is fulfilled when the data record is deleted and optionally, the pending change is cancelled.
      */
-    function deleteLocalRecord(cancelRecordPush) {
+    function deleteClientRecord(cancelRecordPush) {
         return storeTaskRunner.run(function() {
             
             var dataDeleteOperation = {
