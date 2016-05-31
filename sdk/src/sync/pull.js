@@ -29,6 +29,14 @@ function createPullManager(client, store, storeTaskRunner) {
     var mobileServiceTable,
         pullQuery;
     
+    /**
+     * Pulls changes from the server tables into the local store.
+     * 
+     * @param query Query specifying which records to pull
+     * @param queryId A unique string ID for an incremental pull query OR null for a vanilla pull query.
+     * 
+     * @returns A promise that is fulfilled when all records are pulled OR is rejected if the pull fails or is cancelled.  
+     */
     function pull(query, queryId) {
         //FIXME: support queryId
         //TODO: page size should be configurable
@@ -41,7 +49,8 @@ function createPullManager(client, store, storeTaskRunner) {
             var components = query.getComponents();
             pullQuery = new Query(components.table);
             pullQuery.setComponents(components);
-          
+
+            // Set up the query for initiating a pull and then pull all pages          
             return setupQuery(pullQuery, queryId).then(function() {
                 return pullAllPages(pullQuery, queryId)
             });
@@ -60,9 +69,14 @@ function createPullManager(client, store, storeTaskRunner) {
         })();
     }
 
+    // Pulls all pages from the server table, one page at a time.
     function pullAllPages(query, queryId) {
         mobileServiceTable = client.getTable(query.getComponents().table);
         
+        // 1. Pull one page
+        // 2. Check if Pull is complete
+        // 3. If it is, we are done. If not, update the query to fetch the next page.
+        // 4. Go to 1
         return pullPage(query, queryId).then(function(pulledRecords) {
             if (!isPullComplete(pulledRecords)) {
                 // update query and continue pulling the remaining pages
@@ -73,11 +87,16 @@ function createPullManager(client, store, storeTaskRunner) {
         });
     }
     
+    // Check if the pull is complete or if there are more records left to be pulled
     function isPullComplete(pulledRecords) {
-        return pulledRecords.length <= 0; // Pull is complete when no more records can be fetched
+        return pulledRecords.length < pageSize; // Pull is complete when the number of fetched records is less than page size
     }
     
+    // Pull the page as described by the query
     function pullPage(query, queryId) {
+
+        // Define appropriate parameter to fetch the deleted records from the server.
+        // Assumption is that soft delete is enabled on the server table.
         var params = {};
         params[tableConstants.includeDeletedFlag] = true;
         
@@ -101,7 +120,7 @@ function createPullManager(client, store, storeTaskRunner) {
         });
     }
     
-    // Processes the pulled record by taking appropriate action which can be one of:
+    // Processes the pulled record by taking an appropriate action, which can be one of:
     // inserting, updating, deleting in the local store or no action at all.
     function processPulledRecord(chain, tableName, pulledRecord) {
         return chain.then(function() {
@@ -113,7 +132,7 @@ function createPullManager(client, store, storeTaskRunner) {
                 }
                 
                 return operationTableManager.readPendingOperations(tableName, pulledRecord[idPropertyName]).then(function(pendingOperations) {
-                    // If there are pending operations for the record we just pulled, we just ignore it.
+                    // If there are pending operations for the record we just pulled, we ignore it.
                     if (pendingOperations.length > 0) {
                         return;
                     }
@@ -127,7 +146,6 @@ function createPullManager(client, store, storeTaskRunner) {
                     }
                 });
             });
-            
         });
     }
 

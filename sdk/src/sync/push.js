@@ -22,6 +22,11 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
         push: push
     };
 
+    /**
+     * Pushes operations performed on the local store to the server tables.
+     * 
+     * @returns A promise that is fulfilled when all pending operations are pushed OR is rejected if the push fails or is cancelled.  
+     */
     function push() {
         return pushTaskRunner.run(function() {
             return pushAllOperations();
@@ -29,6 +34,11 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
     }
     
     // Pushes all pending operations, one at a time.
+    // 1. Read the oldest pending operation
+    // 2. Lock the operation obtained in step 1. If 1 did not fetch any operation, we are done push is complete.
+    // 3. Push the operation obtained in step 1.
+    // 4. If 3 is successful, remove the locked operation from the operation table. Else FIXME: TBD
+    // 5. Go to 1. 
     function pushAllOperations() {
         return readAndLockFirstPendingOperation().then(function(pendingOperation) {
             if (!pendingOperation) {
