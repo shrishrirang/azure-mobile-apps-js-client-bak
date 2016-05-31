@@ -120,29 +120,65 @@ $testGroup('offline tests')
     
     $test('basic conflict')
     .checkAsync(function () {
-        var query = new Query(testTableName),
-            testId = uuid.v4();
+        var query = new Query(testTableName);
         
-        var record = {id: testId, text: 'something'};
+        var record1 = {id: uuid.v4(), text: 'server1'},
+            record2 = {id: uuid.v4(), text: 'server2'};
+            
+        function onRecordPushError(pushError, tableName, action, data) {
+            if (pushError.isConflict()) {
+                var newValue = data;
+                newValue.version = pushError.error.serverInstance.version;
+                return pushError.updateRecord(newValue).then(function() {
+                    pushError.isHandled = true;
+                });
+            }
+        }
         
-        return table.insert(record).then(function() {
+        return table.insert(record1).then(function() {
+            return table.insert(record2);
+        }).then(function() {
             return syncContext.pull(query);
         }).then(function() {
-            return syncContext.lookup(testTableName, record.id);
+            record1.text = 'server11';
+            return table.update(record1);
+        }).then(function() {
+            record2.text = 'server22';
+            return table.update(record2);
+        }).then(function() {
+            record1.text = 'client1';
+            return syncContext.update(testTableName, record1);
+        }).then(function() {
+            record2.text = 'client2';
+            return syncContext.update(testTableName, record2);
+        }).then(function() {
+            return syncContext.lookup(testTableName, record1.id);
         }).then(function(result) {
-            $assert.areEqual(result.id, record.id);
-            $assert.areEqual(result.text, record.text);
-            record.text = 'updated on server';
-            return table.del(record);
+            $assert.areEqual(result.text, record1.text);
         }).then(function() {
-            record.text = 'updated on client';
-            return syncContext.update(testTableName, record);
-        }).then(function() {
-            return syncContext.push();
-        }).then(function() {
-            $assert.fail('Conflict expected');
+            return syncContext.push({
+                onRecordPushError: onRecordPushError
+            });
+        }).then(function(conflicts) {
+            $assert.areEqual(conflicts.length, 0);
         }, function(error) {
-            error = error;
+            $assert.fail(error);
+        }).then(function() {
+            return syncContext.push({
+                onRecordPushError: onRecordPushError
+            });
+        }).then(function() {
+            return table.lookup(record1.id);
+        }).then(function(result) {
+            $assert.areEqual(result.text, record1.text);
+        }).then(function() {
+            return syncContext.lookup(testTableName, record1.id);
+        }).then(function(result) {
+            $assert.areEqual(result.text, record1.text);
+        }).then(function() {
+            return table.lookup(record2.id);
+        }).then(function(result) {
+            $assert.areEqual(result.text, record2.text);
         });
     })
 );
