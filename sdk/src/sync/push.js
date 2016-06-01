@@ -85,8 +85,8 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
                 // failed to push
                 // FIXME: Handle errors / conflicts
                 return unlockPendingOperation().then(function() {
-                    pushError = createPushError(store, storeTaskRunner, currentOperation, error, pushHandler);
-                    return handlePushError(pushError);
+                    pushError = createPushError(store, storeTaskRunner, currentOperation, error);
+                    return handlePushError(pushError, pushHandler);
                 });
             }).then(function() {
                 if (!pushError) { // no push error

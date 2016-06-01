@@ -1,10 +1,13 @@
 // ----------------------------------------------------------------------------
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// right (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
 /**
  * @file Table push error handling implementation. Defines various methods for resolving conflicts
  */
+
+// TODO: All conflict resolution methods should check that data hasn't changed and it is safe to modify the state
+// of the operation table / data table.
 
 var Platform = require('Platforms/Platform'),
     _ = require('../Utilities/Extensions'),
@@ -18,14 +21,14 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError) 
     
     return {
         // Properties
-        tableName: pushOperation.logRecord.tableName,
-        action: pushOperation.logRecord.action,
-        serverRecord: operationError.serverInstance,
-        clientRecord: pushOperation.data,
         isHandled: false,
+
         // Methods        
+        getTableName: getTableName,
+        getAction: getAction,
+        getServerRecord: getServerRecord,
+        getClientRecord: getClientRecord,
         getError: getError,
-        handleError: handleError,
         isConflict: isConflict,
         updateClientRecord: updateClientRecord,
         deleteClientRecord: deleteClientRecord,
@@ -33,12 +36,29 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError) 
         changeAction: changeAction
     };
     
+    function getTableName() {
+        return makeCopy(pushOperation.logRecord.tableName);
+    }
+    
+    function getAction() {
+        return makeCopy(pushOperation.logRecord.action);
+    }
+    
+    function getServerRecord() {
+        return makeCopy(operationError.serverInstance);
+    }
+    
+    // client value sent to the server. This may not be the latest value.
+    function getClientRecord() {
+        return makeCopy(pushOperation.data);
+    }
+    
     /**
      * Gets the underlying error.
      * This contains grannular details about the failure. Egs: server response, etc
      */
     function getError() {
-        return operationError;
+        return makeCopy(operationError);
     }
     
     /**
@@ -46,7 +66,7 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError) 
      * @returns true - if the current error is a conflict error. false - otherwise.
      */
     function isConflict() {
-        return operationError.request.status === 412;//FIXME: this cna be property
+        return operationError.request.status === 412;
     }
     
     /**
@@ -210,7 +230,7 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError) 
      * Cancels pushing the current operation to the server permanently.
      * This method simply removes the pending operation from the operation table, thereby 
      * permanently skipping the associated change. A future change done to the same record
-     * will not be cancelled and such changes will continue to be pushed. 
+     * will not be affected and such changes will continue to be pushed. 
      */
     function cancelRecordPush() {
         return storeTaskRunner.run(function() {
@@ -219,21 +239,28 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError) 
     }
 }
 
+function makeCopy(value) {
+    if (!_.isNull(value)) {
+        value = JSON.parse( JSON.stringify(value) );
+    }
+    return value;
+}
+
 /**
- * Attempts error handling by delegating it to the user, if a push handler is provided 
+ * Attempts error handling by delegating it to the user, if a push handler is provided
  */
-function handleError(pushHandler) {
+function handlePushError(pushError, pushHandler) {
     return Platform.async(function(callback) {
         callback();
     })().then(function() {
         
         // Check if a handler is provided for errors encountered while pushing records
         if (pushHandler && pushHandler.onRecordPushError) {
-            //TODO: Parameter value should be a copy and not the original value as it can be changed accidentally
+            //TODO: Parameter value should be a  and not the original value as it can be changed accidentally
             return pushHandler.onRecordPushError(pushError);
         }
     });
 }
 
 exports.createPushError = createPushError;
-exports.handleError = handleError;
+exports.handlePushError = handlePushError;
