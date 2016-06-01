@@ -15,6 +15,7 @@ var Validate = require('../Utilities/Validate'),
     tableConstants = require('../constants').table,
     sysProps = require('../constants').table.sysProps,
     createPushError = require('./pushError').createPushError,
+    handlePushError = require('./pushError').handlePushError,
     _ = require('../Utilities/Extensions');
 
 function createPushManager(client, store, storeTaskRunner, operationTableManager) {
@@ -85,7 +86,7 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
                 // FIXME: Handle errors / conflicts
                 return unlockPendingOperation().then(function() {
                     pushError = createPushError(store, storeTaskRunner, currentOperation, error, pushHandler);
-                    return pushError.handleError();
+                    return handlePushError(pushError);
                 });
             }).then(function() {
                 if (!pushError) { // no push error

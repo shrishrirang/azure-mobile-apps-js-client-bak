@@ -3,54 +3,35 @@
 // ----------------------------------------------------------------------------
 
 /**
- * Table push error handling implementation
+ * @file Table push error handling implementation. Defines various methods for resolving conflicts
  */
 
-var Validate = require('../Utilities/Validate'),
-    Platform = require('Platforms/Platform'),
-    ColumnType = require('./ColumnType'),
-    taskRunner = require('../Utilities/taskRunner'),
+var Platform = require('Platforms/Platform'),
     _ = require('../Utilities/Extensions'),
-    Query = require('query.js').Query,
     operationTableName = require('../constants').table.operationTableName;
 
-function createPushError(store, storeTaskRunner, pushOperation, operationError, pushHandler) {
+/**
+ * Creates a pushError object that wraps the low level error encountered while pushing
+ * and adds other useful methods for error handling.
+ */
+function createPushError(store, storeTaskRunner, pushOperation, operationError) {
     
-    var pushError = {
+    return {
+        // Properties
+        tableName: pushOperation.logRecord.tableName,
+        action: pushOperation.logRecord.action,
+        serverRecord: operationError.serverInstance,
+        clientRecord: pushOperation.data,
         isHandled: false,
+        // Methods        
         getError: getError,
         handleError: handleError,
         isConflict: isConflict,
         updateClientRecord: updateClientRecord,
         deleteClientRecord: deleteClientRecord,
-        cancelRecordPush: cancelRecordPush
+        cancelRecordPush: cancelRecordPush,
+        changeAction: changeAction
     };
-    
-    return pushError;
-    
-    function handleError() {
-        return Platform.async(function(callback) {
-            callback();
-        })().then(function() {
-            
-            if (pushHandler && pushHandler.onRecordPushError) {
-                
-                var context = {
-                    pushError: pushError,
-                    tableName: pushOperation.logRecord.tableName,
-                    operationType: pushOperation.logRecord.action,
-                    clientRecord: pushOperation.data // this will be undefined for delete operations  
-                };
-                
-                if (operationError.serverInstance) { // Set server data if we have it
-                    context.serverRecord = operationError.serverInstance;
-                }
-                
-                //TODO: Parameter value should be a copy and not the original value as it can be changed accidentally
-                return pushHandler.onRecordPushError(context);
-            }
-        });
-    }
     
     /**
      * Gets the underlying error.
@@ -61,8 +42,7 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError, 
     }
     
     /**
-     * Checks if the current error is a conflict error
-     * 
+     * Checks if the current error is a conflict error.
      * @returns true - if the current error is a conflict error. false - otherwise.
      */
     function isConflict() {
@@ -70,14 +50,14 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError, 
     }
     
     /**
-     * Updates the data record associated with the current operation from the local store.
+     * Updates the data record associated with the current operation in the local store.
      *
      * @param newValue New value of the data record. Note that the new record cannot change the ID. 
-     * @param {boolean} [cancelRecordPush] Flag specifying whether or not to cancel sending this change (i.e. change
-     * associated with this record) to the server. Note that cancelling push only affects this instance of push and 
+     * @param {boolean} [cancelRecordPush] Flag specifying whether or not to cancel sending this operation (i.e. changes
+     * associated with this record since the last push) to the server. Note that cancelling push only affects this instance of push and 
      * future changes to the record will continue to be pushed to the server.
      * 
-     * @returns A promise that is fulfilled when the data record is updated and optionally, the pending change is cancelled.
+     * @returns A promise that is fulfilled when the data record is updated and, optionally, the pending change is cancelled.
      */
     function updateClientRecord(newValue, cancelRecordPush) {
         return storeTaskRunner.run(function() {
@@ -99,24 +79,22 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError, 
                 throw new Error('Only updating the record being pushed is allowed');
             }
             
+            // Operation to update the data record
             var dataUpdateOperation = {
                 tableName: pushOperation.logRecord.tableName,
                 action: 'upsert',
                 data: newValue
             };
             
+            // Operation to delete the log record
             var logDeleteOperation = {
                 tableName: operationTableName,
                 action: 'delete',
                 data: newValue.id
             }
             
-            var operations = [dataUpdateOperation];
-            
-            if (cancelRecordPush) {
-                operations.push(logDeleteOperation);
-            }
-            
+            // Execute the log and data operations
+            var operations = cancelRecordPush ? [dataUpdateOperation, logDeleteOperation] : [dataUpdateOperation];
             return store.executeBatch(operations);
         });
     }
@@ -124,33 +102,31 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError, 
     /**
      * Deletes the data record associated with the current operation from the local store.
      * 
-     * @param {boolean} [cancelRecordPush] Flag specifying whether or not to cancel sending this change (i.e. change
-     * associated with this record) to the server. Note that cancelling push only affects this instance of push and 
+     * @param {boolean} [cancelRecordPush] Flag specifying whether or not to cancel sending this operation (i.e. changes
+     * associated with this record since the last push) to the server. Note that cancelling push only affects this instance of push and 
      * future changes to the record will continue to be pushed to the server.
      * 
-     * @returns A promise that is fulfilled when the data record is deleted and optionally, the pending change is cancelled.
+     * @returns A promise that is fulfilled when the data record is deleted and, optionally, the pending change is cancelled.
      */
     function deleteClientRecord(cancelRecordPush) {
         return storeTaskRunner.run(function() {
             
+            // Operation to delete the data record
             var dataDeleteOperation = {
                 tableName: pushOperation.logRecord.tableName,
                 action: 'delete',
                 data: pushOperation.logRecord.itemId
             };
             
+            // Operation to delete the log record
             var logDeleteOperation = {
                 tableName: operationTableName,
                 action: 'delete',
                 data: newValue.id
             }
             
-            var operations = [dataDeleteOperation];
-            
-            if (cancelRecordPush) {
-                operations.push(logDeleteOperation);
-            }
-            
+            // Execute the log and data operations
+            var operations = cancelRecordPush ? [dataDeleteOperation, logDeleteOperation] : [dataDeleteOperation];
             return store.executeBatch(operations);
         });
     }
@@ -163,61 +139,70 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError, 
      * Example: You might need to change 'insert' to 'update' to be able to push a record that 
      * was already inserted on the server.
      * 
-     * Note: Changing the operation type to delete will automatically remove the associated record from the 
+     * Note: Changing the action to delete will automatically remove the associated record from the 
      * data table in the local store.
      * 
-     * @param newOperationType New type of the operation. Valid values are 'insert', 'update' and 'delete' / 'del'
-     * @param [newRecordValue] New value of the record. The new record ID should match the original record ID. Also,
-     *                         a new record value cannot be specified if the new operation type is 'delete' / 'del'
+     * @param newAction New type of the operation. Valid values are 'insert', 'update' and 'delete' / 'del'
+     * @param [newClientRecord] New value of the client record. The new record ID should match the original record ID. Also,
+     *                         a new record value cannot be specified if the new action is 'delete' / 'del'
      * 
-     * @returns A promise that is fulfilled when the operation type is changed and optionally, the data record is updated.
+     * @returns A promise that is fulfilled when the action is changed and, optionally, the data record is updated / deleted.
      */
-    function changeOperationType(newOperationType, newRecordValue) {
+    function changeAction(newAction, newClientRecord) {
         return storeTaskRunner.run(function() {
-            var newDataOperation,
-                newLogOperation = {
+            var dataOperation, // operation to edit the data record
+                logOperation = { // operation to edit the log record 
                     tableName: operationTableName,
                     data: pushOperation.logRecord.itemId
                 };
             
-            if (newOperationType === 'insert' || newOperationType === 'update') {
-
-                newLogOperation.action = newOperationType;
-                if (newRecordValue) {
+            if (newAction === 'insert' || newAction === 'update') {
+                
+                // Change the action as specified
+                logOperation.action = newAction;
+                
+                // Update the client record, if a new value is specified
+                if (newClientRecord) {
                     
-                    if (!newRecordValue.id) {
-                        throw new Error('New record value must specify the record ID');
+                    if (!newClientRecord.id) {
+                        throw new Error('New client record value must specify the record ID');
                     }
                     
-                    if (newRecordValue.id !== pushOperation.logRecord.itemId) {
-                        throw new Error('New record value cannot change the record ID. Original ID: ' + pushOperation.logRecord.id + ' New ID: ' + 'newRecordValue.id');
+                    if (newClientRecord.id !== pushOperation.logRecord.itemId) {
+                        throw new Error('New client record value cannot change the record ID. Original ID: ' + pushOperation.logRecord.id + ' New ID: ' + newClientRecord.id);
                     }
                     
-                    newDataOperation = {
+                    dataOperation = {
                         tableName: pushOperation.logRecord.tableName,
                         action: 'upsert',
-                        data: newRecordValue
+                        data: newClientRecord
                     };
                     
                 }
                 
-            } else if (newOperationType === 'delete' || newOperationType === 'del') {
+            } else if (newAction === 'delete' || newAction === 'del') {
 
-                if (newRecordValue) {
-                    throw new Error('Cannot specify a new value for the record if the new operation type is delete');
+                if (newClientRecord) {
+                    throw new Error('Cannot specify a new value for the client record if the new action is delete');
                 }
 
-                newLogOperation.action = 'delete';
-                newDataOperation = {
+                // Change the action to 'delete'
+                logOperation.action = 'delete';
+                
+                // Delete the client record as the new action is 'delete'
+                dataOperation = {
                     tableName: pushOperation.logRecord.tableName,
                     action: 'delete',
                     data: pushOperation.logRecord.id
                 };
 
             } else {
-                throw new Error('Operation type ' + newOperationType + ' not supported.');
+                throw new Error('Action ' + newAction + ' not supported.');
             }
-
+            
+            // Execute the log and data operations
+            var operations = dataOperation ? [logOperation, dataOperation] : [logOperation];
+            return store.executeBatch(operations);
         });
     }
     
@@ -225,7 +210,7 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError, 
      * Cancels pushing the current operation to the server permanently.
      * This method simply removes the pending operation from the operation table, thereby 
      * permanently skipping the associated change. A future change done to the same record
-     * will not be affected and such changes will continue to be pushed. 
+     * will not be cancelled and such changes will continue to be pushed. 
      */
     function cancelRecordPush() {
         return storeTaskRunner.run(function() {
@@ -234,4 +219,21 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError, 
     }
 }
 
+/**
+ * Attempts error handling by delegating it to the user, if a push handler is provided 
+ */
+function handleError(pushHandler) {
+    return Platform.async(function(callback) {
+        callback();
+    })().then(function() {
+        
+        // Check if a handler is provided for errors encountered while pushing records
+        if (pushHandler && pushHandler.onRecordPushError) {
+            //TODO: Parameter value should be a copy and not the original value as it can be changed accidentally
+            return pushHandler.onRecordPushError(pushError);
+        }
+    });
+}
+
 exports.createPushError = createPushError;
+exports.handleError = handleError;
