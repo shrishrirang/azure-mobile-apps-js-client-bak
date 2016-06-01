@@ -78,42 +78,35 @@ $testGroup('offline tests')
         return performActions(actions);
     }),
     
-    $test('pull inserts, updates and deletes')
+    $test('vanilla pull - insert / update / delete')
     .checkAsync(function () {
         var actions = [
+            'serverinsert', 'vanillapull', 'clientlookup',
+            {
+                success: function(result) {
+                    $assert.areEqual(result.id, serverValue.id);
+                    $assert.areEqual(result.text, serverValue.text);
+                }
+            },
+            'serverupdate', 'vanillapull', 'clientlookup',
+            {
+                success: function(result) {
+                    $assert.areEqual(result.id, serverValue.id);
+                    $assert.areEqual(result.text, serverValue.text);
+                }
+            },
+            'serverdelete', 'vanillapull', 'clientlookup',
+            {
+                success: function(result) {
+                    $assert.isNull(result);
+                },
+                fail: function(error) {
+                    $assert.fail(error);
+                }
+            }
         ];
         
-        var query = new Query(testTableName),
-            testId = uuid.v4();
-        
-        var record = {id: testId, text: 'something'};
-        
-        return table.insert(record).then(function() {
-            return syncContext.pull(query);
-        }).then(function() {
-            return syncContext.lookup(testTableName, record.id);
-        }).then(function(result) {
-            $assert.areEqual(result.id, record.id);
-            $assert.areEqual(result.text, record.text);
-            record.text = 'updated';
-            return table.update(record);
-        }).then(function() {
-            return syncContext.pull(query);
-        }).then(function() {
-            return syncContext.lookup(testTableName, testId);
-        }).then(function(result) {
-            $assert.areEqual(result.id, record.id);
-            $assert.areEqual(result.text, record.text);
-            return table.del(record);
-        }).then(function() {
-            return syncContext.pull(query);
-        }).then(function() {
-            return syncContext.lookup(testTableName, testId);
-        }).then(function(result) {
-            $assert.isNull(result);
-        }, function(error) {
-            $assert.fail(error);
-        });
+        return performActions(actions);
     }),
     
     $test('basic conflict')
@@ -185,7 +178,7 @@ $testGroup('offline tests')
 
 function performActions (actions) {
     
-    var testId = generateId();
+    testId = generateId();
     
     var chain = Platform.async(function(callback) {
         callback();
