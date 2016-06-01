@@ -19,6 +19,10 @@ var client = new MobileServiceClient('http://shrirs-js-dev.azurewebsites.net' /*
     syncContext = new MobileServiceSyncContext(client),
     testTableName = storeTestHelper.testTableName,
     table = client.getTable(testTableName),
+    query = new Query(testTableName),
+    serverValue,
+    clientValue,
+    testId,
     store;
     
 $testGroup('offline tests')
@@ -36,55 +40,49 @@ $testGroup('offline tests')
                 }
             });
         }).then(function() {
+            serverValue = clientValue = undefined;
             return syncContext.initialize(store);
         });
     }).tests(
 
-    $test('push inserts, updates and deletes')
+    $test('Basic push - insert / update / delete')
     .checkAsync(function () {
-        var query = new Query(testTableName),
-            testId = uuid.v4();
-            
-        var record = {
-            id: testId,
-            text: 'inserted locally'
-        };
-
-        return syncContext.insert(testTableName, record).then(function() {
-            return syncContext.push();
-        }).then(function() {
-            return table.lookup(testId);
-        }).then(function(result) {
-            $assert.areEqual(result.id, record.id);
-            $assert.areEqual(result.text, record.text);
-            record.text = 'updated locally';
-            return syncContext.update(testTableName, record);
-        }).then(function() {
-            return syncContext.push();
-        }).then(function() {
-            return table.lookup(testId);
-        }).then(function(result) {
-            $assert.areEqual(result.id, record.id);
-            $assert.areEqual(result.text, record.text);
-            return syncContext.del(testTableName, {id: testId});
-        }).then(function() {
-            return syncContext.push();
-        }).then(function(result) {
-            // Success expected
-        }, function(error) {
-            $assert.fail(error);
-            throw error;
-        }).then(function(x) {
-            return table.lookup(testId);
-        }).then(function(result) {
-            $assert.fail('should have failed to lookup the deleted item');
-        }, function(error) {
-            // Error expected
-        });
+        var actions = [
+            'clientinsert', 'push', 'serverlookup',
+            {
+                success: function(result) {
+                    $assert.isNotNull(clientValue);
+                    $assert.areEqual(result.id, clientValue.id);
+                    $assert.areEqual(result.text, clientValue.text);
+                }
+            },
+            'clientupdate', 'push', 'serverlookup',
+            {
+                success: function(result) {
+                    $assert.isNotNull(clientValue);
+                    $assert.areEqual(result.id, clientValue.id);
+                    $assert.areEqual(result.text, clientValue.text);
+                }
+            },
+            'clientdelete', 'push', 'serverlookup',
+            {
+                success: function(result) {
+                    $assert.fail('should have failed to lookup deleted server record');
+                },
+                fail: function(error) {
+                    // error expected
+                }
+            }
+        ];
+                        
+        return performActions(actions);
     }),
     
     $test('pull inserts, updates and deletes')
     .checkAsync(function () {
+        var actions = [
+        ];
+        
         var query = new Query(testTableName),
             testId = uuid.v4();
         
@@ -125,12 +123,12 @@ $testGroup('offline tests')
         var record1 = {id: uuid.v4(), text: 'server1'},
             record2 = {id: uuid.v4(), text: 'server2'};
             
-        function onRecordPushError(context) {
-            if (context.pushError.isConflict()) {
-                var newValue = context.clientRecord;
-                newValue.version = context.serverRecord.version;
-                return context.pushError.updateClientRecord(newValue).then(function() {
-                    context.pushError.isHandled = true;
+        function onRecordPushError(pushError) {
+            if (pushError.isConflict()) {
+                var newValue = pushError.getClientRecord();
+                newValue.version = pushError.getServerRecord().version;
+                return pushError.updateClientRecord(newValue).then(function() {
+                    pushError.isHandled = true;
                 });
             }
         }
@@ -141,10 +139,10 @@ $testGroup('offline tests')
             return syncContext.pull(query);
         }).then(function() {
             record1.text = 'server11';
-            return table.update(record1);
+            return table.del(record1);
         }).then(function() {
             record2.text = 'server22';
-            return table.update(record2);
+            return table.del(record2);
         }).then(function() {
             record1.text = 'client1';
             return syncContext.update(testTableName, record1);
@@ -185,3 +183,94 @@ $testGroup('offline tests')
     })
 );
 
+function performActions (actions) {
+    
+    var testId = generateId();
+    
+    var chain = Platform.async(function(callback) {
+        callback();
+    })();
+    
+    for (var i in actions) {
+        chain = performAction(chain, actions[i]);
+    }
+    
+    return chain;
+}
+
+function performAction (chain, action) {
+    var record;
+    return chain.then(function(result) {
+        if (action && action.success) {
+            return action.success(result);
+        }
+        
+        switch(action) {
+            case 'clientinsert':
+                record = generateRecord('client-insert');
+                return syncContext.insert(testTableName, record).then(function(result) {
+                    clientValue = result;
+                    return result;
+                });
+            case 'clientupdate':
+                record = generateRecord('client-update')
+                return syncContext.update(testTableName, record).then(function(result) {
+                    clientValue = result;
+                    return result;
+                });
+            case 'clientdelete':
+                record = generateRecord(id)
+                return syncContext.del(testTableName, record).then(function(result) {
+                    clientValue = undefined;
+                    return result;
+                });
+            case 'clientlookup':
+                return syncContext.lookup(testTableName, testId);
+            case 'serverinsert':
+                record = generateRecord('server-insert');
+                return table.insert(record).then(function(result) {
+                    serverValue = result;
+                    return result;
+                });
+            case 'serverupdate':
+                record = generateRecord('server-update');
+                return table.update(record).then(function(result) {
+                    serverValue = result;
+                    return result;
+                });
+            case 'serverdelete':
+                record = generateRecord(id);
+                return table.del(record).then(function(result) {
+                    serverValue = undefined;
+                    return result;
+                });
+            case 'serverlookup':
+                return table.lookup(testId);
+            case 'push':
+                return syncContext.push();
+            case 'vanillapull':
+                return syncContext.pull(query);
+            default:
+                throw new Error('Unsupported action : ' + action);
+        }
+    }, function(error) {
+        if (action && action.fail) {
+            return action.fail(error);
+        } else {
+            $assert.fail('Unexpected failure while running action : ' + action);
+            $assert.fail(error);
+            throw error;
+        }
+    });
+}
+
+function generateRecord(textPrefix) {
+    return {
+        id: testId,
+        text: textPrefix + uuid.v4()
+    }
+}
+
+function generateId() {
+    return uuid.v4();
+}
