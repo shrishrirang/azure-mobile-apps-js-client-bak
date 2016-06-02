@@ -21,7 +21,7 @@ var Validate = require('../Utilities/Validate'),
 function createPushManager(client, store, storeTaskRunner, operationTableManager) {
     // Task runner for running push tasks. We want only one push to run at a time. 
     var pushTaskRunner = taskRunner(),
-        lastProcessOperationId,
+        lastProcessedOperationId,
         pushErrors,
         pushHandler;
     
@@ -59,7 +59,7 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
     
     // Resets the state for starting a new push operation
     function reset() {
-        lastProcessOperationId = -1; // Initialize to an invalid operation id
+        lastProcessedOperationId = -1; // Initialize to an invalid operation id
         pushErrors = [];
     }
     
@@ -90,21 +90,21 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
                 });
             }).then(function() {
                 if (!pushError) { // no push error
-                    lastProcessOperationId = currentOperation.logRecord.id;
+                    lastProcessedOperationId = currentOperation.logRecord.id;
                 } else if (pushError && !pushError.isHandled) { // push failed and not handled
 
                     // For conflict errors, we add the error to the list of errors and continue pushing other records
                     // For other errors, we fail push
                     if (pushError.isConflict()) {
-                        lastProcessOperationId = currentOperation.logRecord.id;
-                        pushErrors.push(pushError.error);
+                        lastProcessedOperationId = currentOperation.logRecord.id;
+                        pushErrors.push(pushError.getError());
                     } else { 
-                        throw new verror.VError(pushError.error, 'Push failed while pushing operation for tableName : ' + currentOperation.logRecord.tableName +
+                        throw new verror.VError(pushError.getError(), 'Push failed while pushing operation for tableName : ' + currentOperation.logRecord.tableName +
                                                                  ', action: ' + currentOperation.logRecord.action +
                                                                  ', and record ID: ' + currentOperation.logRecord.itemId);
                     }
                 } else { // push error handled
-                    // NOP.
+                    // NOP.- We want the operation to be re-pushed. If it has been cancelled, that is fine too. 
                 }
             }).then(function() {
                 return pushAllOperations(); // push remaining operations
@@ -115,7 +115,7 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
     function readAndLockFirstPendingOperation() {
         return storeTaskRunner.run(function() {
             var pendingOperation;
-            return operationTableManager.readFirstPendingOperationWithData(lastProcessOperationId).then(function(operation) {
+            return operationTableManager.readFirstPendingOperationWithData(lastProcessedOperationId).then(function(operation) {
                 pendingOperation = operation;
                 
                 if (!pendingOperation) {

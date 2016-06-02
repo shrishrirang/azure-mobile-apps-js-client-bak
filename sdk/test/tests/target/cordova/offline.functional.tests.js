@@ -109,70 +109,44 @@ $testGroup('offline tests')
         return performActions(actions);
     }),
     
-    $test('basic conflict')
+    $test('Push conflict - insert')
     .checkAsync(function () {
-        var query = new Query(testTableName);
         
-        var record1 = {id: uuid.v4(), text: 'server1'},
-            record2 = {id: uuid.v4(), text: 'server2'};
-            
+        var count = 0;
         function onRecordPushError(pushError) {
             if (pushError.isConflict()) {
                 var newValue = pushError.getClientRecord();
-                newValue.version = pushError.getServerRecord().version;
-                return pushError.updateClientRecord(newValue).then(function() {
+
+                return table.lookup(newValue.id).then(function(result) {
+                    newValue.version = result.version;
+                    return pushError.changeAction('update');
+                }).then(function() {
                     pushError.isHandled = true;
                 });
             }
         }
         
-        return table.insert(record1).then(function() {
-            return table.insert(record2);
-        }).then(function() {
-            return syncContext.pull(query);
-        }).then(function() {
-            record1.text = 'server11';
-            return table.del(record1);
-        }).then(function() {
-            record2.text = 'server22';
-            return table.del(record2);
-        }).then(function() {
-            record1.text = 'client1';
-            return syncContext.update(testTableName, record1);
-        }).then(function() {
-            record2.text = 'client2';
-            return syncContext.update(testTableName, record2);
-        }).then(function() {
-            return syncContext.lookup(testTableName, record1.id);
-        }).then(function(result) {
-            $assert.areEqual(result.text, record1.text);
-        }).then(function() {
-            return syncContext.push({
-                onRecordPushError: onRecordPushError
-            });
-        }).then(function(conflicts) {
-            $assert.areEqual(conflicts.length, 0);
-        }, function(error) {
-            $assert.fail(error);
-        }).then(function() {
-            return syncContext.push({
-                onRecordPushError: onRecordPushError
-            });
-        }).then(function() {
-            return table.lookup(record1.id);
-        }).then(function(result) {
-            $assert.areEqual(result.text, record1.text);
-        }).then(function() {
-            return syncContext.lookup(testTableName, record1.id);
-        }).then(function(result) {
-            $assert.areEqual(result.text, record1.text);
-        }).then(function() {
-            return table.lookup(record2.id);
-        }).then(function(result) {
-            $assert.areEqual(result.text, record2.text);
-        }, function(error) {
-            $assert.fail(error);
-        });
+        var actions = [
+            'serverinsert', 'clientinsert',
+            {
+                success: function(result) {
+                    return syncContext.push({
+                        onRecordPushError: onRecordPushError
+                    }).then(function(conflicts) {
+                        $assert.areEqual(conflicts.length, 11);
+                    });
+                }
+            },
+            'serverlookup',
+            {
+                success: function(result) {
+                    $assert.areEqual(result.id, clientValue.id);
+                    $assert.areEqual(result.text, clientValue.text);
+                }
+            }
+        ];
+        
+        return performActions(actions);
     })
 );
 
