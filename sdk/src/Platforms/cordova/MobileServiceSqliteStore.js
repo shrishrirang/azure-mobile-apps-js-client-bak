@@ -207,16 +207,16 @@ var MobileServiceSqliteStore = function (dbName) {
                     columnParams += ', ';
                 }
 
-                // Add comma, if this is not the first update expression
-                if (updateExpression !== '') {
-                    updateExpression += ', ';
-                }
-
                 columnNames += property;
                 columnParams += '?';
 
                 // We don't want to update the id column
                 if (property !== idPropertyName) {
+                    // Add comma, if this is not the first update expression
+                    if (updateExpression !== '') {
+                        updateExpression += ', ';
+                    }
+
                     updateExpression += property + ' = ?';
                     updateValues.push(record[property]);
                 }

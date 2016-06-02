@@ -133,7 +133,7 @@ $testGroup('offline tests')
                     return syncContext.push({
                         onRecordPushError: onRecordPushError
                     }).then(function(conflicts) {
-                        $assert.areEqual(conflicts.length, 11);
+                        $assert.areEqual(conflicts.length, 0);
                     });
                 }
             },
