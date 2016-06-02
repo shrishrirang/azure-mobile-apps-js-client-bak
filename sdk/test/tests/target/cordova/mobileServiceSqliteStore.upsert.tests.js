@@ -425,6 +425,32 @@ $testGroup('SQLiteStore - upsert tests')
         });
     }),
 
+    $test('ID property not the first property that gets enumerated')
+    .checkAsync(function () {
+        var record = { // Defined property names such that id will not be the first property to be enumerated
+            a_prop1: 100,
+            id: 'someid',
+            z_prop2: 200
+        };
+        
+        return store.defineTable({
+            name: storeTestHelper.testTableName,
+            columnDefinitions: {
+                id: MobileServiceSqliteStore.ColumnType.String,
+                a_prop1: MobileServiceSqliteStore.ColumnType.Real,
+                z_prop2: MobileServiceSqliteStore.ColumnType.Real
+            }
+        }).then(function () {
+            return store.upsert(storeTestHelper.testTableName, record);
+        }).then(function () {
+            return store.lookup(storeTestHelper.testTableName, record.id);
+        }).then(function (result) {
+            return $assert.areEqual(result, record);
+        }, function (error) {
+            $assert.fail(error);
+        });
+    }),
+
     $test('invoked with extra arguments')
     .description('Check that promise returned by upsert is either resolved or rejected even when invoked with extra parameters')
     .checkAsync(function () {
