@@ -10,6 +10,7 @@ var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
     operations = require('../../../../src/sync/operations'),
     MobileServiceClient = require('../../../../src/MobileServiceClient'),
+    tableConstants = require('../../../../src/constants').table,
     MobileServiceSyncContext = require('../../../../src/sync/MobileServiceSyncContext'),
     storeTestHelper = require('./storeTestHelper'),
     MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore');
@@ -20,7 +21,7 @@ var store,
     testName = 'somename',
     testRecord = {id: testId, name: testName},
     filterRecord = {id: testId, name: 'filter name'}, // record that will be returned from the store layer's filter function
-    operationTableName = "__operations";
+    operationTableName = tableConstants.operationTableName;
 
 $testGroup('MobileServiceSyncContext tests')
 
