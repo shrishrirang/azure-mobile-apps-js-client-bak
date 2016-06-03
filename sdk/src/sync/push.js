@@ -74,7 +74,6 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
                 return removeLockedOperation();
             }, function(error) {
                 // failed to push
-                // FIXME: Handle errors / conflicts
                 return unlockPendingOperation().then(function() {
                     pushError = createPushError(store, storeTaskRunner, currentOperation, error);
                     return handlePushError(pushError, pushHandler);
