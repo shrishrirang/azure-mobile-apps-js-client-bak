@@ -9,7 +9,8 @@
 var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
     storeTestHelper = require('./storeTestHelper'),
-    MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore');
+    MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore'),
+    store;
 
 $testGroup('SQLiteStore - miscellaneous tests')
 
