@@ -3,7 +3,9 @@
 // ----------------------------------------------------------------------------
 
 var Validate = require('../Utilities/Validate'),
+    Query = require('Query.js').Query,
     _ = require('../Utilities/Extensions'),
+    tableHelper = require('../tableHelper'),
     Platform = require('Platforms/Platform');
 
 /**
@@ -87,5 +89,7 @@ function MobileServiceSyncTable(tableName, client) {
         return client.getSyncContext().del(tableName, instance);
     };
 }
+
+tableHelper.defineQueryOperators(MobileServiceSyncTable);
 
 exports.MobileServiceSyncTable = MobileServiceSyncTable;

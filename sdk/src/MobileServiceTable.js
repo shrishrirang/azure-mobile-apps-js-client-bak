@@ -7,6 +7,7 @@ var Validate = require('./Utilities/Validate');
 var Platform = require('Platforms/Platform');
 var Query = require('query.js/lib/Query').Query;
 var constants = require('./constants');
+var tableHelper = require('./tableHelper');
 
 // Name of the reserved Mobile Services ID member.
 var idPropertyName = "id";
@@ -607,41 +608,43 @@ MobileServiceTable.prototype.del = Platform.async(
             });
     });
 
-// Copy select Query operators to MobileServiceTable so queries can be created
-// compactly.  We'll just add them to the MobileServiceTable prototype and then
-// forward on directly to a new Query instance.
-var queryOperators =
-    ['where', 'select', 'orderBy', 'orderByDescending', 'skip', 'take', 'includeTotalCount'];
-var copyOperator = function (operator) {
-    MobileServiceTable.prototype[operator] = function () {
-        /// <summary>
-        /// Creates a new query.
-        /// </summary>
+// // Copy select Query operators to MobileServiceTable so queries can be created
+// // compactly.  We'll just add them to the MobileServiceTable prototype and then
+// // forward on directly to a new Query instance.
+// var queryOperators =
+//     ['where', 'select', 'orderBy', 'orderByDescending', 'skip', 'take', 'includeTotalCount'];
+// var copyOperator = function (operator) {
+//     MobileServiceTable.prototype[operator] = function () {
+//         /// <summary>
+//         /// Creates a new query.
+//         /// </summary>
 
-        // Create a query associated with this table
-        var table = this;
-        var query = new Query(table.getTableName());
+//         // Create a query associated with this table
+//         var table = this;
+//         var query = new Query(table.getTableName());
 
-        // Add a .read() method on the query which will execute the query.
-        // This method is defined here per query instance because it's
-        // implicitly tied to the table.
-        query.read = Platform.async(
-            function (parameters, callback) {
-                /// <summary>
-                /// Execute the query.
-                /// </summary>                
-                table._read(query, parameters, callback);
-            });
+//         // Add a .read() method on the query which will execute the query.
+//         // This method is defined here per query instance because it's
+//         // implicitly tied to the table.
+//         query.read = Platform.async(
+//             function (parameters, callback) {
+//                 /// <summary>
+//                 /// Execute the query.
+//                 /// </summary>                
+//                 table._read(query, parameters, callback);
+//             });
 
-        // Invoke the query operator on the newly created query
-        return query[operator].apply(query, arguments);
-    };
-};
-var i = 0;
-for (; i < queryOperators.length; i++) {
-    // Avoid unintended closure capture
-    copyOperator(queryOperators[i]);
-}
+//         // Invoke the query operator on the newly created query
+//         return query[operator].apply(query, arguments);
+//     };
+// };
+// var i = 0;
+// for (; i < queryOperators.length; i++) {
+//     // Avoid unintended closure capture
+//     copyOperator(queryOperators[i]);
+// }
+
+tableHelper.defineQueryOperators(MobileServiceTable);
 
 // Table system properties
 function removeSystemProperties(instance) {
