@@ -164,7 +164,7 @@ $testGroup('sqliteSerializer tests').tests(
 
     $test('Serialize a value of type object')
     .check(function () {
-        var value = {a: 1, b: '2'}
+        var value = {a: 1, b: '2'};
         $assert.areEqual(sqliteSerializer.serializeValue(value), JSON.stringify(value));
     }),
 

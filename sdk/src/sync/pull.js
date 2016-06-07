@@ -137,9 +137,9 @@ function createPullManager(client, store, storeTaskRunner, operationTableManager
                         return;
                     }
 
-                    if (pulledRecord[sysProps.deletedColumnName] == true) {
+                    if (pulledRecord[sysProps.deletedColumnName] === true) {
                         return store.del(tableName, pulledRecord.id);
-                    } else if (pulledRecord[sysProps.deletedColumnName] == false) {
+                    } else if (pulledRecord[sysProps.deletedColumnName] === false) {
                         return store.upsert(tableName, pulledRecord);
                     } else {
                         throw new Error("'" + sysProps.deletedColumnName + "' system property is missing. Pull cannot work without it.'");
