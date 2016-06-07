@@ -49,6 +49,27 @@ $testGroup('MobileServiceSyncContext tests')
         });
     }),
 
+    $test('Read test')
+    .description('test verifies that read calls store.read and returns its result')
+    .checkAsync(function () {
+        
+        var records = [ {id: 1} ];
+        var read = store.read;
+        store.read = function(query) {
+            if (query.getComponents().table === storeTestHelper.testTableName) {
+                return records;
+            }
+                
+            return read.apply(store, arguments);
+        };
+        
+        return performActionWithCustomLogging(filterRecord.id, 'read').then(function(result) {
+            $assert.areEqual(result, records);
+        }, function(error) {
+            $assert.fail(error);
+        });
+    }),
+
     $test('Insert should record operations in the operation table')
     .description('test verifies that insert executes operations specified by the operation table manager in a single batch')
     .checkAsync(function () {
@@ -293,6 +314,8 @@ function performActionWithCustomLogging(id, action) {
     }).then(function() {
         if (action === 'lookup') {
             return syncContext.lookup(storeTestHelper.testTableName, id);
+        } else if (action === 'read') {
+            return syncContext.read(new Query(storeTestHelper.testTableName));
         } else if (action === 'insert') {
             return syncContext.insert(storeTestHelper.testTableName, {id: id, name: testName});
         } else if (action === 'update') {

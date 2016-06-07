@@ -126,6 +126,25 @@ function MobileServiceSyncContext(client) {
         });
     };
 
+
+    /**
+     * Reads records from the specified local table
+     * 
+     * @param query A QueryJS object representing the query to use while reading the table
+     * @returns A promise that is resolved with the read results when the operation is completed successfully or rejected with
+     *          the error if it fails.
+     */
+    this.read = function (query) {
+        
+        return Platform.async(function(callback) {
+            callback();
+        })().then(function() {
+            Validate.notNull(query, 'query');
+            Validate.isObject(query, 'query');
+
+            return store.read(query);
+        });
+    };
     /**
      * Delete an object from the specified local table
      * 
