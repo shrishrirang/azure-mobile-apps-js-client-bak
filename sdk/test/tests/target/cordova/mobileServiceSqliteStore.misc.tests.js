@@ -159,5 +159,17 @@ $testGroup('SQLiteStore - miscellaneous tests')
         var store = MobileServiceSqliteStore('somedbname');
         $assert.isNotNull(store, 'somedbname');
         $assert.isNotNull(store._db);
+    }),
+    
+    $test('MobileServiceSqliteStore constructor without db name')
+    .check(function () {
+        var localStore = MobileServiceSqliteStore('somedbname');
+        $assert.isNotNull(localStore._db);
+    }),
+    
+    $test('MobileServiceSqliteStore constructor with a null db name')
+    .check(function () {
+        var localStore = MobileServiceSqliteStore('somedbname');
+        $assert.isNotNull(localStore._db);
     })
 );
