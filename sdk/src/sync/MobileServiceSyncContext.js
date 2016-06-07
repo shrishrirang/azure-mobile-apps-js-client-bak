@@ -185,7 +185,7 @@ function MobileServiceSyncContext(client) {
      * 
      * @returns A promise that is fulfilled when all records are pulled OR is rejected if the pull fails or is cancelled.  
      */
-    this.pull = function (query, queryId) {
+    this.pull = function (query, queryId) { //FIXME: SyncTable should have a pull API 
         //TODO: Implement cancel
         //TODO: Perform push before pulling
         return syncTaskRunner.run(function() {
