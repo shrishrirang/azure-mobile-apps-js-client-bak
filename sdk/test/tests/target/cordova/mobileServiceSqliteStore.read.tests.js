@@ -9,7 +9,8 @@
 var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
     storeTestHelper = require('./storeTestHelper'),
-    MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore');
+    MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore'),
+    store;
 
 $testGroup('SQLiteStore - read tests')
 
@@ -68,19 +69,19 @@ $testGroup('SQLiteStore - read tests')
             return store.upsert(storeTestHelper.testTableName, records);
         }).then(function () {
             return store.read(new Query(storeTestHelper.testTableName).where(function() {
-                return this.flag == false;
+                return this.flag === false;
             }));
         }).then(function (results) {
             $assert.areEqual(results, [record1]);
         }).then(function () {
             return store.read(new Query(storeTestHelper.testTableName).where(function(v) {
-                return this.flag == v;
+                return this.flag === v;
             }, true));
         }).then(function (results) {
             $assert.areEqual(results, [record2]);
         }).then(function () {
             return store.read(new Query(storeTestHelper.testTableName).where(function() {
-                return this.flag == null;
+                return this.flag === null;
             }));
         }).then(function (results) {
             $assert.areEqual(results, [record3]);
@@ -107,19 +108,19 @@ $testGroup('SQLiteStore - read tests')
             return store.upsert(storeTestHelper.testTableName, records);
         }).then(function () {
             return store.read(new Query(storeTestHelper.testTableName).where(function() {
-                return this.name == 'a';
+                return this.name === 'a';
             }));
         }).then(function (results) {
             $assert.areEqual(results, [record1]);
         }).then(function () {
             return store.read(new Query(storeTestHelper.testTableName).where(function(v) {
-                return this.name == v;
+                return this.name === v;
             }, ''));
         }).then(function (results) {
             $assert.areEqual(results, [record2]);
         }).then(function () {
             return store.read(new Query(storeTestHelper.testTableName).where(function() {
-                return this.name == null;
+                return this.name === null;
             }));
         }).then(function (results) {
             $assert.areEqual(results, [record3]);
@@ -145,13 +146,13 @@ $testGroup('SQLiteStore - read tests')
             return store.upsert(storeTestHelper.testTableName, records);
         }).then(function () {
             return store.read(new Query(storeTestHelper.testTableName).where(function(v) {
-                return this.time == v;
+                return this.time === v;
             }, record1.time));
         }).then(function (results) {
             $assert.areEqual(results, [record1]);
         }).then(function () {
             return store.read(new Query(storeTestHelper.testTableName).where(function() {
-                return this.time == null;
+                return this.time === null;
             }));
         }).then(function (results) {
             $assert.areEqual(results, [record2]);
@@ -177,7 +178,7 @@ $testGroup('SQLiteStore - read tests')
             return store.upsert(storeTestHelper.testTableName, records);
         }).then(function () {
             return store.read(new Query(storeTestHelper.testTableName).where(function(v) {
-                return this.val == 1;
+                return this.val === 1;
             }, record1.time));
         }).then(function (results) {
             $assert.areEqual(results, [record1]);
@@ -204,7 +205,7 @@ $testGroup('SQLiteStore - read tests')
             return store.upsert(storeTestHelper.testTableName, records);
         }).then(function () {
             return store.read(new Query(storeTestHelper.testTableName).where(function(v) {
-                return this.val == 1.1;
+                return this.val === 1.1;
             }, record1.time));
         }).then(function (results) {
             $assert.areEqual(results, [record1]);
