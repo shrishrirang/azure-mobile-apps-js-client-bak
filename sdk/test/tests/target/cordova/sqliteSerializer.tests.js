@@ -128,6 +128,62 @@ $testGroup('sqliteSerializer tests').tests(
         });
     }),
 
+    $test('Serialize a value of type boolean')
+    .check(function () {
+        $assert.areEqual(sqliteSerializer.serializeValue(false), 0);
+        $assert.areEqual(sqliteSerializer.serializeValue(true), 1);
+    }),
+
+    $test('Serialize a value of type integer') // JS has no integer type, but sql has an integer type
+    .check(function () {
+        $assert.areEqual(sqliteSerializer.serializeValue(-1), -1);
+        $assert.areEqual(sqliteSerializer.serializeValue(0), 0);
+        $assert.areEqual(sqliteSerializer.serializeValue(10), 10);
+    }),
+
+    $test('Serialize a value of type float') // JS has no float type, but sql has a float type
+    .check(function () {
+        $assert.areEqual(sqliteSerializer.serializeValue(-1.0), -1);
+        $assert.areEqual(sqliteSerializer.serializeValue(-1.1), -1.1);
+        $assert.areEqual(sqliteSerializer.serializeValue(0.0), 0);
+        $assert.areEqual(sqliteSerializer.serializeValue(10.0), 10);
+        $assert.areEqual(sqliteSerializer.serializeValue(10.1), 10.1);
+    }),
+
+    $test('Serialize a value of type string')
+    .check(function () {
+        $assert.areEqual(sqliteSerializer.serializeValue(''), '');
+        $assert.areEqual(sqliteSerializer.serializeValue('abc'), 'abc');
+    }),
+
+    $test('Serialize a value of type date')
+    .check(function () {
+        var value = new Date(2011, 10, 11, 12, 13, 14);
+        $assert.areEqual(sqliteSerializer.serializeValue(value), value.getTime());
+    }),
+
+    $test('Serialize a value of type object')
+    .check(function () {
+        var value = {a: 1, b: '2'}
+        $assert.areEqual(sqliteSerializer.serializeValue(value), JSON.stringify(value));
+    }),
+
+    $test('Serialize a value of type array')
+    .check(function () {
+        var value = [1, {a: 2}];
+        $assert.areEqual(sqliteSerializer.serializeValue(value), JSON.stringify(value));
+    }),
+
+    $test('Serialize a null')
+    .check(function () {
+        $assert.areEqual(sqliteSerializer.serializeValue(null), null);
+    }),
+
+    $test('Serialize an undefined value')
+    .check(function () {
+        $assert.areEqual(sqliteSerializer.serializeValue(undefined), null);
+    }),
+
     $test('Deserialize an object when column definition is null')
     .check(function () {
         $assertThrows(function () {
@@ -411,7 +467,7 @@ $testGroup('sqliteSerializer tests').tests(
             switch (ColumnType[c]) {
                 case ColumnType.Date:
                     serializedValue = sqliteSerializer.serialize(value, columnDefinitions);
-                    $assert.areEqual(serializedValue, serializedValue);
+                    $assert.areEqual(serializedValue, {val: value.val.getTime()});
                     break;
                 case ColumnType.String:
                 case ColumnType.Text:
