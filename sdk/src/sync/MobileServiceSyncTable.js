@@ -2,8 +2,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-var Validate = require('../Utilities/Validate');
-var Platform = require('Platforms/Platform');
+var Validate = require('../Utilities/Validate'),
+    _ = require('../Utilities/Extensions'),
+    Platform = require('Platforms/Platform');
 
 /**
  * Creates an instance of MobileServiceSyncTable
@@ -58,6 +59,22 @@ function MobileServiceSyncTable(tableName, client) {
      */
     this.lookup = function (id) {
         return client.getSyncContext().lookup(tableName, id);
+    };
+
+    /**
+     * Reads records from the local table
+     * 
+     * @param {query} A QueryJS object representing the query to use while reading the table. If no query is specified, the
+     *                entire local table will be read.
+     * @returns A promise that is resolved with the read results when the operation is completed successfully or rejected with
+     *          the error if it fails.
+     */
+    this.read = function (query) { //FIXME: UT
+        if (_.isNull(query)) {
+            query = new Query(tableName);
+        }
+        
+        return client.getSyncContext().read(query);
     };
 
     /**
