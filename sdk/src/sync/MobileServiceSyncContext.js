@@ -20,7 +20,7 @@ var Validate = require('../Utilities/Validate'),
 function MobileServiceSyncContext(client) {
 
     Validate.notNull(client, 'client');
-
+    
     var store,
         operationTableManager,
         storeTaskRunner = taskRunner(); // Used to run insert / update / delete tasks on the store
@@ -63,8 +63,8 @@ function MobileServiceSyncContext(client) {
                 instance.id = uuid.v4();
             }
 
-            // Delegate parameter validation to upsert
-            return upsert(tableName, instance, 'insert', function(existingRecord) { // precondition validator
+            // Delegate parameter validation to upsertWithLogging
+            return upsertWithLogging(tableName, instance, 'insert', function(existingRecord) { // precondition validator
                 if (!_.isNull(existingRecord)) {
                     throw new Error('Cannot perform insert as a record with ID ' + existingRecord.id + ' already exists in the table ' + tableName);
                 }
@@ -83,8 +83,8 @@ function MobileServiceSyncContext(client) {
      */
     this.update = function (tableName, instance) { //TODO: add an update method to the store
         return storeTaskRunner.run(function() {
-            // Delegate parameter validation to upsert
-            return upsert(tableName, instance, 'update', function(existingRecord) { // precondition validator
+            // Delegate parameter validation to upsertWithLogging
+            return upsertWithLogging(tableName, instance, 'update', function(existingRecord) { // precondition validator
                 if (_.isNull(existingRecord)) {
                     throw new Error('Cannot update record with ID ' + existingRecord.id + ' as it does not exist the table ' + tableName);
                 }
@@ -103,7 +103,7 @@ function MobileServiceSyncContext(client) {
      */
     this.lookup = function (tableName, id) {
         
-        return Platform.async(function() {
+        return Platform.async(function(callback) {
             Validate.isString(tableName, 'tableName');
             Validate.notNullOrEmpty(tableName, 'tableName');
 
@@ -112,6 +112,8 @@ function MobileServiceSyncContext(client) {
             if (!store) {
                 throw new Error('MobileServiceSyncContext not initialized');
             }
+            
+            callback();
         })().then(function() {
             return store.lookup(tableName, id);
         });
@@ -154,8 +156,9 @@ function MobileServiceSyncContext(client) {
         return operationTableManager;
     };
     
+    // Performs upsert and logs the action in the operation table
     // Validates parameters. Callers can skip validation
-    function upsert(tableName, instance, action, preconditionValidator) {
+    function upsertWithLogging(tableName, instance, action, preconditionValidator) {
         Validate.isString(tableName, 'tableName');
         Validate.notNullOrEmpty(tableName, 'tableName');
 

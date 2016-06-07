@@ -9,11 +9,12 @@
 var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
     operations = require('../../../../src/sync/operations'),
+    tableConstants = require('../../../../src/constants').table,
     MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore'),
     storeTestHelper = require('./storeTestHelper');
     
 var createOperationTableManager = operations.createOperationTableManager,
-    operationTableName = operations._operationTableName,
+    operationTableName = tableConstants.operationTableName,
     store;
 
 $testGroup('operations tests')
@@ -22,6 +23,13 @@ $testGroup('operations tests')
     .beforeEachAsync(function() {
         return storeTestHelper.createEmptyStore().then(function(emptyStore) {
             store = emptyStore;
+        }).then(function() {
+            return store.defineTable({
+                name: storeTestHelper.testTableName,
+                columnDefinitions: {
+                    id: MobileServiceSqliteStore.ColumnType.String
+                }
+            });
         });
     }).tests(
 
@@ -48,7 +56,7 @@ $testGroup('operations tests')
         }).then(function(op) {
             return store.executeBatch([op]);
         }).then(function() {
-            return operationTableManager._readPendingOperations(storeTestHelper.testTableName, itemId);
+            return operationTableManager.readPendingOperations(storeTestHelper.testTableName, itemId);
         }).then(function(result) {
             $assert.areEqual(result, [
                 {
@@ -74,7 +82,7 @@ $testGroup('operations tests')
         }).then(function(op) {
             return store.executeBatch([op]);
         }).then(function() {
-            return operationTableManager._readPendingOperations(storeTestHelper.testTableName, itemId1);
+            return operationTableManager.readPendingOperations(storeTestHelper.testTableName, itemId1);
         }).then(function(result) {
             $assert.areEqual(result, [
                 {
@@ -93,7 +101,7 @@ $testGroup('operations tests')
         }).then(function(op) {
             return store.executeBatch([op]);
         }).then(function() {
-            return operationTableManager._readPendingOperations(storeTestHelper.testTableName, itemId1);
+            return operationTableManager.readPendingOperations(storeTestHelper.testTableName, itemId1);
         }).then(function(result) {
             $assert.areEqual(result, [
                 {
@@ -111,7 +119,7 @@ $testGroup('operations tests')
         }).then(function(op) {
             return store.executeBatch([op]);
         }).then(function() {
-            return operationTableManager._readPendingOperations(storeTestHelper.testTableName, itemId2);
+            return operationTableManager.readPendingOperations(storeTestHelper.testTableName, itemId2);
         }).then(function(result) {
             $assert.areEqual(result, [
                 {
@@ -206,21 +214,21 @@ $testGroup('operations tests')
     
     $test('getLoggingOperation delete')
     .checkAsync(function () {
-        return performActionsAndVerifyError(['delete'], [
+        return performActionsAndVerifySuccess(['delete'], [
             {id: 1, action: 'delete'}
         ]);
     }),
     
     $test('getLoggingOperation delete, delete')
     .checkAsync(function () {
-        return performActionsAndVerifyError(['delete', 'delete'], [
+        return performActionsAndVerifySuccess(['delete', 'delete'], [
             {id: 1, action: 'delete'}
         ]);
     }),
     
     $test('getLoggingOperation delete, lock, delete')
     .checkAsync(function () {
-        return performActionsAndVerifyError(['delete', 'lock', 'delete'], [
+        return performActionsAndVerifySuccess(['delete', 'lock', 'delete'], [
             {id: 1, action: 'delete'},
             {id: 2, action: 'delete'},
         ]);
@@ -270,6 +278,220 @@ $testGroup('operations tests')
     $test('getLoggingOperation delete, lock, update')
     .checkAsync(function () {
         return performActionsAndVerifyError(['delete', 'lock'], 'update');
+    }),
+    
+    $test('readFirstPendingOperationWithData reads - insert log operation')
+    .checkAsync(function () {
+        var operationTableManager = createOperationTableManager(store);
+        var logRecord1 = { id: 1001, action: 'update', tableName: storeTestHelper.testTableName, itemId: 'a' },
+            logRecord2 = { id: 1,    action: 'insert', tableName: storeTestHelper.testTableName, itemId: 'b' },
+            logRecord3 = { id: 1002,    action: 'insert', tableName: storeTestHelper.testTableName, itemId: 'c' },
+            logRecord4 = { id: 2001, action: 'delete', tableName: storeTestHelper.testTableName, itemId: 'dd' },
+            data1 = { id: 'a' },
+            data2 = { id: 'b' },
+            data3 = { id: 'c' };            
+            
+        return operationTableManager.initialize().then(function() {
+            return store.executeBatch([
+                { tableName: operationTableName, action: 'upsert', data: logRecord1 },
+                { tableName: operationTableName, action: 'upsert', data: logRecord2 },
+                { tableName: operationTableName, action: 'upsert', data: logRecord3 },
+                { tableName: operationTableName, action: 'upsert', data: logRecord4 },
+                { tableName: storeTestHelper.testTableName, action: 'upsert', data: data1 },
+                { tableName: storeTestHelper.testTableName, action: 'upsert', data: data2 },
+                { tableName: storeTestHelper.testTableName, action: 'upsert', data: data3 }
+            ]);
+        }).then(function() {
+            return operationTableManager.readFirstPendingOperationWithData(-1);
+        }).then(function(result) {
+            $assert.areEqual(result, {
+                logRecord: logRecord2,
+                data: data2
+            });
+        }, function(error) {
+            $assert.fail(error);
+        }).then(function() {
+            return operationTableManager.readFirstPendingOperationWithData(1001);
+        }).then(function(result) {
+            $assert.areEqual(result, {
+                logRecord: logRecord3,
+                data: data3
+            });
+        }, function(error) {
+            $assert.fail(error);
+        });
+    }),
+    
+    $test('readFirstPendingOperationWithData - update log operation')
+    .checkAsync(function () {
+        var operationTableManager = createOperationTableManager(store);
+        var logRecord1 = { id: 1001, action: 'insert', tableName: storeTestHelper.testTableName, itemId: 'a' },
+            logRecord2 = { id: 1,    action: 'update', tableName: storeTestHelper.testTableName, itemId: 'b' },
+            logRecord3 = { id: 500,    action: 'update', tableName: storeTestHelper.testTableName, itemId: 'c' },
+            logRecord4 = { id: 2001, action: 'delete', tableName: storeTestHelper.testTableName, itemId: 'dd' },
+            data1 = { id: 'a' },
+            data2 = { id: 'b' },
+            data3 = { id: 'c' };
+            
+        return operationTableManager.initialize().then(function() {
+            return store.executeBatch([
+                { tableName: operationTableName, action: 'upsert', data: logRecord1 },
+                { tableName: operationTableName, action: 'upsert', data: logRecord2 },
+                { tableName: operationTableName, action: 'upsert', data: logRecord3 },
+                { tableName: operationTableName, action: 'upsert', data: logRecord4 },
+                { tableName: storeTestHelper.testTableName, action: 'upsert', data: data1 },
+                { tableName: storeTestHelper.testTableName, action: 'upsert', data: data2 },
+                { tableName: storeTestHelper.testTableName, action: 'upsert', data: data3 }
+            ]);
+        }).then(function() {
+            return operationTableManager.readFirstPendingOperationWithData(-1);
+        }).then(function(result) {
+            $assert.areEqual(result, {
+                logRecord: logRecord2,
+                data: data2
+            });
+        }, function(error) {
+            $assert.fail(error);
+        }).then(function() {
+            return operationTableManager.readFirstPendingOperationWithData(1);
+        }).then(function(result) {
+            $assert.areEqual(result, {
+                logRecord: logRecord3,
+                data: data3
+            });
+        }, function(error) {
+            $assert.fail(error);
+        });
+    }),
+    
+    $test('readFirstPendingOperationWithData - delete log operation')
+    .checkAsync(function () {
+        var operationTableManager = createOperationTableManager(store);
+        var logRecord1 = { id: 1001, action: 'insert', tableName: storeTestHelper.testTableName, itemId: 'a' },
+            logRecord2 = { id: 1,    action: 'delete', tableName: storeTestHelper.testTableName, itemId: 'dd1' },
+            logRecord3 = { id: 5000,    action: 'delete', tableName: storeTestHelper.testTableName, itemId: 'dd2' },
+            logRecord4 = { id: 2001, action: 'update', tableName: storeTestHelper.testTableName, itemId: 'b' },
+            data1 = { id: 'a' },
+            data2 = { id: 'b' };            
+            
+        return operationTableManager.initialize().then(function() {
+            return store.executeBatch([
+                { tableName: operationTableName, action: 'upsert', data: logRecord1 },
+                { tableName: operationTableName, action: 'upsert', data: logRecord2 },
+                { tableName: operationTableName, action: 'upsert', data: logRecord3 },
+                { tableName: operationTableName, action: 'upsert', data: logRecord4 },
+                { tableName: storeTestHelper.testTableName, action: 'upsert', data: data1 },
+                { tableName: storeTestHelper.testTableName, action: 'upsert', data: data2 }
+            ]);
+        }).then(function() {
+            return operationTableManager.readFirstPendingOperationWithData(-1);
+        }).then(function(result) {
+            $assert.areEqual(result, {
+                logRecord: logRecord2
+            });
+        }, function(error) {
+            $assert.fail(error);
+        }).then(function() {
+            return operationTableManager.readFirstPendingOperationWithData(3000);
+        }).then(function(result) {
+            $assert.areEqual(result, {
+                logRecord: logRecord3
+            });
+        }, function(error) {
+            $assert.fail(error);
+        });
+    }),
+    
+    $test('readFirstPendingOperationWithData - first log record without data record, next log record has data record')
+    .checkAsync(function () {
+        var operationTableManager = createOperationTableManager(store);
+        var logRecord1 = { id: 1001, action: 'udpate', tableName: storeTestHelper.testTableName, itemId: 'a' },
+            logRecord2 = { id: 1,    action: 'insert', tableName: storeTestHelper.testTableName, itemId: 'b' },
+            logRecord3 = { id: 2001, action: 'delete', tableName: storeTestHelper.testTableName, itemId: 'dd' },
+            data1 = { id: 'a' },
+            data2 = { id: 'c' };            
+            
+        return operationTableManager.initialize().then(function() {
+            return store.executeBatch([
+                { tableName: operationTableName, action: 'upsert', data: logRecord1 },
+                { tableName: operationTableName, action: 'upsert', data: logRecord2 },
+                { tableName: operationTableName, action: 'upsert', data: logRecord3 },
+                { tableName: storeTestHelper.testTableName, action: 'upsert', data: data1 },
+                { tableName: storeTestHelper.testTableName, action: 'upsert', data: data2 }
+            ]);
+        }).then(function() {
+            return operationTableManager.readFirstPendingOperationWithData(-1);
+        }).then(function(result) {
+            $assert.areEqual(result, {
+                logRecord: logRecord1,
+                data: data1
+            });
+            return store.read(new Query(operationTableName).orderBy('id'));
+        }).then(function(result) {
+            $assert.areEqual(result, [logRecord1, logRecord3]);
+        }, function(error) {
+            $assert.fail(error);
+        });
+    }),
+    
+    $test('readFirstPendingOperationWithData - first log record without data record, next log record does not exist')
+    .checkAsync(function () {
+        var operationTableManager = createOperationTableManager(store);
+        var logRecord1 = { id: 1,    action: 'insert', tableName: storeTestHelper.testTableName, itemId: 'b' };            
+            
+        return operationTableManager.initialize().then(function() {
+            return store.executeBatch([
+                { tableName: operationTableName, action: 'upsert', data: logRecord1 }
+            ]);
+        }).then(function() {
+            return operationTableManager.readFirstPendingOperationWithData(-1);
+        }).then(function(result) {
+            $assert.isNull(result);
+            return store.read(new Query(operationTableName));
+        }).then(function(result) {
+            $assert.areEqual(result, []);
+        }, function(error) {
+            $assert.fail(error);
+        });
+    }),
+    
+    $test('readFirstPendingOperationWithData - log record does not exist')
+    .checkAsync(function () {
+        var operationTableManager = createOperationTableManager(store);
+            
+        return operationTableManager.initialize().then(function() {
+            return operationTableManager.readFirstPendingOperationWithData(-1);
+        }).then(function(result) {
+            $assert.isNull(result);
+        }, function(error) {
+            $assert.fail(error);
+        });
+    }),
+    
+    $test('removeLockedOperation')
+    .checkAsync(function () {
+        var operationTableManager = createOperationTableManager(store);
+        var logRecord1 = { id: 1, action: 'udpate', tableName: storeTestHelper.testTableName, itemId: 'a' },
+            logRecord2 = { id: 101,    action: 'insert', tableName: storeTestHelper.testTableName, itemId: 'b' },
+            logRecord3 = { id: 2001, action: 'delete', tableName: storeTestHelper.testTableName, itemId: 'dd' };            
+            
+        return operationTableManager.initialize().then(function() {
+            return store.executeBatch([
+                { tableName: operationTableName, action: 'upsert', data: logRecord1 },
+                { tableName: operationTableName, action: 'upsert', data: logRecord2 },
+                { tableName: operationTableName, action: 'upsert', data: logRecord3 }
+            ]);
+        }).then(function() {
+            return operationTableManager.lockOperation(logRecord2.id);
+        }).then(function(result) {
+            return operationTableManager.removeLockedOperation();
+        }).then(function(result) {
+            return store.read(new Query(operationTableName).orderBy('id'));
+        }).then(function(result) {
+            $assert.areEqual(result, [logRecord1, logRecord3]);
+        }, function(error) {
+            $assert.fail(error);
+        });
     })
 );
 
@@ -330,7 +552,7 @@ function performAction(asyncChain, operationTableManager, itemId, action) {
 
 // Verify that the pending operations in the operation table are as expected
 function verifyOperations(operationTableManager, itemId, expectedOperations) {
-    return operationTableManager._readPendingOperations(storeTestHelper.testTableName, itemId).then(function(operations) {
+    return operationTableManager.readPendingOperations(storeTestHelper.testTableName, itemId).then(function(operations) {
         
         for (var i in expectedOperations) {
             expectedOperations[i].tableName = storeTestHelper.testTableName;

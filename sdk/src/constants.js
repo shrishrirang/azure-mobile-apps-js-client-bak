@@ -14,6 +14,16 @@ module.exports = {
         TableReadQuery: "TQ",            // Table reads where the caller uses a function / query OM to determine the items to be returned
     },
     apiVersionHeaderName: "ZUMO-API-VERSION",
-    apiVersion: "2.0.0"
+    apiVersion: "2.0.0",
+    table: {
+        idPropertyName: "id",
+        sysProps: {
+            deletedColumnName: "deleted",
+            createdAtColumnName: "createdAt",
+            updatedAtColumnName: "updatedAt",
+            versionColumnName: "version"
+        },
+        includeDeletedFlag: "__includeDeleted",
+        operationTableName: "__operations"
+    }
 };
-

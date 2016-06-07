@@ -14,8 +14,8 @@ var Platform = require('Platforms/Platform'),
     ColumnType = require('../../sync/ColumnType'),
     sqliteSerializer = require('./sqliteSerializer'),
     Query = require('query.js').Query,
-    formatSql = require('azure-odata-sql').format;
-    idPropertyName = "id"; // TODO: Add support for case insensitive ID
+    formatSql = require('azure-odata-sql').format,
+    idPropertyName = "id"; // TODO: Add support for case insensitive ID and custom ID column 
 
 /**
  * Initializes a new instance of MobileServiceSqliteStore
@@ -180,58 +180,52 @@ var MobileServiceSqliteStore = function (dbName) {
             throw new Error("Number of table columns cannot be more than 999");
         }
 
-        // Insert and update SQL statements and their parameters corresponding to each record we want to upsert in the table.
-        var statements = [],
-            parameters = [],
-            columnNames, columnParams, updateExpression, insertValues, updateValues, record;
+        var statements = [], // INSERT & UPDATE statements for each record we want to upsert
+            parameters = [], // INSERT & UPDATE parameters for each record we want to upsert
+            record,
+            insertColumnNames = [],
+            insertParams = [],
+            insertValues = [],
+            updateColumnNames = [],
+            updateExpressions = [],
+            updateValues = [];
+
         for (i = 0; i < records.length; i++) {
 
             if (_.isNull(records[i])) {
                 continue;
             }
             
-            // Reset the variables dirtied in the previous iteration of the loop.
-            columnNames = '';
-            columnParams = '';
-            updateExpression = '';
-            insertValues = [];
-            updateValues = [];
             record = records[i];
 
-            // Compute columnNames, columnParams and updateExpression that will be used later in the INSERT and UPDATE statements.
+            // Reset the variables dirtied in the previous iteration of the loop.
+            insertColumnNames = [];
+            insertParams = [];
+            insertValues = [];
+            updateColumnNames = [];
+            updateExpressions = [];
+            updateValues = [];
+
             for (var property in record) {
+                insertColumnNames.push(property);
+                insertParams.push('?');
+                insertValues.push(record[property]);
                 
-                // Add comma, if this is not the first column
-                if (columnNames !== '') {
-                    columnNames += ', ';
-                    columnParams += ', ';
-                }
-
-                // Add comma, if this is not the first update expression
-                if (updateExpression !== '') {
-                    updateExpression += ', ';
-                }
-
-                columnNames += property;
-                columnParams += '?';
-
-                // We don't want to update the id column
                 if (property !== idPropertyName) {
-                    updateExpression += property + ' = ?';
+                    updateColumnNames.push(property);
+                    updateExpressions.push(property + ' = ?');
                     updateValues.push(record[property]);
                 }
-
-                insertValues.push(record[property]);
             }
             
             // Insert the instance. If one with the same id already exists, ignore it.
-            statements.push(_.format("INSERT OR IGNORE INTO {0} ({1}) VALUES ({2})", tableName, columnNames, columnParams));
+            statements.push(_.format("INSERT OR IGNORE INTO {0} ({1}) VALUES ({2})", tableName, insertColumnNames.join(), insertParams.join()));
             parameters.push(insertValues);
 
             // If there is any property other than id that needs to be upserted, update the record.
             if (updateValues.length > 0) {
-                statements.push(_.format("UPDATE {0} SET {1} WHERE {2} = ?", tableName, updateExpression, idPropertyName));
-                updateValues.push(record[idPropertyName]);
+                statements.push(_.format("UPDATE {0} SET {1} WHERE {2} = ?", tableName, updateExpressions.join(), idPropertyName));
+                updateValues.push(record[idPropertyName]); // Add value of record ID as the last parameter.. for the WHERE clause in the statement.
                 parameters.push(updateValues);
             }
         }

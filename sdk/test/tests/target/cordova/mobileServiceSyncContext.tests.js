@@ -10,6 +10,7 @@ var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
     operations = require('../../../../src/sync/operations'),
     MobileServiceClient = require('../../../../src/MobileServiceClient'),
+    tableConstants = require('../../../../src/constants').table,
     MobileServiceSyncContext = require('../../../../src/sync/MobileServiceSyncContext'),
     storeTestHelper = require('./storeTestHelper'),
     MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore');
@@ -17,7 +18,10 @@ var Platform = require('Platforms/Platform'),
 var store,
     testOperationId = 100000,
     testId = 'someid',
-    testName = 'somename';
+    testName = 'somename',
+    testRecord = {id: testId, name: testName},
+    filterRecord = {id: testId, name: 'filter name'}, // record that will be returned from the store layer's filter function
+    operationTableName = tableConstants.operationTableName;
 
 $testGroup('MobileServiceSyncContext tests')
 
@@ -28,11 +32,27 @@ $testGroup('MobileServiceSyncContext tests')
         });
     }).tests(
         
-    $test('Insert should record operations in the operation table')
-    .description('test verifies that insert executes the operations specified by the operation table manager in a single batch')
+    $test('Lookup test')
+    .description('test verifies that lookup calls store.lookup and returns its result')
     .checkAsync(function () {
         
-        var executeBatch = store.executeBatch;
+        store.lookup = function(tableName, id) {
+            $assert.areEqual(tableName, storeTestHelper.testTableName);
+            $assert.areEqual(id, filterRecord.id);
+            return filterRecord;
+        };
+        
+        return performActionWithCustomLogging(filterRecord.id, 'lookup').then(function(result) {
+            $assert.areEqual(result, filterRecord);
+        }, function(error) {
+            $assert.fail(error);
+        });
+    }),
+
+    $test('Insert should record operations in the operation table')
+    .description('test verifies that insert executes operations specified by the operation table manager in a single batch')
+    .checkAsync(function () {
+        
         store.executeBatch = function(operationBatch) {
             $assert.areEqual(operationBatch, [
                 {
@@ -45,7 +65,7 @@ $testGroup('MobileServiceSyncContext tests')
                 },
                 {
                     action: 'upsert',
-                    tableName: operations._operationTableName,
+                    tableName: operationTableName,
                     data: {
                         id: testOperationId,
                         action: 'insert_override',
@@ -54,10 +74,11 @@ $testGroup('MobileServiceSyncContext tests')
                     }
                 }
             ]);
-            return executeBatch.call(store, operationBatch);
+            return filterRecord;
         };
         
-        return performActionWithCustomLogging(testId, 'insert').then(function(syncContext) {
+        return performActionWithCustomLogging(testId, 'insert').then(function(result) {
+            $assert.areEqual(result, testRecord);
         }, function(error) {
             $assert.fail(error);
         });
@@ -67,7 +88,6 @@ $testGroup('MobileServiceSyncContext tests')
     .description('test verifies that update executes the operations specified by the operation table manager in a single batch')
     .checkAsync(function () {
         
-        var executeBatch = store.executeBatch;
         store.executeBatch = function(operationBatch) {
             $assert.areEqual(operationBatch, [
                 {
@@ -80,7 +100,7 @@ $testGroup('MobileServiceSyncContext tests')
                 },
                 {
                     action: 'upsert',
-                    tableName: operations._operationTableName,
+                    tableName: operationTableName,
                     data: {
                         id: testOperationId,
                         action: 'update_override',
@@ -89,7 +109,7 @@ $testGroup('MobileServiceSyncContext tests')
                     }
                 }
             ]);
-            return executeBatch.call(store, operationBatch);
+            return filterRecord;
         };
         
         // insert a record in the table in advance, so that we can update it subsequently
@@ -97,7 +117,8 @@ $testGroup('MobileServiceSyncContext tests')
             return store.upsert(storeTestHelper.testTableName, {id: testId});
         }).then(function() {
             return performActionWithCustomLogging(testId, 'update');
-        }).then(function(syncContext) {
+        }).then(function(result) {
+            $assert.areEqual(result, testRecord);
         }, function(error) {
             $assert.fail(error);
         });
@@ -107,7 +128,6 @@ $testGroup('MobileServiceSyncContext tests')
     .description('test verifies that del executes the operations specified by the operation table manager in a single batch')
     .checkAsync(function () {
         
-        var executeBatch = store.executeBatch;
         store.executeBatch = function(operationBatch) {
             $assert.areEqual(operationBatch, [
                 {
@@ -117,7 +137,7 @@ $testGroup('MobileServiceSyncContext tests')
                 },
                 {
                     action: 'upsert',
-                    tableName: operations._operationTableName,
+                    tableName: operationTableName,
                     data: {
                         id: testOperationId,
                         action: 'delete_override',
@@ -126,10 +146,10 @@ $testGroup('MobileServiceSyncContext tests')
                     }
                 }
             ]);
-            return executeBatch.call(store, operationBatch);
         };
         
-        return performActionWithCustomLogging(testId, 'del').then(function(syncContext) {
+        return performActionWithCustomLogging(testId, 'del').then(function(result) {
+            $assert.isNull(result);
         }, function(error) {
             $assert.fail(error);
         });
@@ -138,18 +158,18 @@ $testGroup('MobileServiceSyncContext tests')
     $test('Inserting object without ID should auto-generate ID')
     .checkAsync(function () {
         
-        var executeBatch = store.executeBatch;
         store.executeBatch = function(operationBatch) {
-            
             $assert.isNotNull(operationBatch);
             $assert.areEqual(operationBatch.length, 2);
             $assert.isNotNull(operationBatch[0].data.id);
             $assert.isNotNull(operationBatch[1].data.id);
-            return executeBatch.call(store, operationBatch);
+            return filterRecord;
         };
         
-        return performActionWithCustomLogging(undefined, 'insert').then(function(syncContext) {
-            // Success expected
+        return performActionWithCustomLogging(undefined, 'insert').then(function(result) {
+            $assert.isNotNull(result);
+            $assert.isNotNull(result.id);
+            $assert.areEqual(result.name, testName);
         }, function(error) {
             $assert.fail(error);
         });
@@ -158,10 +178,8 @@ $testGroup('MobileServiceSyncContext tests')
     $test('Updating object without ID should fail')
     .checkAsync(function () {
         
-        var executeBatch = store.executeBatch;
         store.executeBatch = function(operationBatch) {
             $assert.fail('We should have failed long before this getting called!');
-            return executeBatch.call(store, operationBatch);
         };
         
         // insert a record in the table in advance, so that we can update it subsequently
@@ -169,7 +187,7 @@ $testGroup('MobileServiceSyncContext tests')
             return store.upsert(storeTestHelper.testTableName, {id: testId});
         }).then(function() {
             return performActionWithCustomLogging(undefined /* do not set ID */, 'update');
-        }).then(function(syncContext) {
+        }).then(function(result) {
             $assert.fail('failure expected');
         }, function(error) {
             // failure expected
@@ -179,10 +197,8 @@ $testGroup('MobileServiceSyncContext tests')
     $test('Deleting object without ID should fail')
     .checkAsync(function () {
         
-        var executeBatch = store.executeBatch;
         store.executeBatch = function(operationBatch) {
             $assert.fail('We should have failed long before this getting called!');
-            return executeBatch.call(store, operationBatch);
         };
         
         // insert a record in the table in advance, so that we can update it subsequently
@@ -190,7 +206,7 @@ $testGroup('MobileServiceSyncContext tests')
             return store.upsert(storeTestHelper.testTableName, {id: testId});
         }).then(function() {
             return performActionWithCustomLogging(undefined /* do not set ID */, 'del');
-        }).then(function(syncContext) {
+        }).then(function(result) {
             $assert.fail('failure expected');
         }, function(error) {
             // failure expected
@@ -263,7 +279,7 @@ function performActionWithCustomLogging(id, action) {
                 callback();
             })().then(function() {
                 return {
-                    tableName: operations._operationTableName,
+                    tableName: operationTableName,
                     action: 'upsert',
                     data: {
                         id: testOperationId,
@@ -275,12 +291,14 @@ function performActionWithCustomLogging(id, action) {
             });
         };
     }).then(function() {
-        if (action === 'insert') {
-            return syncContext.insert(storeTestHelper.testTableName, {id: id, name: 'somename'});
+        if (action === 'lookup') {
+            return syncContext.lookup(storeTestHelper.testTableName, id);
+        } else if (action === 'insert') {
+            return syncContext.insert(storeTestHelper.testTableName, {id: id, name: testName});
         } else if (action === 'update') {
-            return syncContext.update(storeTestHelper.testTableName, {id: id, name: 'somename'});
+            return syncContext.update(storeTestHelper.testTableName, {id: id, name: testName});
         } else if (action === 'del') {
-            return syncContext.del(storeTestHelper.testTableName, {id: id, name: ''});
+            return syncContext.del(storeTestHelper.testTableName, {id: id});
         } else {
             throw new Error('unsupported action. fix the test.');
         }
