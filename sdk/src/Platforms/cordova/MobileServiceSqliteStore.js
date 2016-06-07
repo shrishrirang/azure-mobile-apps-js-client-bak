@@ -578,7 +578,7 @@ function getStatementParameters(statement) {
 
     if (statement.parameters) {
         statement.parameters.forEach(function (param) {
-            params.push(param.value);
+            params.push(sqliteSerializer.serializeValue(param.value));
         });
     }
 

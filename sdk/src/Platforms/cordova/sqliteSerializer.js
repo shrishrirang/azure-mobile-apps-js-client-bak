@@ -42,7 +42,7 @@ function getSqliteType (columnType) {
             sqliteType = "REAL";
             break;
         default:
-            throw new Error(_.format(Platform.getResourceString("sqliteSerializer_UnsupportedColumnType"), columnType));
+            throw new Error('Column type ' + columnType + ' is not supported');
     }
 
     return sqliteType;
@@ -155,7 +155,7 @@ function serialize (value, columnDefinitions) {
         }
         
     } catch (error) {
-        throw new verror.VError(error, Platform.getResourceString("sqliteSerializer_SerializationFailed"), JSON.stringify(value), JSON.stringify(columnDefinitions));
+        throw new verror.VError(error, 'Failed to serialize value ' + JSON.stringify(value) + '. Column definitions: ' + JSON.stringify(columnDefinitions));
     }
 
     return serializedValue;
@@ -180,7 +180,7 @@ function deserialize (value, columnDefinitions) {
         }
         
     } catch (error) {
-        throw new verror.VError(error, Platform.getResourceString("sqliteSerializer_DeserializationFailed"), JSON.stringify(value), JSON.stringify(columnDefinitions));
+        throw new verror.VError(error, 'Failed to deserialize value ' + JSON.stringify(value) + '. Column definitions: ' + JSON.stringify(columnDefinitions));
     }
 
     return deserializedValue;
@@ -193,12 +193,12 @@ function serializeMember(value, columnType) {
     
     // Start by checking if the specified column type is valid
     if (!isColumnTypeValid(columnType)) {
-        throw new Error(_.format(Platform.getResourceString("sqliteSerializer_UnsupportedColumnType"), columnType));
+        throw new Error('Column type ' + columnType + ' is not supported');
     }
 
     // Now check if the specified value can be stored in a column of type columnType
     if (!isJSValueCompatibleWithColumnType(value, columnType)) {
-        throw new Error(_.format(Platform.getResourceString('sqliteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, columnType));
+        throw new Error('Converting value ' + JSON.stringify(value) + ' of type ' + typeof value + ' to type ' + columnType + ' is not supported.');
     }
 
     // If we are here, it means we are good to proceed with serialization
@@ -217,7 +217,7 @@ function serializeMember(value, columnType) {
             serializedValue = typeConverter.convertToReal(value);
             break;
         default:
-            throw new Error(_.format(Platform.getResourceString("sqliteSerializer_UnsupportedColumnType"), columnType));
+            throw new Error('Column type ' + columnType + ' is not supported');
     }
     
     return serializedValue;
@@ -234,12 +234,13 @@ function deserializeMember(value, columnType) {
 
     // Start by checking if the specified column type is valid.
     if (!isColumnTypeValid(columnType)) {
-        throw new Error(_.format(Platform.getResourceString("sqliteSerializer_UnsupportedColumnType"), columnType));
+            throw new Error('Column type ' + columnType + ' is not supported');
     }
 
     // Now check if the specified value can be stored in a column of type columnType.
     if (!isSqliteValueCompatibleWithColumnType(value, columnType)) {
-        throw new Error(_.format(Platform.getResourceString('sqliteSerializer_UnsupportedTypeConversion'), JSON.stringify(value), typeof value, columnType));
+        throw new Error('Converting value ' + JSON.stringify(value) + ' of type ' + typeof value +
+                            ' to type ' + columnType + ' is not supported.');
     }
 
     // If we are here, it means we are good to proceed with deserialization
@@ -279,6 +280,35 @@ function deserializeMember(value, columnType) {
     return deserializedValue;
 }
 
+/**
+ * Serializes a JS value to its equivalent that will be stored in the store.
+ * This method is useful while querying to convert values to their store representations.
+ */
+function serializeValue(value) {
+
+    var type;
+    if ( _.isNull(value) ) {
+        type = ColumnType.Object;
+    } else if ( _.isNumber(value) ) {
+        type = ColumnType.Real;
+    } else if ( _.isDate(value) ) {
+        type = ColumnType.Date;
+    } else if ( _.isBool(value) ) {
+        type = ColumnType.Boolean;
+    } else if ( _.isString(value) ) {
+        type = ColumnType.String;
+    } else if ( _.isArray(value) ) {
+        type = ColumnType.Array;
+    } else if ( _.isObject(value) ) {
+        type = ColumnType.Object;
+    } else {
+        type = ColumnType.Object;
+    }
+
+    return serializeMember(value, type);
+}
+
 exports.serialize = serialize;
+exports.serializeValue = serializeValue;
 exports.deserialize = deserialize;
 exports.getSqliteType = getSqliteType;
