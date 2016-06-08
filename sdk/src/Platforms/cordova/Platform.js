@@ -7,4 +7,12 @@
  * For now, the browser implementation works as-is for Cordova, so we 
  * just reuse the browser definitions.
  */
-module.exports = require('../web/Platform');
+
+var browserExports = require('../web/Platform');
+
+// Add each export individually to module.exports instead of 
+// simply returning browserExports to work around a limitation / bug
+// in browserify's cyclic dependency handling 
+for (var i in browserExports) {
+    module.exports[i] = browserExports[i];
+}
