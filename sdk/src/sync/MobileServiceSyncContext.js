@@ -6,6 +6,8 @@ var Validate = require('../Utilities/Validate'),
     Platform = require('Platforms/Platform'),
     createOperationTableManager = require('./operations').createOperationTableManager,
     taskRunner = require('../Utilities/taskRunner'),
+    createPullManager = require('./pull').createPullManager,
+    createPushManager = require('./push').createPushManager,
     uuid = require('node-uuid'),
     _ = require('../Utilities/Extensions');
 
@@ -23,6 +25,9 @@ function MobileServiceSyncContext(client) {
     
     var store,
         operationTableManager,
+        pullManager,
+        pushManager,
+        syncTaskRunner = taskRunner(), // Used to run push / pull tasks
         storeTaskRunner = taskRunner(); // Used to run insert / update / delete tasks on the store
 
     /**
@@ -43,6 +48,8 @@ function MobileServiceSyncContext(client) {
             return operationTableManager.initialize(localStore);
         }).then(function() {
             store = localStore; // Assigning to store after all initialization steps are complete
+            pullManager = createPullManager(client, store, storeTaskRunner, operationTableManager);
+            pushManager = createPushManager(client, store, storeTaskRunner, operationTableManager);
         });
         
     };
@@ -149,6 +156,38 @@ function MobileServiceSyncContext(client) {
                 ]);
             });
         });
+    };
+    
+    /**
+     * Pulls changes from the server tables into the local store.
+     * 
+     * @param query Query specifying which records to pull
+     * @param queryId A unique string ID for an incremental pull query OR null for a vanilla pull query.
+     * 
+     * @returns A promise that is fulfilled when all records are pulled OR is rejected if the pull fails or is cancelled.  
+     */
+    this.pull = function (query, queryId) {
+        //TODO: Implement cancel
+        //TODO: Perform push before pulling
+        return syncTaskRunner.run(function() {
+            return pullManager.pull(query, queryId);
+        });
+    };
+    
+    /**
+     * Pushes operations performed on the local store to the server tables.
+     * 
+     * Error handling is delegated to the pushHandler property of MobileServiceSyncContext instance.
+     * The pushHandler is an object with the following property:
+     * - function onConflict (serverRecord, clientRecord, pushError) - this is called when a conflict is encountered while pushing a record to the server.
+     * - function onError (pushError) - this is called when an error is encountered while pushing a record to the server.
+     * 
+     * @returns A promise that is fulfilled when all pending operations are pushed OR is rejected if the push fails or is cancelled.  
+     */
+    this.push = function () { //TODO: Implement cancel
+        return syncTaskRunner.run(function() {
+            return pushManager.push(this.pushHandler);
+        }.bind(this));
     };
     
     // Unit test purposes only
