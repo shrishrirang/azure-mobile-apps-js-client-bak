@@ -143,19 +143,12 @@ $testGroup('offline functional tests')
     .checkAsync(function () {
         
         syncContext.pushHandler = {};
-        syncContext.pushHandler.onRecordPushError = function (pushError) {
-            if (pushError.isConflict()) {
-                var newValue = pushError.getClientRecord();
-
-                $assert.areEqual(pushError.getError().request.status, 409);
-                
-                return table.lookup(newValue.id).then(function(result) {
-                    newValue.version = result.version;
-                    return pushError.changeAction('update');
-                }).then(function() {
-                    pushError.isHandled = true;
-                });
-            }
+        syncContext.pushHandler.onConflict = function (serverRecord, clientRecord, pushError) {
+            $assert.areEqual(pushError.getError().request.status, 409);
+            
+            return table.lookup(clientRecord.id).then(function(serverValue) {
+                return pushError.changeAction('update');
+            });
         };
         
         var actions = [
@@ -193,14 +186,11 @@ $testGroup('offline functional tests')
     .checkAsync(function () {
         
         syncContext.pushHandler = {};
-        syncContext.pushHandler.onRecordPushError = function (pushError) {
-            if (pushError.isConflict()) {
-                $assert.areEqual(pushError.getError().request.status, 412);
-                var newValue = pushError.getClientRecord();
-                newValue.version = pushError.getServerRecord().version;
-                pushError.update(newValue);
-                pushError.isHandled = true;
-            }
+        syncContext.pushHandler.onConflict = function (serverRecord, clientRecord, pushError) {
+            $assert.areEqual(pushError.getError().request.status, 412);
+            var newValue = clientRecord;
+            newValue.version = serverRecord.version;
+            return pushError.update(newValue);
         };
         
         var actions = [
@@ -218,7 +208,7 @@ $testGroup('offline functional tests')
         return performActions(actions);
     }),
     
-    $test('Push - connection error')
+    $test('Push - connection error unhandled')
     .checkAsync(function () {
         
         filter = function (req, next, callback) {
@@ -240,6 +230,38 @@ $testGroup('offline functional tests')
         return performActions(actions);
     }),
     
+    $test('Push - connection error handled')
+    .checkAsync(function () {
+        
+        var fail = true;
+
+        filter = function (req, next, callback) {
+            if (fail) {
+                callback(null, { status: 400, responseText: '{"error":"some error"}' });
+            } else {
+                next(req, callback);
+            }
+        };
+
+        syncContext.pushHandler = {
+            onError: function (pushError) {
+                fail = false;
+                pushError.isHandled = true;
+            }
+        };
+        
+        var actions = [
+            'clientinsert', 'push', 'serverlookup',
+            function(serverValue) {
+                $assert.isNotNull(serverValue);
+                $assert.areEqual(serverValue.text, clientValue.text);
+            }
+        ];
+
+        return performActions(actions);
+    }),
+
+    //fixme: onError test, isHandled = false after using error handling methods.. 
     $test('Pull - connection error') 
     .description('verifies that pull behaves as expected when unable to connect to the server')
     .checkAsync(function () {
@@ -282,14 +304,11 @@ $testGroup('offline functional tests')
     .checkAsync(function () {
         
         syncContext.pushHandler = {};
-        syncContext.pushHandler.onRecordPushError = function (pushError) {
-            if (pushError.isConflict()) {
-                $assert.areEqual(pushError.getError().request.status, 412);
-                var newValue = pushError.getClientRecord();
-                newValue.version = pushError.getServerRecord().version;
-                pushError.update(newValue);
-                pushError.isHandled = true;
-            }
+        syncContext.pushHandler.onConflict = function (serverRecord, clientRecord, pushError) {
+            $assert.areEqual(pushError.getError().request.status, 412);
+            var newValue = clientRecord;
+            newValue.version = serverRecord.version;
+            return pushError.update(newValue);
         };
         
         var actions = [
@@ -312,16 +331,14 @@ $testGroup('offline functional tests')
     .checkAsync(function () {
         
         syncContext.pushHandler = {};
-        syncContext.pushHandler.onRecordPushError = function (pushError) {
-            if (pushError.isConflict()) {
-                $assert.areEqual(pushError.getError().request.status, 412);
-                var newValue = pushError.getClientRecord();
-                newValue.version = pushError.getServerRecord().version;
-                pushError.cancelAndUpdate(newValue);
-                pushError.isHandled = true;
-                
+        syncContext.pushHandler.onConflict = function (serverRecord, clientRecord, pushError) {
+            $assert.areEqual(pushError.getError().request.status, 412);
+            var newValue = clientRecord;
+            newValue.version = serverRecord.version;
+            return pushError.cancelAndUpdate(newValue).then(function() {
+                // We are going to push twice. We want pushHandler to be used only the first time.
                 syncContext.pushHandler = undefined;
-            }
+            });
         };
         
         var actions = [
@@ -363,16 +380,14 @@ $testGroup('offline functional tests')
     .checkAsync(function () {
         
         syncContext.pushHandler = {};
-        syncContext.pushHandler.onRecordPushError = function (pushError) {
-            if (pushError.isConflict()) {
-                $assert.areEqual(pushError.getError().request.status, 412);
-                var newValue = pushError.getClientRecord();
-                newValue.version = pushError.getServerRecord().version;
-                pushError.cancelAndDiscard(newValue);
-                pushError.isHandled = true;
-                
+        syncContext.pushHandler.onConflict = function (serverRecord, clientRecord, pushError) {
+            $assert.areEqual(pushError.getError().request.status, 412);
+            var newValue = clientRecord;
+            newValue.version = serverRecord.version;
+            return pushError.cancelAndDiscard(newValue).then(function() {
+                // We are going to push twice. We want pushHandler to be used only the first time.
                 syncContext.pushHandler = undefined;
-            }
+            });
         };
         
         var actions = [
@@ -414,14 +429,11 @@ $testGroup('offline functional tests')
     .checkAsync(function () {
         
         syncContext.pushHandler = {};
-        syncContext.pushHandler.onRecordPushError = function (pushError) {
-            if (pushError.isConflict()) {
-                $assert.areEqual(pushError.getError().request.status, 412);
-                var newValue = pushError.getClientRecord();
-                newValue.version = pushError.getServerRecord().version;
-                pushError.update(newValue);
-                pushError.isHandled = true;
-            }
+        syncContext.pushHandler.onConflict = function (serverRecord, clientRecord, pushError) {
+            $assert.areEqual(pushError.getError().request.status, 412);
+            var newValue = clientRecord;
+            newValue.version = serverRecord.version;
+            return pushError.update(newValue);
         };
         
         var serverId1, serverId2, serverId3,
@@ -541,6 +553,78 @@ $testGroup('offline functional tests')
                 $assert.isNotNull(result)
                 $assert.isNotNull(result.text)
                 $assert.areEqual(result.text, clientValue3.text);
+            }
+        ];
+
+        return performActions(actions);
+    }),
+    
+    $test('Push - A handled conflict should be considered handled if isHandled is set to false')
+    .checkAsync(function () {
+        
+        syncContext.pushHandler = {};
+        syncContext.pushHandler.onConflict = function (serverRecord, clientRecord, pushError) {
+            $assert.areEqual(pushError.getError().request.status, 412);
+            var newValue = clientRecord;
+            newValue.version = serverRecord.version;
+            return pushError.cancelAndDiscard(newValue).then(function() {
+                pushError.isHandled = false;
+            });
+        };
+        
+        var actions = [
+            'serverinsert', 'vanillapull', 'serverupdate', 'clientupdate', 'push',
+
+            function(conflicts) {
+                $assert.areEqual(conflicts.length, 1);
+            },
+
+            'clientlookup',
+            function(result) {
+                $assert.isNull(result);
+            },
+
+            'serverlookup',
+            function (result) {
+                $assert.areEqual(result.id, serverValue.id);
+                $assert.areEqual(result.text, serverValue.text);
+                $assert.isNotNull(result.text);
+            }
+        ];
+
+        return performActions(actions);
+    }),
+    
+    $test('Push - A handled conflict should be considered unhandled if onConflict fails')
+    .checkAsync(function () {
+        
+        syncContext.pushHandler = {};
+        syncContext.pushHandler.onConflict = function (serverRecord, clientRecord, pushError) {
+            $assert.areEqual(pushError.getError().request.status, 412);
+            var newValue = clientRecord;
+            newValue.version = serverRecord.version;
+            return pushError.cancelAndDiscard(newValue).then(function() {
+                throw 'some error';
+            });
+        };
+        
+        var actions = [
+            'serverinsert', 'vanillapull', 'serverupdate', 'clientupdate', 'push',
+
+            function(conflicts) {
+                $assert.areEqual(conflicts.length, 1);
+            },
+
+            'clientlookup',
+            function(result) {
+                $assert.isNull(result);
+            },
+
+            'serverlookup',
+            function (result) {
+                $assert.areEqual(result.id, serverValue.id);
+                $assert.areEqual(result.text, serverValue.text);
+                $assert.isNotNull(result.text);
             }
         ];
 

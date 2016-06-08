@@ -57,7 +57,7 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError) 
     
     /**
      * Gets the value of the server record, if available.
-     * Value of the server record may not be available always.
+     * **NOTE** Value of the server record may not be available always.
      * Example: If the push failed due to a connection error, the value of server
      * record won't be available.
      */
@@ -97,6 +97,7 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError) 
      * @returns A promise that is fulfilled when the operation is cancelled and the client record is updated.
      */
     function cancelAndUpdate(newValue) {
+        var self = this;
         return storeTaskRunner.run(function() {
 
             if (pushOperation.logRecord.action === 'delete') {
@@ -131,7 +132,9 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError) 
             
             // Execute the log and data operations
             var operations = [dataUpdateOperation, logDeleteOperation];
-            return store.executeBatch(operations);
+            return store.executeBatch(operations).then(function() {
+                self.isHandled = true;
+            });
         });
     }
     
@@ -141,6 +144,7 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError) 
      * @returns A promise that is fulfilled when the operation is cancelled and the client record is discarded.
      */
     function cancelAndDiscard() {
+        var self = this;
         return storeTaskRunner.run(function() {
             
             // Operation to delete the data record
@@ -159,7 +163,9 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError) 
             
             // Execute the log and data operations
             var operations = [dataDeleteOperation, logDeleteOperation];
-            return store.executeBatch(operations);
+            return store.executeBatch(operations).then(function() {
+                self.isHandled = true;
+            })
         });
     }
     
@@ -171,6 +177,7 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError) 
      * @returns A promise that is fulfilled when the data record is updated in the localstore.
      */
     function update(newValue) {
+        var self = this;
         return storeTaskRunner.run(function() {
             if (pushOperation.logRecord.action === 'delete') {
                 throw new Error('Cannot update a deleted record');
@@ -191,7 +198,9 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError) 
             //TODO: Do we need to disallow updating record if the record has been deleted after
             //we attempted push?
                         
-            return store.upsert(pushOperation.logRecord.tableName, newValue);
+            return store.upsert(pushOperation.logRecord.tableName, newValue).then(function() {
+                self.isHandled = this;
+            })
         });
     }
     
@@ -213,6 +222,7 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError) 
      * @returns A promise that is fulfilled when the action is changed and, optionally, the data record is updated / deleted.
      */
     function changeAction(newAction, newClientRecord) {
+        var self = this;
         return storeTaskRunner.run(function() {
             var dataOperation, // operation to edit the data record
                 logOperation = { // operation to edit the log record 
@@ -267,7 +277,9 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError) 
             
             // Execute the log and data operations
             var operations = dataOperation ? [logOperation, dataOperation] : [logOperation];
-            return store.executeBatch(operations);
+            return store.executeBatch(operations).then(function() {
+                self.isHandled = true;
+            });
         });
     }
     
@@ -279,8 +291,11 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError) 
      * will not be affected and such changes will continue to be pushed. 
      */
     function cancel() {
+        var self = this;
         return storeTaskRunner.run(function() {
-            return store.del(operationTableName, pushOperation.logRecord.id);
+            return store.del(operationTableName, pushOperation.logRecord.id).then(function() {
+                self.isHandled = true;
+            });
         });
     }
 }
@@ -300,10 +315,18 @@ function handlePushError(pushError, pushHandler) {
         callback();
     })().then(function() {
         
-        // Check if a handler is provided for errors encountered while pushing records
-        if (pushHandler && pushHandler.onRecordPushError) {
-            return pushHandler.onRecordPushError(pushError);
+        if (pushError.isConflict()) {
+            if (pushHandler && pushHandler.onConflict) {
+                // NOTE: value of server record will not be available in case of 409.
+                return pushHandler.onConflict(pushError.getServerRecord(), pushError.getClientRecord(), pushError);
+            }
+        } else if (pushHandler && pushHandler.onError) {
+            return pushHandler.onError(pushError);
         }
+
+    }).then(undefined, function(error) {
+        // Set isHandled to false even if the user has set it to handled if the onConflict / onError failed 
+        pushError.isHandled = false;
     });
 }
 

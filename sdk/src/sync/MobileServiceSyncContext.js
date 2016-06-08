@@ -179,7 +179,8 @@ function MobileServiceSyncContext(client) {
      * 
      * Error handling is delegated to the pushHandler property of MobileServiceSyncContext instance.
      * The pushHandler is an object with the following property:
-     * - function onRecordPushError(pushError) - this is called when an error is encountered while pushing a record to the server.
+     * - function onConflict (serverRecord, clientRecord, pushError) - this is called when a conflict is encountered while pushing a record to the server.
+     * - function onError (pushError) - this is called when an error is encountered while pushing a record to the server.
      * 
      * @returns A promise that is fulfilled when all pending operations are pushed OR is rejected if the push fails or is cancelled.  
      */
