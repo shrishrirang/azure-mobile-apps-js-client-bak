@@ -14,21 +14,39 @@ var Validate = require('../Utilities/Validate'),
     tableConstants = require('../constants').table,
     _ = require('../Utilities/Extensions');
     
-var pageSize = 50,
+var pageSize = 2, //fixme
     idPropertyName = tableConstants.idPropertyName,
+    pulltimeTableName = tableConstants.pulltimeTableName,
     sysProps = tableConstants.sysProps;
     
 function createPullManager(client, store, storeTaskRunner, operationTableManager) {
     // Task runner for running pull tasks. We want only one pull to run at a time. 
     var pullTaskRunner = taskRunner(),
         mobileServiceTable,
+        lastKnownUpdatedAt,
         tablePullQuery,
         pagePullQuery,
         pullQueryId;
     
     return {
+        initialize: initialize,
         pull: pull
     };
+
+    /**
+     * Creates and initializes the table used to store incremental sync state
+     */
+    function initialize () {
+        return pullTaskRunner.run(function() {
+            return store.defineTable({
+                name: pulltimeTableName,
+                columnDefinitions: {
+                    id: 'string',
+                    value: 'date'
+                }
+            });
+        });
+    }
     
     /**
      * Pulls changes from the server tables into the local store.
@@ -54,28 +72,33 @@ function createPullManager(client, store, storeTaskRunner, operationTableManager
             // Set up the query for initiating a pull and then pull all pages          
             return setupQuery().then(function() {
                 return pullAllPages();
+            }).then(function() {
+                return onPullCompletion();
             });
         });
     }
 
     function reset() {
-        tablePullQuery = pagePullQuery = pullQueryId = undefined;
+        tablePullQuery = pagePullQuery = pullQueryId = undefined; //fixme - not needed
+        lastKnownUpdatedAt = undefined; //fixme
     }
     
     // Setup the query to get started with pull
     function setupQuery() {
-        return Platform.async(function(callback) {
-            
-            if (pullQueryId) {
-            } else {
-                // Sort the results by 'updatedAt' column and fetch pageSize number of results
-                pagePullQuery = copyQuery(tablePullQuery);
-                pagePullQuery.orderBy(tableConstants.sysProps.updatedAtColumnName)
-                pagePullQuery.take(pageSize);
-            }
+        return getLastKnownUpdatedAt().then(function(updatedAt) {
+            lastKnownUpdatedAt = updatedAt;
 
-            callback();
-        })();
+            pagePullQuery = copyQuery(tablePullQuery);
+
+            pagePullQuery = pagePullQuery.where(function(lastKnownUpdatedAt) {
+                //FIXME: use tableConstants.sysProps.updatedAtColumnName
+                return this.updatedAt >= lastKnownUpdatedAt;
+            }, lastKnownUpdatedAt);
+
+            // Sort the results by 'updatedAt' column and fetch pageSize number of results
+            pagePullQuery.orderBy(tableConstants.sysProps.updatedAtColumnName);
+            pagePullQuery.take(pageSize);
+        });
     }
 
     // Pulls all pages from the server table, one page at a time.
@@ -129,7 +152,7 @@ function createPullManager(client, store, storeTaskRunner, operationTableManager
             });
         });
     }
-    
+
     // Processes the pulled record by taking an appropriate action, which can be one of:
     // inserting, updating, deleting in the local store or no action at all.
     function processPulledRecord(chain, tableName, pulledRecord) {
@@ -159,17 +182,73 @@ function createPullManager(client, store, storeTaskRunner, operationTableManager
         });
     }
 
+    // Gets the last known updatedAt timestamp
+    // For incremental pull, we check if we have any information in the store.
+    // If not we simply use 1970 to start the sync operation, just like a non-incremental / vanilla pull.
+    function getLastKnownUpdatedAt() {
+        
+        return Platform.async(function(callback) {
+            callback();
+        })().then(function() {
+            
+            if (pullQueryId) {
+                return store.lookup(pulltimeTableName, pullQueryId);
+            }
+
+        }).then(function(result) {
+
+            if (result) {
+                return result.value;
+            }
+
+            return new Date (1970, 0, 0);
+        });
+    }
+
     // update the query to pull the next page
     function updateQueryForNextPage(pulledRecords) {
         return Platform.async(function(callback) {
             callback();
         })().then(function() {
-            if (pullQueryId) { // Incremental pull
-                //TODO: Implement incremental pull
-            } else { // Vanilla pull
+
+            if (!pulledRecords) {
+                throw new Error('Something is wrong. pulledRecords cannot be null at this point');
+            }
+
+            var lastRecord = pulledRecords[ pulledRecords.length - 1];
+
+            if (!lastRecord) {
+                throw new Error('Something is wrong. Possibly invalid response from the server. lastRecord cannot be null!');
+            }
+
+            var lastRecordTime = lastRecord[tableConstants.sysProps.updatedAtColumnName];
+
+            if (!_.isDate(lastRecordTime)) {
+                throw new Error('Property ' + tableConstants.sysProps.updatedAtColumnName + ' of the last record should be a valid date');
+            }
+
+            if (lastRecordTime === lastKnownUpdatedAt) {
                 pagePullQuery.skip(pagePullQuery.getComponents().skip + pulledRecords.length);
+            } else {
+                lastKnownUpdatedAt = lastRecordTime;
+
+                pagePullQuery = copyQuery(tablePullQuery);
+                pagePullQuery.orderBy(tableConstants.sysProps.updatedAtColumnName);
+                pagePullQuery = pagePullQuery.where(function(lastKnownUpdatedAt) {
+                    //FIXME: use tableConstants.sysProps.updatedAtColumnName
+                    return this.updatedAt >= lastKnownUpdatedAt;
+                }, lastKnownUpdatedAt);
             }
         });
+    }
+
+    function onPullCompletion() {
+        if (pullQueryId) {
+            return store.upsert(pulltimeTableName, {
+                id: pullQueryId,
+                value: lastKnownUpdatedAt
+            });
+        }
     }
 
     // Not all query operations are allowed while pulling.

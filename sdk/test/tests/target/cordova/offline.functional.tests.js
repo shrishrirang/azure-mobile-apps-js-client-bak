@@ -20,7 +20,7 @@ var Platform = require('Platforms/Platform'),
     storeTestHelper = require('./storeTestHelper');
     
 var testTableName = storeTestHelper.testTableName,
-    query = new Query(testTableName),
+    query,
     client,
     table,
     serverValue,
@@ -60,6 +60,7 @@ $testGroup('offline functional tests')
             
             syncContext = new MobileServiceSyncContext(client);
             table = client.getTable(testTableName);
+            query = new Query(testTableName);
             
             return syncContext.initialize(store);
         });
@@ -125,36 +126,58 @@ $testGroup('offline functional tests')
         return performActions(actions);
     }),
     
-/*
     $test('Vanilla pull multiple pages')
     .checkAsync(function () {
         var textPrefix = generateGuid(),
             numServerRequests = 0,
-            count = 60;
+            count = 3;
 
-        var pullFilter = function (req, next, callback) {
-            numServerRequests++;
-            next(req, callback);
-        };
+        query = query.where(function(textPrefix) {
+            return this.text.indexOf(textPrefix) === 0;
+        }, textPrefix);
 
+        var actions = [
+            function() {
+                return populateServerTable(textPrefix, count);
+            },
 
-        return populateServerTable(textPrefix, count).then(function() {
+            'vanillapull',
+            'clientread',
 
-            var query = new Query(testTableName);
-            query = query.where(function(textPrefix) {
-                return this.text.indexOf(textPrefix) === 0;
-            }, textPrefix);
+            function(result) {
+                $assert.areEqual(result.length, count);
+            }
+        ];
 
-            filter = pullFilter;
-            return syncContext.pull(query);
-        }).then(function() {
-            return store.read(new Query(testTableName));
-        }).then(function(result) {
-            $assert.areEqual(numServerRequests, 2); // 1 request for each page. 2 requests in all as page size is 50.
-            $assert.areEqual(result.length, count);
-        });
+        return performActions(actions);
     }),
-*/
+
+    $test('Incremental pull multiple pages')
+    .checkAsync(function () {
+        var textPrefix = generateGuid(),
+            numServerRequests = 0,
+            count = 3;
+
+        query = query.where(function(textPrefix) {
+            return this.text.indexOf(textPrefix) === 0;
+        }, textPrefix);
+
+        var actions = [
+            function() {
+                return populateServerTable(textPrefix, count);
+            },
+
+            'incrementalpull',
+            'clientread',
+
+            function(result) {
+                $assert.areEqual(result.length, count);
+            }
+        ];
+
+        return performActions(actions);
+    }),
+
 
     $test('Push with response 409 - conflict not handled')
     .description('verifies that push behaves as expected if error is 409 and conflict is not handled')
@@ -688,6 +711,8 @@ function performAction (chain, action) {
                 });
             case 'clientlookup':
                 return syncContext.lookup(testTableName, currentId);
+            case 'clientread':
+                return syncContext.read(new Query(testTableName));
             case 'serverinsert':
                 record = generateRecord('server-insert');
                 return table.insert(record).then(function(result) {
@@ -708,10 +733,14 @@ function performAction (chain, action) {
                 });
             case 'serverlookup':
                 return table.lookup(currentId);
+            case 'serverread':
+                return table.read(new Query(testTableName));
             case 'push':
                 return syncContext.push();
             case 'vanillapull':
                 return syncContext.pull(query);
+            case 'incrementalpull':
+                return syncContext.pull(query, 'queryId');
             default:
                 throw new Error('Unsupported action : ' + action);
         }
@@ -735,7 +764,10 @@ function populateServerTable(textPrefix, count) {
     })();
 
     for (var i = 0; i < count; i++) {
-        chain = insertRecord(chain, generateRecord(textPrefix));
+        chain = insertRecord(chain, {
+            id: generateGuid(),
+            text: generateText(textPrefix) 
+        });
     }
 
     return chain;
@@ -750,8 +782,12 @@ function insertRecord(chain, record) {
 function generateRecord(textPrefix) {
     return {
         id: currentId,
-        text: textPrefix + '__' + generateGuid()
+        text: generateText(textPrefix)
     };
+}
+
+function generateText(textPrefix) {
+    return textPrefix + '__' + generateGuid();
 }
 
 function generateGuid() {
