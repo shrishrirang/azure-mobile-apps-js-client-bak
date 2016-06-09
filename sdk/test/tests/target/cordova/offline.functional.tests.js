@@ -6,6 +6,8 @@
  * Functional tests for offline scenarios
  */
 
+// These tests need the todoitem table to setup in the backend
+
 var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
     pullManager = require('../../../../src/sync/pull'),
@@ -94,7 +96,7 @@ $testGroup('offline functional tests')
                         
         return performActions(actions);
     }),
-    
+
     $test('vanilla pull - insert / update / delete')
     .description('performs insert, update and delete on the server and pulls each of them individually')
     .checkAsync(function () {
@@ -123,6 +125,35 @@ $testGroup('offline functional tests')
         return performActions(actions);
     }),
     
+    $test('Vanilla pull multiple pages')
+    .checkAsync(function () {
+        var textPrefix = generateGuid(),
+            numServerRequests = 0,
+            count = 60;
+
+        var pullFilter = function (req, next, callback) {
+            numServerRequests++;
+            next(req, callback);
+        };
+
+
+        return populateServerTable(textPrefix, count).then(function() {
+
+            var query = new Query(testTableName);
+            query = query.where(function(textPrefix) {
+                return this.text.indexOf(textPrefix) === 0;
+            }, textPrefix);
+
+            filter = pullFilter;
+            return syncContext.pull(query);
+        }).then(function() {
+            return store.read(new Query(testTableName));
+        }).then(function(result) {
+            $assert.areEqual(numServerRequests, 2); // 1 request for each page. 2 requests in all as page size is 50.
+            $assert.areEqual(result.length, count);
+        });
+    }),
+
     $test('Push with response 409 - conflict not handled')
     .description('verifies that push behaves as expected if error is 409 and conflict is not handled')
     .checkAsync(function () {
@@ -211,7 +242,7 @@ $testGroup('offline functional tests')
     $test('Push - connection error unhandled')
     .checkAsync(function () {
         
-        filter = function (req, next, callback) {
+        var filter = function (req, next, callback) {
             callback(null, { status: 400, responseText: '{"error":"some error"}' });
         };
         
@@ -261,7 +292,6 @@ $testGroup('offline functional tests')
         return performActions(actions);
     }),
 
-    //fixme: onError test, isHandled = false after using error handling methods.. 
     $test('Pull - connection error') 
     .description('verifies that pull behaves as expected when unable to connect to the server')
     .checkAsync(function () {
@@ -444,19 +474,19 @@ $testGroup('offline functional tests')
             function() {
                 serverId1 = serverValue.id;
                 clientValue1 = clientValue;
-                currentId = generateId();
+                currentId = generateGuid();
             },
             'serverinsert', 'vanillapull', 'serverupdate', 'clientupdate',
             function() {
                 serverId2 = serverValue.id;
                 clientValue2 = clientValue;
-                currentId = generateId();
+                currentId = generateGuid();
             },
             'serverinsert', 'vanillapull', 'clientupdate',
             function() {
                 serverId3 = serverValue.id;
                 clientValue3 = clientValue;
-                currentId = generateId();
+                currentId = generateGuid();
             },
             'push',
             
@@ -506,19 +536,19 @@ $testGroup('offline functional tests')
             function() {
                 serverId1 = serverValue.id;
                 clientValue1 = clientValue;
-                currentId = generateId();
+                currentId = generateGuid();
             },
             'serverinsert', 'vanillapull', 'serverupdate', 'clientupdate',
             function() {
                 serverId2 = serverValue.id;
                 clientValue2 = clientValue;
-                currentId = generateId();
+                currentId = generateGuid();
             },
             'serverinsert', 'vanillapull', 'clientupdate',
             function() {
                 serverId3 = serverValue.id;
                 clientValue3 = clientValue;
-                currentId = generateId();
+                currentId = generateGuid();
             },
             'push',
             function(conflicts) {
@@ -634,7 +664,7 @@ $testGroup('offline functional tests')
 
 function performActions (actions) {
     
-    currentId = generateId(); // generate the ID to use for performing the actions
+    currentId = generateGuid(); // generate the ID to use for performing the actions
     
     var chain = Platform.async(function(callback) {
         callback();
@@ -717,13 +747,34 @@ function performAction (chain, action) {
     });
 }
 
+//TODO: Add another test to do a bulk insert by inserting all record in parallel
+function populateServerTable(textPrefix, count) {
+    var numInsertedRecords = 0;
+
+    var chain = Platform.async(function(callback) {
+        callback();
+    })();
+
+    for (var i = 0; i < count; i++) {
+        chain = insertRecord(chain, generateRecord(textPrefix));
+    }
+
+    return chain;
+}
+
+function insertRecord(chain, record) {
+    return chain.then(function() {
+        return table.insert(record);
+    })
+}
+
 function generateRecord(textPrefix) {
     return {
         id: currentId,
-        text: textPrefix + uuid.v4()
+        text: textPrefix + '__' + generateGuid()
     };
 }
 
-function generateId() {
+function generateGuid() {
     return uuid.v4();
 }
