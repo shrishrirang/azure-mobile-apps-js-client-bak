@@ -125,6 +125,7 @@ $testGroup('offline functional tests')
         return performActions(actions);
     }),
     
+/*
     $test('Vanilla pull multiple pages')
     .checkAsync(function () {
         var textPrefix = generateGuid(),
@@ -153,6 +154,7 @@ $testGroup('offline functional tests')
             $assert.areEqual(result.length, count);
         });
     }),
+*/
 
     $test('Push with response 409 - conflict not handled')
     .description('verifies that push behaves as expected if error is 409 and conflict is not handled')
@@ -242,7 +244,7 @@ $testGroup('offline functional tests')
     $test('Push - connection error unhandled')
     .checkAsync(function () {
         
-        var filter = function (req, next, callback) {
+        filter = function (req, next, callback) {
             callback(null, { status: 400, responseText: '{"error":"some error"}' });
         };
         
@@ -292,29 +294,6 @@ $testGroup('offline functional tests')
         return performActions(actions);
     }),
 
-    $test('Pull - connection error') 
-    .description('verifies that pull behaves as expected when unable to connect to the server')
-    .checkAsync(function () {
-        
-        filter = function (req, next, callback) {
-            callback(null, { status: 400, responseText: '{"error":"some error"}' });
-        };
-        
-        var actions = [
-            'vanillapull',
-            {
-                success: function(conflicts) {
-                    $assert.fail('should have failed');
-                },
-                fail: function(error) {
-                    $assert.isNotNull(error);
-                }
-            }
-        ];
-
-        return performActions(actions);
-    }),
-    
     $test('Pull - pending changes on client') 
     .description('Verifies that pull leaves records that are edited on the client untouched')
     .checkAsync(function () {
