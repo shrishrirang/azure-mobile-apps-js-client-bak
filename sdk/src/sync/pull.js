@@ -22,7 +22,9 @@ function createPullManager(client, store, storeTaskRunner, operationTableManager
     // Task runner for running pull tasks. We want only one pull to run at a time. 
     var pullTaskRunner = taskRunner(),
         mobileServiceTable,
-        pullQuery;
+        tablePullQuery,
+        pagePullQuery,
+        pullQueryId;
     
     return {
         pull: pull
@@ -32,56 +34,64 @@ function createPullManager(client, store, storeTaskRunner, operationTableManager
      * Pulls changes from the server tables into the local store.
      * 
      * @param query Query specifying which records to pull
-     * @param queryId A unique string ID for an incremental pull query OR null for a vanilla pull query.
+     * @param pullQueryId A unique string ID for an incremental pull query OR null for a vanilla pull query.
      * 
      * @returns A promise that is fulfilled when all records are pulled OR is rejected if the pull fails or is cancelled.  
      */
     function pull(query, queryId) {
-        //TODO: support queryId
+        //TODO: support pullQueryId
         //TODO: page size should be configurable
         
         return pullTaskRunner.run(function() {
             validateQuery(query);
             Validate.isString(queryId); // non-null string or null - both are valid
 
-            // Make a copy of the query as we will be modifying it            
-            var components = query.getComponents();
-            pullQuery = new Query(components.table);
-            pullQuery.setComponents(components);
+            // Make a copy of the query as we will be modifying it
+            tablePullQuery = copyQuery(query);            
+
+            pullQueryId = queryId;
 
             // Set up the query for initiating a pull and then pull all pages          
-            return setupQuery(pullQuery, queryId).then(function() {
-                return pullAllPages(pullQuery, queryId);
+            return setupQuery().then(function() {
+                return pullAllPages();
             });
         });
     }
+
+    function reset() {
+        tablePullQuery = pagePullQuery = pullQueryId = undefined;
+    }
     
     // Setup the query to get started with pull
-    function setupQuery(query, queryId) {
+    function setupQuery() {
         return Platform.async(function(callback) {
             
-            // Sort the results by 'updatedAt' column and fetch pageSize results
-            query.orderBy('updatedAt');
-            query.take(pageSize);
+            if (pullQueryId) {
+            } else {
+                // Sort the results by 'updatedAt' column and fetch pageSize number of results
+                pagePullQuery = copyQuery(tablePullQuery);
+                pagePullQuery.orderBy(tableConstants.sysProps.updatedAtColumnName)
+                pagePullQuery.take(pageSize);
+            }
 
             callback();
         })();
     }
 
     // Pulls all pages from the server table, one page at a time.
-    function pullAllPages(query, queryId) {
-        mobileServiceTable = client.getTable(query.getComponents().table);
+    function pullAllPages() {
+        mobileServiceTable = client.getTable(tablePullQuery.getComponents().table);
         
         // 1. Pull one page
         // 2. Check if Pull is complete
         // 3. If it is complete, go to 5. If not, update the query to fetch the next page.
         // 4. Go to 1
         // 5. DONE
-        return pullPage(query, queryId).then(function(pulledRecords) {
+        return pullPage().then(function(pulledRecords) {
             if (!isPullComplete(pulledRecords)) {
                 // update query and continue pulling the remaining pages
-                return updateQueryForNextPage(query, queryId, pulledRecords).then(function() {
-                    return pullAllPages(query, queryId);
+                return updateQueryForNextPage(pulledRecords).then(function() {
+                    return pullAllPages();
                 });
             }
         });
@@ -93,20 +103,20 @@ function createPullManager(client, store, storeTaskRunner, operationTableManager
     }
     
     // Pull the page as described by the query
-    function pullPage(query, queryId) {
+    function pullPage() {
 
         // Define appropriate parameter to enable fetching of deleted records from the server.
         // Assumption is that soft delete is enabled on the server table.
         var params = {};
         params[tableConstants.includeDeletedFlag] = true;
         
-        return mobileServiceTable.read(query, params).then(function(pulledRecords) {
+        return mobileServiceTable.read(pagePullQuery, params).then(function(pulledRecords) {
 
             var chain = Platform.async(function(callback) {
                 callback();
             })();
             
-            var tableName = query.getComponents().table;
+            var tableName = pagePullQuery.getComponents().table;
             
             // Process all records in the page
             for (var i in pulledRecords) {
@@ -150,14 +160,14 @@ function createPullManager(client, store, storeTaskRunner, operationTableManager
     }
 
     // update the query to pull the next page
-    function updateQueryForNextPage(query, queryId, pulledRecords) {
+    function updateQueryForNextPage(pulledRecords) {
         return Platform.async(function(callback) {
             callback();
         })().then(function() {
-            if (queryId) { // Incremental pull
+            if (pullQueryId) { // Incremental pull
                 //TODO: Implement incremental pull
             } else { // Vanilla pull
-                query.skip(query.getComponents().skip + pulledRecords.length);
+                pagePullQuery.skip(pagePullQuery.getComponents().skip + pulledRecords.length);
             }
         });
     }
@@ -189,6 +199,15 @@ function createPullManager(client, store, storeTaskRunner, operationTableManager
         if (components.includeTotalCount) {
             throw new Error('includeTotalCount is not supported in the pull query');
         }
+    }
+
+    // Makes a copy of the QueryJS object
+    function copyQuery(query) {
+        var components = query.getComponents();
+        var queryCopy = new Query(components.table);
+        queryCopy.setComponents(components);
+
+        return queryCopy;
     }
 }
 
