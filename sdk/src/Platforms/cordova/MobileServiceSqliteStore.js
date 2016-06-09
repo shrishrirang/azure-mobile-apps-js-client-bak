@@ -6,7 +6,7 @@
  * @file SQLite implementation of the local store.
  * This uses the https://www.npmjs.com/package/cordova-sqlite-storage Cordova plugin.
  */
-
+ 
 var Platform = require('Platforms/Platform'),
     Validate = require('../../Utilities/Validate'),
     _ = require('../../Utilities/Extensions'),
@@ -15,17 +15,22 @@ var Platform = require('Platforms/Platform'),
     sqliteSerializer = require('./sqliteSerializer'),
     Query = require('query.js').Query,
     formatSql = require('azure-odata-sql').format,
-    idPropertyName = "id"; // TODO: Add support for case insensitive ID and custom ID column 
+    idPropertyName = "id", // TODO: Add support for case insensitive ID and custom ID column
+    defaultDbName = 'mobileapps.db';
 
 /**
  * Initializes a new instance of MobileServiceSqliteStore
  */
-var MobileServiceSqliteStore = function (dbName) {
+var MobileServiceSqliteStore = function (dbName) { //TODO: allow null dbName
 
     // Guard against initialization without the new operator
     "use strict";
     if ( !(this instanceof MobileServiceSqliteStore) ) {
         return new MobileServiceSqliteStore(dbName);
+    }
+    
+    if ( _.isNull(dbName) ) {
+        dbName = defaultDbName;
     }
 
     this._db = window.sqlitePlugin.openDatabase({ name: dbName, location: 'default' });
@@ -573,7 +578,7 @@ function getStatementParameters(statement) {
 
     if (statement.parameters) {
         statement.parameters.forEach(function (param) {
-            params.push(param.value);
+            params.push(sqliteSerializer.serializeValue(param.value));
         });
     }
 

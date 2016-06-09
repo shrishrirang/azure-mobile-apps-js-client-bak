@@ -465,8 +465,8 @@ $testGroup('offline functional tests')
             },
             'serverlookup',
             function (result) {
-                $assert.isNotNull(result)
-                $assert.isNotNull(result.text)
+                $assert.isNotNull(result);
+                $assert.isNotNull(result.text);
                 $assert.areEqual(result.text, clientValue1.text);
             },
 
@@ -475,8 +475,8 @@ $testGroup('offline functional tests')
             },
             'serverlookup',
             function (result) {
-                $assert.isNotNull(result)
-                $assert.isNotNull(result.text)
+                $assert.isNotNull(result);
+                $assert.isNotNull(result.text);
                 $assert.areEqual(result.text, clientValue2.text);
             },
 
@@ -485,8 +485,8 @@ $testGroup('offline functional tests')
             },
             'serverlookup',
             function (result) {
-                $assert.isNotNull(result)
-                $assert.isNotNull(result.text)
+                $assert.isNotNull(result);
+                $assert.isNotNull(result.text);
                 $assert.areEqual(result.text, clientValue3.text);
             }
         ];
@@ -530,8 +530,8 @@ $testGroup('offline functional tests')
             },
             'serverlookup',
             function (result) {
-                $assert.isNotNull(result)
-                $assert.isNotNull(result.text)
+                $assert.isNotNull(result);
+                $assert.isNotNull(result.text);
                 $assert.areEqual(result.text, clientValue1.text);
             },
 
@@ -540,8 +540,8 @@ $testGroup('offline functional tests')
             },
             'serverlookup',
             function (result) {
-                $assert.isNotNull(result)
-                $assert.isNotNull(result.text)
+                $assert.isNotNull(result);
+                $assert.isNotNull(result.text);
                 $assert.areNotEqual(result.text, clientValue2.text);
             },
 
@@ -550,8 +550,8 @@ $testGroup('offline functional tests')
             },
             'serverlookup',
             function (result) {
-                $assert.isNotNull(result)
-                $assert.isNotNull(result.text)
+                $assert.isNotNull(result);
+                $assert.isNotNull(result.text);
                 $assert.areEqual(result.text, clientValue3.text);
             }
         ];
@@ -666,13 +666,13 @@ function performAction (chain, action) {
                     return result;
                 });
             case 'clientupdate':
-                record = generateRecord('client-update')
+                record = generateRecord('client-update');
                 return syncContext.update(testTableName, record).then(function(result) {
                     clientValue = result;
                     return result;
                 });
             case 'clientdelete':
-                record = generateRecord()
+                record = generateRecord();
                 return syncContext.del(testTableName, record).then(function(result) {
                     clientValue = undefined;
                     return result;
@@ -721,7 +721,7 @@ function generateRecord(textPrefix) {
     return {
         id: currentId,
         text: textPrefix + uuid.v4()
-    }
+    };
 }
 
 function generateId() {

@@ -2,8 +2,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-var Validate = require('../Utilities/Validate');
-var Platform = require('Platforms/Platform');
+var Validate = require('../Utilities/Validate'),
+    Query = require('Query.js').Query,
+    _ = require('../Utilities/Extensions'),
+    tableHelper = require('../tableHelper'),
+    Platform = require('Platforms/Platform');
 
 /**
  * Creates an instance of MobileServiceSyncTable
@@ -61,6 +64,22 @@ function MobileServiceSyncTable(tableName, client) {
     };
 
     /**
+     * Reads records from the local table
+     * 
+     * @param {query} A QueryJS object representing the query to use while reading the table. If no query is specified, the
+     *                entire local table will be read.
+     * @returns A promise that is resolved with the read results when the operation is completed successfully or rejected with
+     *          the error if it fails.
+     */
+    this.read = function (query) { //FIXME: UT
+        if (_.isNull(query)) {
+            query = new Query(tableName);
+        }
+        
+        return client.getSyncContext().read(query);
+    };
+
+    /**
      * Deletes an object / record from the local table
      * @param instance The object / record to delete from the local table
      * @returns A promise that is resolved when the operation is completed successfully.
@@ -70,5 +89,8 @@ function MobileServiceSyncTable(tableName, client) {
         return client.getSyncContext().del(tableName, instance);
     };
 }
+
+// Define query operators
+tableHelper.defineQueryOperators(MobileServiceSyncTable);
 
 exports.MobileServiceSyncTable = MobileServiceSyncTable;

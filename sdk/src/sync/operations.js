@@ -202,7 +202,7 @@ function createOperationTableManager(store) {
     function readFirstPendingOperationWithDataInternal(lastProcessedOperationId) {
         var logRecord, // the record logged in the operation table
             query = new Query(operationTableName).where(function(lastProcessedOperationId) {
-                        return this.id > lastProcessedOperationId
+                        return this.id > lastProcessedOperationId;
                     }, lastProcessedOperationId).orderBy('id').take(1);
         
         // Read record from operation table with the smallest ID
