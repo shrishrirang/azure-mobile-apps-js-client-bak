@@ -27,6 +27,7 @@ function MobileServiceSyncContext(client) {
         operationTableManager,
         pullManager,
         pushManager,
+        isInitialized = false,
         syncTaskRunner = taskRunner(), // Used to run push / pull tasks
         storeTaskRunner = taskRunner(); // Used to run insert / update / delete tasks on the store
 
@@ -47,9 +48,13 @@ function MobileServiceSyncContext(client) {
             operationTableManager = opManager;
             return operationTableManager.initialize(localStore);
         }).then(function() {
-            store = localStore; // Assigning to store after all initialization steps are complete
+            store = localStore;
             pullManager = createPullManager(client, store, storeTaskRunner, operationTableManager);
             pushManager = createPushManager(client, store, storeTaskRunner, operationTableManager);
+        }).then(function() {
+            return pullManager.initialize();
+        }).then(function() {
+            isInitialized = true;
         });
         
     };
@@ -65,6 +70,8 @@ function MobileServiceSyncContext(client) {
      */
     this.insert = function (tableName, instance) { //TODO: add an insert method to the store
         return storeTaskRunner.run(function() {
+            validateInitialization();
+            
             // Generate an ID if it is not set already 
             if (_.isNull(instance.id)) {
                 instance.id = uuid.v4();
@@ -90,6 +97,8 @@ function MobileServiceSyncContext(client) {
      */
     this.update = function (tableName, instance) { //TODO: add an update method to the store
         return storeTaskRunner.run(function() {
+            validateInitialization();
+            
             // Delegate parameter validation to upsertWithLogging
             return upsertWithLogging(tableName, instance, 'update', function(existingRecord) { // precondition validator
                 if (_.isNull(existingRecord)) {
@@ -111,6 +120,8 @@ function MobileServiceSyncContext(client) {
     this.lookup = function (tableName, id) {
         
         return Platform.async(function(callback) {
+            validateInitialization();
+            
             Validate.isString(tableName, 'tableName');
             Validate.notNullOrEmpty(tableName, 'tableName');
 
@@ -139,6 +150,8 @@ function MobileServiceSyncContext(client) {
         return Platform.async(function(callback) {
             callback();
         })().then(function() {
+            validateInitialization();
+
             Validate.notNull(query, 'query');
             Validate.isObject(query, 'query');
 
@@ -154,6 +167,8 @@ function MobileServiceSyncContext(client) {
     this.del = function (tableName, instance) {
         
         return storeTaskRunner.run(function() {
+            validateInitialization();
+            
             Validate.isString(tableName, 'tableName');
             Validate.notNullOrEmpty(tableName, 'tableName');
 
@@ -189,6 +204,8 @@ function MobileServiceSyncContext(client) {
         //TODO: Implement cancel
         //TODO: Perform push before pulling
         return syncTaskRunner.run(function() {
+            validateInitialization();
+            
             return pullManager.pull(query, queryId);
         });
     };
@@ -205,6 +222,8 @@ function MobileServiceSyncContext(client) {
      */
     this.push = function () { //TODO: Implement cancel
         return syncTaskRunner.run(function() {
+            validateInitialization();
+
             return pushManager.push(this.pushHandler);
         }.bind(this));
     };
@@ -243,6 +262,13 @@ function MobileServiceSyncContext(client) {
         }).then(function() {
             return instance;
         });
+    }
+
+    // Throws an error if the sync context is not initialized
+    function validateInitialization() {
+        if (!isInitialized) {
+            throw new Error ('MobileServiceClient is being used before it is initialized');
+        }
     }
 }
 

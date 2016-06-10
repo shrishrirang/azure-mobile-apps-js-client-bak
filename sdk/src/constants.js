@@ -24,6 +24,7 @@ module.exports = {
             versionColumnName: "version"
         },
         includeDeletedFlag: "__includeDeleted",
-        operationTableName: "__operations"
+        operationTableName: "__operations",
+        pulltimeTableName: "__pulltime"
     }
 };
