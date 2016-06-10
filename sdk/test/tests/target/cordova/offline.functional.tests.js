@@ -791,7 +791,7 @@ function populateServerTable(textPrefix, count) {
 function insertRecord(chain, record) {
     return chain.then(function() {
         return table.insert(record);
-    })
+    });
 }
 
 function generateRecord(textPrefix) {
