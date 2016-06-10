@@ -78,10 +78,17 @@ You can perform CRUD operations on the local table in the same way as you would 
 
 You can pull data from the online tables into the local table using the `pull` method:
 ```
-syncContext.pull(new WindowsAzure.Query('todoitem'));
+syncContext.pull(new WindowsAzure.Query('todoitem' /* table name */));
 ```
 
 `pull` returns a promise that is resolved when the pull operation is complete. `WindowsAzure.Query` is a QueryJS object. You can read more about it at https://msdn.microsoft.com/library/azure/jj613353 and https://github.com/Azure/azure-query-js.
+
+To pull data incrementally, so that subsequent pulls only fetch what has changed since the previous pull, you can pass a `queryId` that uniquely identifies the logical query in your application. `queryId` helps the SDK determine what changes have been pulled from the server already.
+
+```
+syncContext.pull(new WindowsAzure.Query('todoitem' /* table name */), 'allitems' /* queryId */);
+```
+
 
 #### Pushing data to the tables on the server
 
