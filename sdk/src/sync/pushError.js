@@ -165,7 +165,7 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError) 
             var operations = [dataDeleteOperation, logDeleteOperation];
             return store.executeBatch(operations).then(function() {
                 self.isHandled = true;
-            })
+            });
         });
     }
     
@@ -200,7 +200,7 @@ function createPushError(store, storeTaskRunner, pushOperation, operationError) 
                         
             return store.upsert(pushOperation.logRecord.tableName, newValue).then(function() {
                 self.isHandled = this;
-            })
+            });
         });
     }
     
