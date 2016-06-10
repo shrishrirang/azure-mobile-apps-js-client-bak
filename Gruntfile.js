@@ -21,6 +21,7 @@ module.exports = function(grunt) {
             ],
             // List of Cordova entry points
             cordova: [
+                'sdk/src/Platforms/cordova/MobileServiceSqliteStore.js',
                 '<%= files.core %>',
             ],
             // Entry points common to tests for all platforms
@@ -92,7 +93,7 @@ module.exports = function(grunt) {
                 src: '<%= files.cordova %>',
                 dest: './sdk/src/generated/MobileServices.Cordova.js',
                 options: {
-                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
+                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/cordova', expose: 'Platforms' } ] )
                 }
             },
             webTest: {
@@ -107,12 +108,13 @@ module.exports = function(grunt) {
             },
             cordovaTest: {
                 src: [
+                    '<%= files.testcore %>',
                     '<%= files.cordova %>',
-                    '<%= files.testcore %>'
+                    './sdk/test/tests/target/cordova/**/*.js'
                 ],
                 dest: './sdk/test/app/cordova/www/scripts/generated/tests.js',
                 options: {
-                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/web', expose: 'Platforms' } ] )
+                    preBundleCB: definePlatformMappings( [ { src: '**/*.js', cwd: __dirname + '/sdk/src/Platforms/cordova', expose: 'Platforms' } ] )
                 }
             },
         },
@@ -136,10 +138,19 @@ module.exports = function(grunt) {
                 cwd: 'node_modules/qunitjs/qunit'
             },
             cordovaTest: {
-                src: '*',
+                // Copy qunit css and js files to the Cordova unit test app directory
+                src: ['*'],
                 dest: 'sdk/test/app/cordova/www/external/qunit/',
                 expand: true,
                 cwd: 'node_modules/qunitjs/qunit'
+            },
+            hostCordovaTest: {
+                // Copy the test bundle to the Cordova unit test app's android directory.
+                // This is needed to host the Cordova bits so that the Cordova app can refresh on the fly.
+                src: ['tests.js'],
+                dest: __dirname + '/sdk/test/app/cordova/platforms/android/assets/www/scripts/generated',
+                expand: true,
+                cwd: __dirname + '/sdk/test/app/cordova/www/scripts/generated'
             }
         },
         watch: {
@@ -149,11 +160,11 @@ module.exports = function(grunt) {
             },
             web: {
                 files: '<%= files.all %>',
-                tasks: ['concat', 'browserify:web', 'browserify:webTest', 'copy:web', 'copy:webTest']
+                tasks: ['concat', 'browserify:webTest', 'copy:webTest']
             },
             cordova: {
                 files: '<%= files.all %>',
-                tasks: ['concat', 'browserify:cordova', 'browserify:cordovaTest', 'copy:cordova', 'copy:cordovaTest']
+                tasks: ['concat', 'browserify:cordovaTest', 'copy:cordovaTest', 'copy:hostCordovaTest']
             }
         }
     });
@@ -167,7 +178,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-copy');
         
     // Default task(s).
-    grunt.registerTask('build', ['concat', 'browserify', 'uglify', 'copy', 'jshint']);
+    grunt.registerTask('build', ['buildbrowser', 'buildcordova', 'jshint']);
     grunt.registerTask('buildbrowser', ['concat', 'browserify:web', 'browserify:webTest', 'copy:web', 'copy:webTest']);
     grunt.registerTask('buildcordova', ['concat', 'browserify:cordova', 'browserify:cordovaTest', 'copy:cordova', 'copy:cordovaTest']);
 

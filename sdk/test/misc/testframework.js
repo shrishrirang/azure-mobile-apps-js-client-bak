@@ -151,7 +151,9 @@ Test.prototype.exec = function (excludeFunctionalTests) {
             QUnit.ok(typeof result.then === "function", "Async test returned a promise");
             QUnit.stop();
             result
-                .then(QUnit.start, function (err) {
+                .then(function() {
+                    QUnit.start();
+                }, function (err) {
                     QUnit.start();
                     QUnit.ok(false, err && err.exception || err);
                 });

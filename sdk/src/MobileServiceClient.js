@@ -6,6 +6,8 @@ var _ = require('./Utilities/Extensions'),
     constants = require('./constants'),
     Validate = require('./Utilities/Validate'),
     Platform = require('Platforms/Platform'),
+    MobileServiceSyncContext = require('./sync/MobileServiceSyncContext'),
+    MobileServiceSyncTable = require('./sync/MobileServiceSyncTable').MobileServiceSyncTable,
     MobileServiceTable = require('./MobileServiceTable'),
     MobileServiceLogin = require('./MobileServiceLogin');
 
@@ -73,6 +75,16 @@ function MobileServiceClient(applicationUrl) {
     this._serviceFilter = null;
     this._login = new MobileServiceLogin(this);
 
+    var _syncContext = new MobileServiceSyncContext(this);
+
+    this.getSyncContext = function() {
+        /// <summary>
+        /// Returns the associated MobileServiceSyncContext
+        /// </summary>
+
+        return _syncContext;
+    };
+
     this.getTable = function (tableName) {
         /// <summary>
         /// Gets a reference to a table and its data operations.
@@ -84,7 +96,20 @@ function MobileServiceClient(applicationUrl) {
         Validate.notNullOrEmpty(tableName, 'tableName');
         return new MobileServiceTable(tableName, this);
     };
-    
+
+    this.getSyncTable = function (tableName) {
+        /// <summary>
+        /// Gets a reference to a sync table and its data operations.
+        /// </summary>
+        /// <param name="tableName">The name of the table.</param>
+        /// <returns>A reference to the sync table.</returns>
+
+        Validate.isString(tableName, 'tableName');
+        Validate.notNullOrEmpty(tableName, 'tableName');
+		
+        return new MobileServiceSyncTable(tableName, this);
+    };
+
     if (Push) {
         this.push = new Push(this, MobileServiceClient._applicationInstallationId);
     }
