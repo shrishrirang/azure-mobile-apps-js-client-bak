@@ -6,6 +6,9 @@
  * Functional tests for offline scenarios
  */
 
+// These tests need the todoitem (quickstart) table to be setup in the backend with the name
+// matching storeTestHelper.testTableName
+
 var Platform = require('Platforms/Platform'),
     Query = require('query.js').Query,
     pullManager = require('../../../../src/sync/pull'),
@@ -18,7 +21,7 @@ var Platform = require('Platforms/Platform'),
     storeTestHelper = require('./storeTestHelper');
     
 var testTableName = storeTestHelper.testTableName,
-    query = new Query(testTableName),
+    query,
     client,
     table,
     serverValue,
@@ -58,6 +61,7 @@ $testGroup('offline functional tests')
             
             syncContext = new MobileServiceSyncContext(client);
             table = client.getTable(testTableName);
+            query = new Query(testTableName);
             
             return syncContext.initialize(store);
         });
@@ -94,7 +98,7 @@ $testGroup('offline functional tests')
                         
         return performActions(actions);
     }),
-    
+
     $test('vanilla pull - insert / update / delete')
     .description('performs insert, update and delete on the server and pulls each of them individually')
     .checkAsync(function () {
@@ -123,6 +127,48 @@ $testGroup('offline functional tests')
         return performActions(actions);
     }),
     
+    $test('Vanilla pull - zero records')
+    .checkAsync(function () {
+        return performPull(0, 'vanillapull');
+    }),
+
+    $test('Vanilla pull - single page')
+    .checkAsync(function () {
+        return performPull(5, 'vanillapull');
+    }),
+
+    $test('Vanilla pull - record count exactly matches page size')
+    .checkAsync(function () {
+        // FIXME: Hardcoding 50 with an implicit assumption that it is the page size is not good. Fix it!
+        return performPull(50, 'vanillapull'); 
+    }),
+
+    $test('Vanilla pull - multiple pages')
+    .checkAsync(function () {
+        return performPull(60, 'vanillapull');
+    }),
+
+    $test('Incremental pull - zero records')
+    .checkAsync(function () {
+        return performPull(0, 'incrementalpull');
+    }),
+
+    $test('Incremental pull - single page')
+    .checkAsync(function () {
+        return performPull(5, 'incrementalpull');
+    }),
+
+    $test('Incremental pull - record count exactly matches page size')
+    .checkAsync(function () {
+        // FIXME: Hardcoding 50 with an implicit assumption that it is the page size is not good. Fix it!
+        return performPull(50, 'incrementalpull'); 
+    }),
+
+    $test('Incremental pull - multiple pages')
+    .checkAsync(function () {
+        return performPull(60, 'incrementalpull');
+    }),
+
     $test('Push with response 409 - conflict not handled')
     .description('verifies that push behaves as expected if error is 409 and conflict is not handled')
     .checkAsync(function () {
@@ -261,30 +307,6 @@ $testGroup('offline functional tests')
         return performActions(actions);
     }),
 
-    //fixme: onError test, isHandled = false after using error handling methods.. 
-    $test('Pull - connection error') 
-    .description('verifies that pull behaves as expected when unable to connect to the server')
-    .checkAsync(function () {
-        
-        filter = function (req, next, callback) {
-            callback(null, { status: 400, responseText: '{"error":"some error"}' });
-        };
-        
-        var actions = [
-            'vanillapull',
-            {
-                success: function(conflicts) {
-                    $assert.fail('should have failed');
-                },
-                fail: function(error) {
-                    $assert.isNotNull(error);
-                }
-            }
-        ];
-
-        return performActions(actions);
-    }),
-    
     $test('Pull - pending changes on client') 
     .description('Verifies that pull leaves records that are edited on the client untouched')
     .checkAsync(function () {
@@ -444,19 +466,19 @@ $testGroup('offline functional tests')
             function() {
                 serverId1 = serverValue.id;
                 clientValue1 = clientValue;
-                currentId = generateId();
+                currentId = generateGuid();
             },
             'serverinsert', 'vanillapull', 'serverupdate', 'clientupdate',
             function() {
                 serverId2 = serverValue.id;
                 clientValue2 = clientValue;
-                currentId = generateId();
+                currentId = generateGuid();
             },
             'serverinsert', 'vanillapull', 'clientupdate',
             function() {
                 serverId3 = serverValue.id;
                 clientValue3 = clientValue;
-                currentId = generateId();
+                currentId = generateGuid();
             },
             'push',
             
@@ -506,19 +528,19 @@ $testGroup('offline functional tests')
             function() {
                 serverId1 = serverValue.id;
                 clientValue1 = clientValue;
-                currentId = generateId();
+                currentId = generateGuid();
             },
             'serverinsert', 'vanillapull', 'serverupdate', 'clientupdate',
             function() {
                 serverId2 = serverValue.id;
                 clientValue2 = clientValue;
-                currentId = generateId();
+                currentId = generateGuid();
             },
             'serverinsert', 'vanillapull', 'clientupdate',
             function() {
                 serverId3 = serverValue.id;
                 clientValue3 = clientValue;
-                currentId = generateId();
+                currentId = generateGuid();
             },
             'push',
             function(conflicts) {
@@ -634,7 +656,7 @@ $testGroup('offline functional tests')
 
 function performActions (actions) {
     
-    currentId = generateId(); // generate the ID to use for performing the actions
+    currentId = generateGuid(); // generate the ID to use for performing the actions
     
     var chain = Platform.async(function(callback) {
         callback();
@@ -679,6 +701,8 @@ function performAction (chain, action) {
                 });
             case 'clientlookup':
                 return syncContext.lookup(testTableName, currentId);
+            case 'clientread':
+                return syncContext.read(new Query(testTableName));
             case 'serverinsert':
                 record = generateRecord('server-insert');
                 return table.insert(record).then(function(result) {
@@ -699,10 +723,14 @@ function performAction (chain, action) {
                 });
             case 'serverlookup':
                 return table.lookup(currentId);
+            case 'serverread':
+                return table.read(new Query(testTableName));
             case 'push':
                 return syncContext.push();
             case 'vanillapull':
                 return syncContext.pull(query);
+            case 'incrementalpull':
+                return syncContext.pull(query, 'queryId');
             default:
                 throw new Error('Unsupported action : ' + action);
         }
@@ -717,13 +745,66 @@ function performAction (chain, action) {
     });
 }
 
+// pullType is either 'vanillapull' or 'incrementalpull'
+function performPull(recordCount, pullType) {
+    var textPrefix = generateGuid(),
+        numServerRequests = 0;
+
+    query = query.where(function(textPrefix) {
+        return this.text.indexOf(textPrefix) === 0;
+    }, textPrefix);
+
+    var actions = [
+        function() {
+            return populateServerTable(textPrefix, recordCount);
+        },
+
+        pullType,
+        'clientread',
+
+        function(result) {
+            $assert.areEqual(result.length, recordCount);
+        }
+    ];
+
+    return performActions(actions);
+}
+
+//TODO: Add another test to do a bulk insert by inserting all record in parallel
+function populateServerTable(textPrefix, count) {
+    var numInsertedRecords = 0;
+
+    var chain = Platform.async(function(callback) {
+        callback();
+    })();
+
+    for (var i = 0; i < count; i++) {
+        chain = insertRecord(chain, {
+            id: generateGuid(),
+            text: generateText(textPrefix) 
+        });
+    }
+
+    return chain;
+}
+
+function insertRecord(chain, record) {
+    return chain.then(function() {
+        return table.insert(record);
+    })
+}
+
 function generateRecord(textPrefix) {
     return {
         id: currentId,
-        text: textPrefix + uuid.v4()
+        text: generateText(textPrefix)
     };
 }
 
-function generateId() {
+function generateText(textPrefix) {
+    return textPrefix + '__' + generateGuid();
+}
+
+function generateGuid() {
     return uuid.v4();
 }

@@ -71,7 +71,7 @@ function MobileServiceSyncTable(tableName, client) {
      * @returns A promise that is resolved with the read results when the operation is completed successfully or rejected with
      *          the error if it fails.
      */
-    this.read = function (query) { //FIXME: UT
+    this.read = function (query) {
         if (_.isNull(query)) {
             query = new Query(tableName);
         }

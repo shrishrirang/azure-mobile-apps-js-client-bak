@@ -11,6 +11,7 @@ var Platform = require('Platforms/Platform'),
     operations = require('../../../../src/sync/operations'),
     MobileServiceSqliteStore = require('Platforms/MobileServiceSqliteStore'),
     operationTableName = require('../../../../src/constants').table.operationTableName,
+    pulltimeTableName = require('../../../../src/constants').table.pulltimeTableName,
     testTableName = 'sometable',
     testDbFile = 'somedbfile.db',
     store;
@@ -30,6 +31,7 @@ function resetStore(store) {
     return Platform.async(function(callback) {
         store._db.sqlBatch([
             'DROP TABLE IF EXISTS ' + operationTableName,
+            'DROP TABLE IF EXISTS ' + pulltimeTableName,
             'DROP TABLE IF EXISTS ' + testTableName
         ], function() {
             callback(null, store);
