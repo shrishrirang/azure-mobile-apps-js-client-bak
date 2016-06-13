@@ -18,7 +18,7 @@ Run the following command to get the Javascript client for Azure Mobile Apps:
     
 The SDK files are present in the package's _/dist_ directory.
 
-### Offline data sync
+### Offline data sync (Preview)
 
 Offline data sync is a feature of Azure Mobile Apps that makes it easy for developers to create apps that are functional without a network connection. Offline data sync is now available in the Cordova SDK.
 
