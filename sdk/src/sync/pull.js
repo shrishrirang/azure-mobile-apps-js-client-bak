@@ -117,14 +117,18 @@ function createPullManager(client, store, storeTaskRunner, operationTableManager
 
         var pulledRecords;
         
-        return mobileServiceTable.read(pagePullQuery, params).then(function(result) {
+        // azure-query-js does not support datatimeoffset
+        // As a temporary workaround, convert the query to an odata string and replace datetime' with datetimeoffset'. 
+        var queryString = pagePullQuery.toOData();
+        var tableName = pagePullQuery.getComponents().table;
+        queryString = queryString.replace(new RegExp('^/' + tableName), '').replace("datetime'", "datetimeoffset'");
+
+        return mobileServiceTable.read(queryString, params).then(function(result) {
             pulledRecords = result;
 
             var chain = Platform.async(function(callback) {
                 callback();
             })();
-            
-            var tableName = pagePullQuery.getComponents().table;
             
             // Process all records in the page
             for (var i in pulledRecords) {
