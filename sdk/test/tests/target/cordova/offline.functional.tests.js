@@ -781,7 +781,8 @@ function populateServerTable(textPrefix, count) {
     for (var i = 0; i < count; i++) {
         chain = insertRecord(chain, {
             id: generateGuid(),
-            text: generateText(textPrefix) 
+            text: generateText(textPrefix),
+            complete: false 
         });
     }
 
@@ -797,7 +798,8 @@ function insertRecord(chain, record) {
 function generateRecord(textPrefix) {
     return {
         id: currentId,
-        text: generateText(textPrefix)
+        text: generateText(textPrefix),
+        complete: false
     };
 }
 
