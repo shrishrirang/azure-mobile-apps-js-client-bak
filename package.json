@@ -1,7 +1,7 @@
 {
   "name": "azure-mobile-apps-client",
   "description": "Javascript client for Azure Mobile Apps. For more details visit http://azure.microsoft.com/en-us/develop/mobile",
-  "version": "2.0.0-beta5",
+  "version": "2.0.0-beta6",
   "devDependencies": {
     "azure-mobile-apps": "~2.0.2",
     "azure-odata-sql": "~0.0.3",
