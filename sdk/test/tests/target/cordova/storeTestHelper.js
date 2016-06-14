@@ -32,6 +32,10 @@ function resetStore(store) {
         store._db.sqlBatch([
             'DROP TABLE IF EXISTS ' + operationTableName,
             'DROP TABLE IF EXISTS ' + pulltimeTableName,
+            'DROP TABLE IF EXISTS tablea',
+            'DROP TABLE IF EXISTS tableb',
+            'DROP TABLE IF EXISTS tablec',
+            'DROP TABLE IF EXISTS tabled',
             'DROP TABLE IF EXISTS ' + testTableName
         ], function() {
             callback(null, store);
