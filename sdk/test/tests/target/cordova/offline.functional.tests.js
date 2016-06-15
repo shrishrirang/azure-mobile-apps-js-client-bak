@@ -32,8 +32,8 @@ var testTableName = storeTestHelper.testTableName,
     id,
     store;
 
-var tablea, tableb, tablec, tabled;
-var querya, queryb, queryc, queryd;
+var tablez, tablea, tableb, tablec, tabled;
+var queryz, querya, queryb, queryc, queryd;
 
 $testGroup('offline functional tests')
     .functional()
@@ -46,6 +46,16 @@ $testGroup('offline functional tests')
                     id: MobileServiceSqliteStore.ColumnType.String,
                     text: MobileServiceSqliteStore.ColumnType.String,
                     complete: MobileServiceSqliteStore.ColumnType.Boolean,
+                    version: MobileServiceSqliteStore.ColumnType.String
+                }
+            });
+        }).then(function() {
+            return store.defineTable({
+                name: 'tablez',
+                columnDefinitions: {
+                    id: MobileServiceSqliteStore.ColumnType.String,
+                    text: MobileServiceSqliteStore.ColumnType.String,
+                    tableaid: MobileServiceSqliteStore.ColumnType.String,
                     version: MobileServiceSqliteStore.ColumnType.String
                 }
             });
@@ -109,11 +119,13 @@ $testGroup('offline functional tests')
             
             return syncContext.initialize(store);
         }).then(function() {
+            tablez = client.getSyncTable('tablez');
             tablea = client.getSyncTable('tablea');
             tableb = client.getSyncTable('tableb');
             tablec = client.getSyncTable('tablec');
             tabled = client.getSyncTable('tabled');
 
+            queryz = new Query('tablea');
             querya = new Query('tablea');
             queryb = new Query('tableb');
             queryc = new Query('tablec');
@@ -137,18 +149,28 @@ $testGroup('offline functional tests')
         
         var a, b, c, d;
 
-        return tableb.insert({text: 'b1.1'}).then(function(res) {
-            b = res;
-            return syncContext.push();
+        return tablez.insert({text: 'z1.1'}).then(function(res) {
+            z = res;
         }).then(function() {
-            return tablea.insert({text: 'a1.1', tablebid: b.id});
+            return tablea.insert({text: 'a1.1'});
         }).then(function(res) {
             a = res;
+            return tableb.insert({text: 'b1.1', tablebid: a.id});
+        }).then(function(res) {
+            b = res;
+        }).then(function() {
+            return tablez.update({id: z.id, text: 'z1.2', tableaid: a.id});
+        }).then(function(res) {
+            return tablea.update({id: a.id, text: 'a1.2', tablebid: b.id});
+        }).then(function() {
             return syncContext.push();
         }).then(function() {
             return tableb.del(b);
-        }).then(function(res) {
+        }).then(function() {
             return tablea.del(a);
+        }).then(function() {
+            return tablez.del(z);
+        }).then(function() {
         }).then(function() {
         }).then(function() {
         }).then(function() {
