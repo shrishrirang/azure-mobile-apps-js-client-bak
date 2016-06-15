@@ -23,6 +23,7 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
     var pushTaskRunner = taskRunner(),
         lastProcessedOperationId,
         pushConflicts,
+        depChain,
         pushHandler;
     
     return {
@@ -36,20 +37,98 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
      *          All conflicts are collected and returned to the user at the completion of the push operation. 
      *          The promise is rejected if pushing any record fails for reasons other than conflict or is cancelled.
      */
-    function push(handler) {
+    function push(handler, relationships) {
+
+        relationships = {
+            tablea: ['tableb', 'tabled'],
+            tableb: [],
+            tablec: ['tabled'],
+            tabled: []
+        }
+
         return pushTaskRunner.run(function() {
             reset();
             pushHandler = handler;
+
+            depChain = getTableDependencyChain(relationships);
+
             return pushAllOperations().then(function() {
                 return pushConflicts;
             });
         });
+    }
+
+    function getNode(nodes, name) {
+        if (!nodes[name]) {
+            nodes[name] = {
+                name: name,
+                children: []
+            };
+        }
+
+        return nodes[name];
+    }
+
+    function getRelationshipGraph(relationships) {
+
+        var nodes = {};
+
+        for (var source in relationships) {
+            var destinations = relationships[source];
+
+            var sourceNode = getNode(nodes, source);
+            
+            for (var i in destinations) {
+                var destination = destinations[i];
+                var destinationNode = getNode(nodes, destination);
+                sourceNode.children.push(destinationNode);
+            }
+        }
+
+        return nodes;
+    }
+
+    // chain[x] does not depend on any chain[y], where y >= x
+    function getTableDependencyChain(relationships) {
+
+        var nodes = getRelationshipGraph(relationships);
+
+        var chain = [];
+        for (var i in nodes) {
+            var node = nodes[i];
+
+            traverse(node, chain);
+        }
+
+        return chain;
+    }
+
+    function traverse(node, chain) {
+        if (node.visited) {
+            return;
+        }
+
+        if (node.processing) {
+            throw new Error('loop detected');
+        }
+
+        node.processing = true;
+
+        for (var i in node.children) {
+            var child = node.children[i];
+            traverse(child, chain);
+        }
+
+        chain.push(node);
+        node.processing = false;
+        node.visited = true;
     }
     
     // Resets the state for starting a new push operation
     function reset() {
         lastProcessedOperationId = -1; // Initialize to an invalid operation id
         pushConflicts = [];
+        nodes = {};
     }
     
     // Pushes all pending operations, one at a time.
@@ -83,13 +162,13 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
                 });
             }).then(function() {
                 if (!pushError) { // no push error
-                    lastProcessedOperationId = currentOperation.logRecord.id;
+                    currentOperation.node.lastProcessedOperationId = currentOperation.logRecord.id;
                 } else if (pushError && !pushError.isHandled) { // push failed and not handled
 
                     // For conflict errors, we add the error to the list of errors and continue pushing other records
                     // For other errors, we abort push.
                     if (pushError.isConflict()) {
-                        lastProcessedOperationId = currentOperation.logRecord.id;
+                        currentOperation.node.lastProcessedOperationId = currentOperation.logRecord.id;
                         pushConflicts.push(pushError);
                     } else { 
                         throw new verror.VError(pushError.getError(), 'Push failed while pushing operation for tableName : ' + currentOperation.logRecord.tableName +
@@ -109,14 +188,14 @@ function createPushManager(client, store, storeTaskRunner, operationTableManager
     function readAndLockFirstPendingOperation() {
         return storeTaskRunner.run(function() {
             var pendingOperation;
-            return operationTableManager.readFirstPendingOperationWithData(lastProcessedOperationId).then(function(operation) {
+            return operationTableManager.readFirstPendingOperationWithData(depChain).then(function(operation) {
                 pendingOperation = operation;
                 
                 if (!pendingOperation) {
                     return;
                 }
                 
-                return operationTableManager.lockOperation(pendingOperation.logRecord.id);
+                return operationTableManager.lockOperation(pendingOperation.logRecord);
             }).then(function() {
                 return pendingOperation;
             });

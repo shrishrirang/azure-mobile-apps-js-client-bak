@@ -56,6 +56,7 @@ $testGroup('offline functional tests')
                     id: MobileServiceSqliteStore.ColumnType.String,
                     text: MobileServiceSqliteStore.ColumnType.String,
                     tablebid: MobileServiceSqliteStore.ColumnType.String,
+                    tabledid: MobileServiceSqliteStore.ColumnType.String,
                     version: MobileServiceSqliteStore.ColumnType.String
                 }
             });
@@ -136,14 +137,18 @@ $testGroup('offline functional tests')
         
         var a, b, c, d;
 
-        return tablea.insert({text: 'begin'}).then(function(res) {
-            return tablec.insert({text: 'c orig'});
+        return tableb.insert({text: 'b1.1'}).then(function(res) {
+            b = res;
+            return syncContext.push();
+        }).then(function() {
+            return tablea.insert({text: 'a1.1', tablebid: b.id});
         }).then(function(res) {
-            c = res;
-            return tabled.insert({text: 'd'});
+            a = res;
+            return syncContext.push();
+        }).then(function() {
+            return tableb.del(b);
         }).then(function(res) {
-            d = res;
-            return tablec.update({id: c.id, text: 'c new', tabledid: d.id});
+            return tablea.del(a);
         }).then(function() {
         }).then(function() {
         }).then(function() {

@@ -25,7 +25,8 @@ function createOperationTableManager(store) {
     var runner = taskRunner(),
         isInitialized,
         maxOperationId = 0,
-        lockedOperationId,
+        _lockedOperationId,
+        lockedOperation,
         maxId;
 
     return {
@@ -72,15 +73,15 @@ function createOperationTableManager(store) {
      * And if we do not condense, insert will have no corresponding data in the table to send to the server while pushing as 
      * the record would have been deleted.
      */
-    function lockOperation(id) {
+    function lockOperation(operation) {
         return runner.run(function() {
             // Locking a locked operation should have no effect
-            if (lockedOperationId === id) {
+            if (lockedOperation && lockedOperation.id === operation.id && lockedOperation.tableName === operation.tableName) {
                 return;
             }
             
-            if (!lockedOperationId) {
-                lockedOperationId = id;
+            if (!lockedOperation) {
+                lockedOperation = operation;
                 return;
             }
 
@@ -93,7 +94,7 @@ function createOperationTableManager(store) {
      */
     function unlockOperation() {
         return runner.run(function() {
-            lockedOperationId = undefined;
+            lockedOperation = undefined;
         });
     }
     
@@ -175,9 +176,19 @@ function createOperationTableManager(store) {
      * @returns Object containing logRecord (record from the operation table) and an optional data record (i.e. record associated with logRecord).
      * The data record will be present only for insert and update operations.
      */
-    function readFirstPendingOperationWithData(lastProcessedOperationId) {
+    function readFirstPendingOperationWithData(depChain) {
         return runner.run(function() {
-            return readFirstPendingOperationWithDataInternal(lastProcessedOperationId);
+            return readFirstPendingOperationWithDataInternal(depChain, 0, 'edit').then(function(pendingOperation) {
+                if (pendingOperation) {
+                    return pendingOperation;
+                }
+
+                depChain.reverse();
+                return readFirstPendingOperationWithDataInternal(depChain, 0, 'delete').then(function(pendingOperation) {
+                    depChain.reverse();
+                    return pendingOperation;
+                });
+            });
         });
     }
 
@@ -188,7 +199,7 @@ function createOperationTableManager(store) {
      * If no operation is currently locked, the promise is rejected.
      */
     function removeLockedOperation() {
-        return removePendingOperation(lockedOperationId).then(function() {
+        return removePendingOperation(lockedOperation.id).then(function() {
             return unlockOperation();
         });
     }
@@ -196,10 +207,94 @@ function createOperationTableManager(store) {
 
     // Checks if the specified operation is locked
     function isLocked(operation) {
-        return operation && operation.id === lockedOperationId;
+        return operation && lockedOperation && operation.id === lockedOperation.id;
     }
 
-    function readFirstPendingOperationWithDataInternal(lastProcessedOperationId) {
+    // FIXME: Lock needed on store
+    function readFirstPendingOperationWithDataInternal(depChain, index, action) {
+
+        if (index >= depChain.length) {
+            return; //FIXME
+        }
+
+        var tableName = depChain[index].name;
+
+        var action1, action2;
+        if (action === 'edit') {
+            action1 = 'insert';
+            action2 = 'update';
+        } else {
+            action1 = 'delete';
+            action2 = 'delete';
+        }
+
+        var logRecord;
+        depChain[index].lastProcessedOperationId = depChain[index].lastProcessedOperationId || -1;
+
+        var query = new Query(operationTableName).where(function(lastProcessedOperationId, tableName, action1, action2) {
+            return this.id > lastProcessedOperationId && this.tableName === tableName && (this.action === action1 || this.action === action2);
+        }, depChain[index].lastProcessedOperationId, tableName, action1, action2);
+
+        var workaround = false;
+        if (workaround) {
+            query = new Query(operationTableName).where(function(lastProcessedOperationId, tableName, action1, action2) {
+                return true;
+            }, depChain[index].lastProcessedOperationId, tableName, action1, action2);
+        }
+
+        query = query.orderBy('id').take(1);
+
+        // Read record from op table with smallest ID and for given table and action criteria
+        return store.read(query).then(function(result) {
+            if (result.length === 1) {
+                logRecord = result[0];
+            } else if (result.length === 0) { // no pending records
+                return;
+            } else {
+                throw new Error('Something is wrong!');
+            }
+        }).then(function() {
+            if (!logRecord) {
+                // no pending records.. proceed to next index
+                return readFirstPendingOperationWithDataInternal(depChain, index+1, action);
+            }
+
+            if (logRecord.action === 'delete') {
+                return {
+                    logRecord: logRecord,
+
+                    node: depChain[index]
+                };
+            }
+
+            // Find the data record associated with the log record. 
+            return store.lookup(logRecord.tableName, logRecord.itemId).then(function(data) {
+                if (data) { // Return the log record and the data record.
+                    return {
+                        logRecord: logRecord,
+                        data: data,
+
+                        node: depChain[index]
+                    };
+                }
+                
+                // It is possible that a log record corresponding to an insert / update operation has no corresponding
+                // data record. 
+                // 
+                // This can happen in the following scenario:
+                // insert -> push / lock operation begins -> delete -> push fails
+                //  
+                // In such a case, we remove the log operation from the operation table and proceed to the next log operation.
+                return removePendingOperationInternal(logRecord.id).then(function() {
+                    return readFirstPendingOperationWithDataInternal(depChain, index, action);
+                });
+            });
+        });
+    }
+
+
+
+    function readFirstPendingOperationWithDataInternalOld(lastProcessedOperationId) {
         var logRecord, // the record logged in the operation table
             query = new Query(operationTableName).where(function(lastProcessedOperationId) {
                         return this.id > lastProcessedOperationId;
