@@ -7,7 +7,7 @@ function definePushTestsNamespace() {
         deviceToken,
     	templateName = 'myPushTemplate',
         waitTime = 30000,
-        GCM_SENDER_ID = '13925784256';
+        GCM_SENDER_ID = '******';
 
     // TODO: See if we can check if we are running on a simulator and abort the tests
 
